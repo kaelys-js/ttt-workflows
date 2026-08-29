@@ -1,43 +1,26 @@
 # sec-audit
 
-Security audit across three layers — your code, your live Azure, and your identity/CI — reconciled
-into one report. Read-only until you approve a change.
+Audits your code, live Azure, and identity/CI in one read-only pass, and returns one report.
 
-**Point it at something and say what to do:**
+**→ Point me at a repo, PR, or folder** — then say `sweep`, `review`, `poc`, or `remediate`.
 
-```
-sweep https://github.com/org/repo                  # full audit
-review "USER can PATCH role=ADMIN" in ./oms-be      # score one finding (CVSS + CWE)
-poc for SEC-01                                       # prove one is real
-```
-
-**Modes:** `sweep` (find everything) · `review` (score one) · `poc` (prove one) · `remediate` (fix as a PR).
-**Point at:** a repo or PR URL (GitHub / Azure DevOps), a local repo, or a file/folder.
-
-Live layers need an `az` login; source scanners are semgrep/gitleaks/checkov/osv/trivy. Checked on start.
-
-_Say **"options"** for the layers, coverage flags, and the full run._
+Type **`options`** for the three layers, coverage grids, and flags.
 
 <details>
-<summary>Options — full reference</summary>
+<summary><code>options</code></summary>
 
-**A `sweep` checks three layers** (most scanners read only code; half the problems live in the cloud):
-- **code** (git) — auth logic, injection, mass-assignment, upload limits, IaC network/TLS, dep CVEs.
-- **azure** (live ARM) — public DBs, weak TLS, open Key Vaults, ACR admin, Defender off, missing diagnostics.
-- **entra** (live Graph) — app-registration reply-URLs, implicit flow, long-lived / shared credentials.
-- **ado** (live pipeline) — cleartext secrets in variable groups + build definitions.
+**Modes:** `sweep` (find everything) · `review` (score one finding, CVSS + CWE) · `poc` (prove one is real) · `remediate` (fix as a PR, never merged).
 
-**Coverage vs a prior audit** (optional — hand `sweep` your prior findings, get a found/remediated/gap grid):
-- `--known <list.csv|json>` — the prior findings (`id,title,severity`).
-- `--map <map.json>` — `{ "<your-id>": "<regex>" }`, attributes a finding to your ID by its evidence.
-- `--remediated <id,id>` — IDs you've verified fixed live.
+**Three layers a sweep runs** — most scanners read only code; half the problems live in the cloud:
+- **code** — auth logic, injection, mass-assignment, upload limits, IaC network/TLS, dep CVEs.
+- **live Azure** — public DBs, weak TLS, open Key Vaults, ACR admin, Defender off, missing diagnostics.
+- **live Entra + CI** — app-registration login flaws, long-lived secrets, cleartext pipeline tokens.
 
-**Auth:** `node`, `git` (required). Live layers: `az login` — Reader + Directory app-read (Graph) +
-ADO bearer; pick a context with `AZURE_CONFIG_DIR`. Full code layer: the five scanners — a missing
-one is reported as *not covered*, never silently skipped.
+**Coverage vs a prior audit** (optional): pass `--known <list>` and get a found/remediated/gap grid. `--map` attributes to your IDs; `--remediated` marks ones fixed live.
 
-**Guarantees:** read-only until you approve · live probes are GET-only · multi-agent sweeps only on
-your per-run opt-in · no AI attribution · always states what it did **not** cover.
+**Auth:** `node`, `git`. Live layers need `az login`. Code scanners: semgrep, gitleaks, checkov, osv-scanner, trivy — a missing one is reported, never silently skipped.
+
+**Never:** changes anything until you approve. Live probes are GET-only. No AI attribution. Always states what it did *not* cover.
 
 **Scripting:**
 ```bash

@@ -1,48 +1,25 @@
 # trp
 
-Takes a ClickUp ticket to merge-ready: writes you a plan, **stops for your OK**, then builds,
-reviews its own work, opens the PR, and updates the ticket. Nothing is built before you approve.
+Takes a ClickUp ticket to merge-ready. Writes the plan first and waits for your OK before building.
 
-**Paste a ticket URL to start:**
+**→ Paste a ticket URL to start.**
 
-```
-TRP Process for: https://app.clickup.com/t/abc123
-```
-
-**Add a modifier if you want:**
-
-```
-…abc123  — no ClickUp, this PR      # deliver against a PR only, no ticket write
-…abc123  — Read GAP-LIST            # ground the plan in the linked GAP-LIST
-```
-
-You'll see the plan and approve it before anything runs. Needs a ClickUp token plus `gh` (ITC) or
-`az` (Wheaton); it checks on start and tells you if anything's missing.
-
-_Say **"options"** for response modes, client routing, and the phases._
+Type **`options`** for modifiers, client routing, and the phases.
 
 <details>
-<summary>Options — full reference</summary>
+<summary><code>options</code></summary>
 
-**Response modes** (inferred from the ticket):
-- **implement** (default) — a code change: plan → approve → build → PR → ClickUp update.
-- **spike-writeup** — options/investigation, no code.
-- **support** — a question or triage, no code.
+**Modifiers** (append to the URL): `no ClickUp, this PR` (deliver to a PR only) · `Read GAP-LIST` (ground the plan in it) · env notes like "against staging".
 
-**Clients** (routed automatically, not interchangeable):
-- **Wheaton** — Azure DevOps, branches `develop`/`main`, no feature flags.
-- **ITC** — GitHub, CodeRabbit, feature flags.
+**Response modes** (from the ticket): implement a code change (default) · spike-writeup (options, no code) · support (a question, no code).
 
-**Phases:** 0 ground in the repo → 1 **present the plan and STOP for approval** → 2–3 implement +
-local gates green → 3.5 CodeRabbit + the pr-review skill to zero findings → 4 open the PR → 5 update
-the ticket (status + PM/technical comment).
+**Clients** (auto-routed): Wheaton — Azure DevOps, `develop`/`main`, no flags. ITC — GitHub, CodeRabbit, feature flags.
 
-**Auth:** `node` + a ClickUp token (`~/.config/ttt/clickup.token` or `CLICKUP_TOKEN_FILE`), plus
-`gh` (ITC) or `az` (Wheaton) to push and open the PR.
+**Phases:** 0 ground in the repo → 1 **present the plan, STOP for approval** → 2–3 build + gates green → 3.5 CodeRabbit + pr-review to zero → 4 open the PR → 5 update the ticket.
 
-**Guarantees:** the approval gate is absolute (everything before Phase 1 is read-only) · discover,
-don't punt · evidence first, no "suspected" cause · every approved item ships · no AI attribution ·
-real gates green before every push.
+**Auth:** a ClickUp token (`CLICKUP_TOKEN_FILE`) + `gh` (ITC) or `az` (Wheaton).
+
+**Never:** builds before you approve · ships a "suspected" cause · drops an approved item · adds AI attribution · pushes a failing test.
 
 **Scripting:**
 ```bash
