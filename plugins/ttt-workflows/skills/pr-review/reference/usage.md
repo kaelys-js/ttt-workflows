@@ -9,20 +9,37 @@ Type **`options`** for re-reviews, ticket checks, and the full rubric.
 <details>
 <summary><code>options</code></summary>
 
-**Cases** (auto-detected): first review · re-review after a push (only what changed) · ticket-linked (also checks the ticket's acceptance criteria).
+```
+pr-review — review a PR, output a paste-ready comment (never posts it)
 
-**Reviews:** design → correctness → security → tests → API → readability → perf → docs. Plus: does the code do what the PR *says*, and is it current (vs the vendor's live docs).
+USAGE
+  pr-review <pr-url>
 
-**Output:** verdict · severity tally · one row per finding, anchored to `file:line`, each with a fix.
+ARGUMENTS
+  <pr-url>              github.com/…/pull/N   or   dev.azure.com/…/pullrequest/N
 
-**Auth:** `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional, ticket-linked PRs only (`CLICKUP_TOKEN_FILE`).
+BEHAVIOR              auto-detected, no flag
+  first review         full pass over the whole diff
+  re-review            same PR after a push — only what changed, acknowledges fixes
+  ticket-linked        PR names a ClickUp ticket — also checks it against the AC
 
-**Never:** posts, comments, approves, or resolves. No AI attribution. Won't block on lint or pre-existing issues.
+REVIEWS              in priority order
+  design · correctness · security · tests · API · readability · perf · docs
+  + does the code do what the PR says, and is it current (vs live vendor docs)
 
-**Scripting:**
-```bash
-D="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills}"; D="${D:-$HOME/.claude/skills}"
-node $D/pr-review/scripts/fetch-pr.mjs "<PR_URL>" --out pr.json
-node $D/pr-review/scripts/render-review.mjs findings.json --pr pr.json
+OUTPUT
+  verdict · severity tally · one row per finding (file:line + a concrete fix)
+
+AUTH
+  gh                   GitHub         — gh auth login
+  az                   Azure DevOps   — az login
+  CLICKUP_TOKEN_FILE   ticket-linked PRs only (optional)
+
+EXAMPLES
+  https://github.com/org/repo/pull/128
+  https://dev.azure.com/org/proj/_git/repo/pullrequest/2189
+  review PR #128 again — I pushed fixes
+
+NEVER  posts/comments/approves · AI attribution · blocks on lint or pre-existing issues
 ```
 </details>

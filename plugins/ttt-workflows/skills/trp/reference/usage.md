@@ -9,22 +9,41 @@ Type **`options`** for modifiers, client routing, and the phases.
 <details>
 <summary><code>options</code></summary>
 
-**Modifiers** (append to the URL): `no ClickUp, this PR` (deliver to a PR only) · `Read GAP-LIST` (ground the plan in it) · env notes like "against staging".
+```
+trp — deliver a ClickUp ticket to merge-ready (plan → approve → build → PR → ticket)
 
-**Response modes** (from the ticket): implement a code change (default) · spike-writeup (options, no code) · support (a question, no code).
+USAGE
+  trp <ticket-url> [— <modifier>]
 
-**Clients** (auto-routed): Wheaton — Azure DevOps, `develop`/`main`, no flags. ITC — GitHub, CodeRabbit, feature flags.
+ARGUMENTS
+  <ticket-url>         app.clickup.com/t/…
 
-**Phases:** 0 ground in the repo → 1 **present the plan, STOP for approval** → 2–3 build + gates green → 3.5 CodeRabbit + pr-review to zero → 4 open the PR → 5 update the ticket.
+MODIFIERS            append after an em-dash
+  — no ClickUp, this PR    deliver against a PR only, skip the ticket write
+  — Read GAP-LIST          ground the plan in the linked GAP-LIST
+  — <env note>             e.g. "against staging"
 
-**Auth:** a ClickUp token (`CLICKUP_TOKEN_FILE`) + `gh` (ITC) or `az` (Wheaton).
+RESPONSE MODES       inferred from the ticket
+  implement            code change (default) — phases 0→5
+  spike-writeup        options / investigation, no code
+  support              a question or triage, no code
 
-**Never:** builds before you approve · ships a "suspected" cause · drops an approved item · adds AI attribution · pushes a failing test.
+CLIENTS              auto-routed, not interchangeable
+  Wheaton              Azure DevOps · develop/main · no feature flags
+  ITC                  GitHub · CodeRabbit · feature flags
 
-**Scripting:**
-```bash
-D="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills}"; D="${D:-$HOME/.claude/skills}"
-node $D/trp/scripts/fetch-ticket.mjs "<TICKET_URL>" --out ticket.json
-node $D/trp/scripts/clickup-update.mjs "<TICKET_URL>" --status "in review" --comment-file phase5.md --live
+PHASES
+  0 ground · 1 PLAN→approve · 2–3 build+gates · 3.5 review-to-zero · 4 PR · 5 ticket
+
+AUTH
+  CLICKUP_TOKEN_FILE   required — read + update the ticket
+  gh (ITC) | az (Wheaton)   push the branch, open the PR
+
+EXAMPLES
+  TRP Process for: https://app.clickup.com/t/abc123
+  TRP Process for: https://app.clickup.com/t/abc123 — no ClickUp, this PR
+  TRP Process for: https://app.clickup.com/t/abc123 — Read GAP-LIST, against staging
+
+NEVER  builds before you approve · a "suspected" cause · AI attribution · a failing push
 ```
 </details>
