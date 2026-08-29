@@ -1,80 +1,49 @@
 # sec-audit
 
-Security audit of any target across three layers — source code, live Azure, and identity/CI —
-reconciled into one report. Read-only until you approve a change.
+Security audit across three layers — your code, your live Azure, and your identity/CI — reconciled
+into one report. Read-only until you approve a change.
 
-**Invoke:** name a TARGET and a MODE. e.g. `sweep https://github.com/org/repo` · `review PR #28`
-
-## Targets — what to point it at
-
-| target | example | scope |
-|---|---|---|
-| repo URL | `github.com/org/repo` · `dev.azure.com/org/proj/_git/repo` | read-only clone at HEAD |
-| PR URL | `github.com/…/pull/N` · `dev.azure.com/…/pullrequest/N` | the PR diff |
-| local path | `./my-repo` · `./src/controllers` · `./config.ts` | a repo, folder, or one file |
-
-## Modes — what to do
-
-| mode | does | invoke | output |
-|---|---|---|---|
-| `sweep` | full audit across all three layers | `sweep <target>` | findings report (+ coverage grid if you pass a prior list) |
-| `review` | score one finding — CVSS 4.0 + CWE | `review "<finding>" in <target>` | private GHSA-shaped advisory |
-| `poc` | prove a finding with a throwaway PoC | `poc for SEC-nn` | `run-poc.sh` that tears itself down |
-| `remediate` | write the fix as a PR (never merged) | `remediate SEC-nn` | fix branch + open PR |
-
-## What a `sweep` checks — the three layers
-
-Most scanners read only code. Half the real problems live in the running cloud, not git.
-
-| layer | source | catches |
-|---|---|---|
-| **code** | git | auth logic, injection, mass-assignment, upload limits, IaC network/TLS, dependency CVEs |
-| **azure** | live ARM | public DBs, weak TLS, open Key Vaults, ACR admin, Defender off, missing diagnostics, PG params |
-| **entra** | live Graph | app-registration reply-URLs, implicit/hybrid flow, long-lived / shared credentials |
-| **ado** | live pipeline | cleartext secrets in variable groups + build definitions |
-
-## Coverage against a prior audit — optional
-
-Hand `sweep` a prior finding list and it returns a grid: each prior finding marked **found**,
-**remediated**, or **gap**. All three inputs are your files — no client detail lives in the skill.
-
-| flag | is |
-|---|---|
-| `--known <list.csv\|json>` | the prior findings (columns `id,title,severity`) |
-| `--map <map.json>` | `{ "<your-id>": "<regex>" }` — attributes a finding to your ID by matching its evidence |
-| `--remediated <id,id>` | IDs you've verified fixed in the live estate |
-
-## Auth — checked on start; preflight names anything missing and where to put it
-
-| | needs |
-|---|---|
-| required | `node`, `git` |
-| live layers | `az login` — Reader on the subscription + Directory app-read (Graph) + ADO bearer. Pick a context with `AZURE_CONFIG_DIR=<path>`. |
-| full code layer | `semgrep` `gitleaks` `checkov` `osv-scanner` `trivy` — a missing one is reported as *not covered*, never silently skipped |
-
-## Guarantees
-
-Read-only until you approve. Live probes are GET-only (statically enforced). Multi-agent sweeps
-run only on your explicit per-run opt-in. No AI attribution. Always states what it did **not**
-cover — never a silent all-clear.
-
-## Examples
+**Point it at something and say what to do:**
 
 ```
-sweep https://dev.azure.com/org/proj/_git/repo
-sweep ./oms-be --known prior-audit.csv --map map.json --remediated SEC-37,SEC-54
-review "the /users PATCH lets a USER set role=ADMIN" in ./oms-be
-poc for SEC-01
+sweep https://github.com/org/repo                  # full audit
+review "USER can PATCH role=ADMIN" in ./oms-be      # score one finding (CVSS + CWE)
+poc for SEC-01                                       # prove one is real
 ```
+
+**Modes:** `sweep` (find everything) · `review` (score one) · `poc` (prove one) · `remediate` (fix as a PR).
+**Point at:** a repo or PR URL (GitHub / Azure DevOps), a local repo, or a file/folder.
+
+Live layers need an `az` login; source scanners are semgrep/gitleaks/checkov/osv/trivy. Checked on start.
+
+_Say **"options"** for the layers, coverage flags, and the full run._
 
 <details>
-<summary>Run the pipeline yourself (scripting)</summary>
+<summary>Options — full reference</summary>
 
+**A `sweep` checks three layers** (most scanners read only code; half the problems live in the cloud):
+- **code** (git) — auth logic, injection, mass-assignment, upload limits, IaC network/TLS, dep CVEs.
+- **azure** (live ARM) — public DBs, weak TLS, open Key Vaults, ACR admin, Defender off, missing diagnostics.
+- **entra** (live Graph) — app-registration reply-URLs, implicit flow, long-lived / shared credentials.
+- **ado** (live pipeline) — cleartext secrets in variable groups + build definitions.
+
+**Coverage vs a prior audit** (optional — hand `sweep` your prior findings, get a found/remediated/gap grid):
+- `--known <list.csv|json>` — the prior findings (`id,title,severity`).
+- `--map <map.json>` — `{ "<your-id>": "<regex>" }`, attributes a finding to your ID by its evidence.
+- `--remediated <id,id>` — IDs you've verified fixed live.
+
+**Auth:** `node`, `git` (required). Live layers: `az login` — Reader + Directory app-read (Graph) +
+ADO bearer; pick a context with `AZURE_CONFIG_DIR`. Full code layer: the five scanners — a missing
+one is reported as *not covered*, never silently skipped.
+
+**Guarantees:** read-only until you approve · live probes are GET-only · multi-agent sweeps only on
+your per-run opt-in · no AI attribution · always states what it did **not** cover.
+
+**Scripting:**
 ```bash
-D="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills}"; D="${D:-$HOME/.claude/skills}"   # plugin OR ~/.claude/skills symlink
+D="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills}"; D="${D:-$HOME/.claude/skills}"
 S=$D/sec-audit/scripts ; DIR=./audit-out
 node $S/resolve-target.mjs "<repo|pr|path>" --out $DIR/target.json
-#   code layer: drive workflows/{sfp-deep-read,expansion-sweep}.js + find-findings.sh
 AZURE_CONFIG_DIR=<ctx> node $S/probe-azure.mjs --rg-prefix <p> --out $DIR/azure-findings.json
 AZURE_CONFIG_DIR=<ctx> node $S/probe-entra.mjs --filter <p1,p2> --out $DIR/entra-findings.json
 AZURE_CONFIG_DIR=<ctx> node $S/probe-ado.mjs --org <o> --project <p> --out $DIR/ado-findings.json
