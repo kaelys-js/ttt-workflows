@@ -17,12 +17,20 @@ The user says "TRP Process for: <ClickUp URL>" (or names TRP / Task Resolution
 Protocol) — optionally with modifiers: "no ClickUp, this PR", "Read GAP-LIST",
 client or environment notes. Invoked without a ticket URL, ask for it; do not guess.
 
-## On invocation: orient first
+## On invocation: open the picker
 
-Before fetching the ticket, present the end-to-end usage guide (`reference/usage.md`) — what
-the skill does, the phase machine (0 → 5), the absolute approval gate, and the hard rules —
-so the operator sees exactly how delivery will go. Read it in full yourself, then run. Show
-its shape; don't bury it.
+If the operator already pasted a ticket link with clear intent, skip the picker and proceed.
+Otherwise open the **Ask** picker: call AskUserQuestion with the four paths defined in
+`reference/usage.md` (Deliver this ticket · Just the code, skip the ticket · Show me how this
+works · Options), then route:
+
+- **Deliver this ticket** → full run. **Just the code** → the "no ClickUp" path. For either,
+  run `scripts/preflight.mjs`; if it exits non-zero, relay its lines verbatim (what's missing +
+  where) and WAIT. Then fetch the ticket and start Phase 0.
+- **Show me how this works** → present the "How it works" section of `reference/usage.md`.
+- **Options** → present the "Options" section of `reference/usage.md`.
+
+Never start delivery until preflight is clean and the plan is approved (Phase 1).
 
 **Then check auth.** Run this skill's `scripts/preflight.mjs`. If it exits non-zero, it prints exactly which credential/tool is missing and where to put it (a file path + the env var, or the `gh`/`az` login command) — relay those `✗` lines to the operator verbatim and WAIT for them to provide it. Do not run the skill until preflight is clean.
 

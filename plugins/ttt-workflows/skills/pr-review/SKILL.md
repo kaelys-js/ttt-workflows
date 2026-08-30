@@ -17,14 +17,20 @@ and wants it reviewed, or says "PR review", "review this PR", or "code review". 
 a re-review — the same PR after the author pushed changes. Invoked without a URL, ask
 for the PR link first; do not guess one.
 
-## On invocation: orient first
+## On invocation: open the picker
 
-Before fetching anything, present the end-to-end usage guide (`reference/usage.md`) — what
-the skill does, the seven-step run, the R1-R15 rubric in one screen, and the read-only hard
-rule — so the operator sees exactly how the review will go. Read it in full yourself, then
-run. Show its shape; don't bury it.
+If the operator already gave a clear request (a PR URL), skip the picker — run
+`scripts/preflight.mjs`, then follow the Workflow below. Otherwise open the **Ask** picker:
+call AskUserQuestion with the four paths defined in `reference/usage.md` (Review a pull request ·
+Re-check after changes · Show me how this works · Options), then route on the answer:
 
-**Then check auth.** Run this skill's `scripts/preflight.mjs`. If it exits non-zero, it prints exactly which credential/tool is missing and where to put it (a file path + the env var, or the `gh`/`az` login command) — relay those `✗` lines to the operator verbatim and WAIT for them to provide it. Do not run the skill until preflight is clean.
+- **Review a pull request / Re-check after changes** → run `scripts/preflight.mjs`; if it exits
+  non-zero, relay its `✗` lines verbatim (what's missing + where to put it) and WAIT. Then ask
+  for the PR link if not supplied, and run the Workflow.
+- **Show me how this works** → present the "How it works" section of `reference/usage.md`.
+- **Options** → present the "Options" section of `reference/usage.md`.
+
+Never run the review until preflight is clean.
 
 ## Files in this skill
 

@@ -16,15 +16,19 @@ The user says "security audit", "SFP", "SRP", "security review", "find vulnerabi
 "build a PoC", "remediate SEC-nn" — or points at a target to audit. Invoked without a
 target or a mode, ask for both; do not guess.
 
-## On invocation: orient first
+## On invocation: open the picker
 
-Before running anything, present the end-to-end usage guide (`reference/usage.md`) — what
-the three layers are, the four target types, the four modes, the full point-at-anything run
-recipe, and the six hard gates — so the operator sees exactly how to drive the audit. Read
-it in full yourself, then confirm target + mode, then run. The guide is short by design;
-show its shape, don't bury it.
+If the operator already named a target + intent, skip the picker and proceed. Otherwise open
+the **Ask** picker: call AskUserQuestion with the four paths defined in `reference/usage.md`
+(Run a full check-up · Look into one thing · Show me how this works · Options), then route:
 
-**Then check auth.** Run this skill's `scripts/preflight.mjs`. If it exits non-zero, it prints exactly which credential/tool is missing and where to put it (a file path + the env var, or the `gh`/`az` login command) — relay those `✗` lines to the operator verbatim and WAIT for them to provide it. Do not run the skill until preflight is clean.
+- **Run a full check-up** → `sweep`. **Look into one thing** → `review` (then offer `poc` /
+  `remediate`). For either, run `scripts/preflight.mjs`; if it exits non-zero, relay its lines
+  verbatim (what's missing + where) and WAIT. Then confirm target + mode and run.
+- **Show me how this works** → present the "How it works" section of `reference/usage.md`.
+- **Options** → present the "Options" section of `reference/usage.md`.
+
+Never start a run until preflight is clean.
 
 ## Targets (any of four)
 
