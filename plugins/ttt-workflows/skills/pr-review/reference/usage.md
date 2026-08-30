@@ -28,6 +28,8 @@ workflow. · Show me how this works → present **How it works** below. · Optio
 
 I'll never post, comment, approve, or change the PR · add an AI credit · or hold it up over lint or problems that were already there.
 
+**Want every detail?** Say **deep dive** for the full technical walkthrough — every check, the anchoring gate, rendering, and the refusal rules (`reference/deep-dive.md`).
+
 ---
 
 ## Options

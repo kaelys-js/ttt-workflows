@@ -35,6 +35,8 @@ three places at once:
 Going further, on your say-so: I can prove a finding is real with a safe demo that cleans up
 after itself, or write the fix and open it for your review — I never merge it myself.
 
+**Want every detail?** Say **deep dive** for the full technical walkthrough — each of the three layers, the live probes, coverage matching, scoring, and the six gates (`reference/deep-dive.md`).
+
 ---
 
 ## Options

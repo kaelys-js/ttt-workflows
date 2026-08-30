@@ -29,6 +29,8 @@ paths. If the user already pasted a ticket link with clear intent, skip the pick
 I'll never build anything before you approve · ship a guess as the cause · quietly drop
 something you approved · add an AI credit · or push with a failing test.
 
+**Want every detail?** Say **deep dive** for the full technical walkthrough — every phase, the approval gate, the local gates, the self-review loop, and client routing (`reference/deep-dive.md`).
+
 ---
 
 ## Options

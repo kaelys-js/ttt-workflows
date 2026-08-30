@@ -30,10 +30,9 @@ works · Options), then route:
   where) and WAIT. Then fetch the ticket and start Phase 0.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → present the "Options" section of `reference/usage.md`.
+- **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never start delivery until preflight is clean and the plan is approved (Phase 1).
-
-**Then check auth.** Run this skill's `scripts/preflight.mjs`. If it exits non-zero, it prints exactly which credential/tool is missing and where to put it (a file path + the env var, or the `gh`/`az` login command) — relay those `✗` lines to the operator verbatim and WAIT for them to provide it. Do not run the skill until preflight is clean.
 
 ## Files in this skill
 
@@ -43,7 +42,8 @@ Never start delivery until preflight is clean and the plan is approved (Phase 1)
   default, `--live` to execute, attribution + two-layer + landed gates built in. Run it.
 - `scripts/selftest.mjs` — regression battery for the deterministic layer. Run after
   any script edit; every check must be OK.
-- `reference/usage.md` — the on-invocation end-to-end guide (present this first).
+- `reference/usage.md` — the on-invocation picker + How-it-works + Options.
+- `reference/deep-dive.md` — the full technical walkthrough (on "deep dive").
 - `reference/phases.md` — the phase machine (0 → 5, incl. 3.5) with exit criteria. Read in full.
 - `reference/gates.md` — operational gates, pre-push gates, forbidden vocabulary,
   attribution scan, PR-done bar, failure catalogue. Read in full.

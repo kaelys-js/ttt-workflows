@@ -27,6 +27,7 @@ the **Ask** picker: call AskUserQuestion with the four paths defined in `referen
   verbatim (what's missing + where) and WAIT. Then confirm target + mode and run.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → present the "Options" section of `reference/usage.md`.
+- **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never start a run until preflight is clean.
 

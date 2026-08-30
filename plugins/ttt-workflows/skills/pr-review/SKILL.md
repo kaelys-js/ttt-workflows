@@ -29,6 +29,7 @@ Re-check after changes · Show me how this works · Options), then route on the 
   for the PR link if not supplied, and run the Workflow.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → present the "Options" section of `reference/usage.md`.
+- **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never run the review until preflight is clean.
 
@@ -39,7 +40,8 @@ Never run the review until preflight is clean.
 - `scripts/render-review.mjs` — `findings.json` → the paste-ready block. Run it.
 - `scripts/selftest.mjs` — regression battery for the deterministic layer. Run it after
   any edit to the scripts; every check must be OK.
-- `reference/usage.md` — the on-invocation end-to-end guide (present this first).
+- `reference/usage.md` — the on-invocation picker + How-it-works + Options.
+- `reference/deep-dive.md` — the full technical walkthrough (on "deep dive").
 - `reference/rubric.md` — the review checklist (R1–R15). Read before writing findings.
 - `reference/output-format.md` — the output template, emoji legend, `findings.json`
   schema, and plain-language rules. Read before writing findings.
