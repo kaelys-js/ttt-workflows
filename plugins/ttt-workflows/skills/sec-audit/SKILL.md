@@ -137,7 +137,7 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
 - `scripts/resolve-target.mjs` · `scripts/advisory-lint.mjs` · `scripts/coverage-claim.mjs`
   · `scripts/probe-azure.mjs` · `scripts/probe-entra.mjs` · `scripts/probe-ado.mjs`
   · `scripts/report.mjs` · `scripts/aggregate.mjs` · `scripts/collect-findings.mjs` · `scripts/preflight.mjs` · `scripts/selftest.mjs`
-- `reference/{usage,review,poc,sweep,remediate,methodology,gates}.md`
+- `reference/{usage,deep-dive,review,poc,sweep,remediate,methodology,gates}.md`
 - `workflows/expansion-sweep.js` — multi-agent net-new hunt (surfaces + known-list via args)
 
 ## Constraints
