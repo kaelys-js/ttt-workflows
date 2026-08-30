@@ -1,10 +1,11 @@
 # sec-audit
 
-Audits your code, live Azure, and identity/CI in one read-only pass, and returns one report.
+A security audit that reads your code, your live Azure, and your identity setup — read-only.
 
-**→ Point me at a repo, PR, or folder** — then say `sweep`, `review`, `poc`, or `remediate`.
+**❯ Point me at a repo, PR, or folder** — then `sweep`, `review`, `poc`, or `remediate`.
+You'll get one report: what's exposed, how bad, and how to fix it.
 
-Type **`options`** for the three layers, coverage grids, and flags.
+`options` — the three layers, coverage grids & flags
 
 <details>
 <summary><code>options</code></summary>

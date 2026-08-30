@@ -1,10 +1,11 @@
 # trp
 
-Takes a ClickUp ticket to merge-ready. Writes the plan first and waits for your OK before building.
+Turns a ClickUp ticket into a merge-ready PR — plan first, always your call.
 
-**→ Paste a ticket URL to start.**
+**❯ Paste a ClickUp ticket link.**
+I'll write the plan and wait for your OK before building anything.
 
-Type **`options`** for modifiers, client routing, and the phases.
+`options` — modifiers, clients & the phases
 
 <details>
 <summary><code>options</code></summary>

@@ -1,10 +1,11 @@
 # pr-review
 
-Reviews a pull request and hands you a paste-ready comment. Never posts anything itself.
+Paste-ready PR reviews that never touch the PR.
 
-**→ Drop a PR link to start** — GitHub or Azure DevOps.
+**❯ Paste a GitHub or Azure DevOps PR link.**
+You'll get a verdict, the issues that actually matter, and a fix for each.
 
-Type **`options`** for re-reviews, ticket checks, and the full rubric.
+`options` — re-reviews, ticket checks & the rubric
 
 <details>
 <summary><code>options</code></summary>
