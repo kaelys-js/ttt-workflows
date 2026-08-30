@@ -21,11 +21,12 @@ client or environment notes. Invoked without a ticket URL, ask for it; do not gu
 
 If the operator already pasted a ticket link with clear intent, skip the picker and proceed.
 Otherwise open the **Ask** picker: call AskUserQuestion with the four paths defined in
-`reference/usage.md` (Deliver this ticket · Just the code, skip the ticket · Show me how this
+`reference/usage.md` (Deliver this ticket · Look into it first (a spike) · Show me how this
 works · Options), then route:
 
-- **Deliver this ticket** → full run. **Just the code** → the "no ClickUp" path. For either,
-  run `scripts/preflight.mjs`; if it exits non-zero, relay its lines verbatim (what's missing +
+- **Deliver this ticket** → full run (or the "no ClickUp" path if they say just the code).
+  **Look into it first** → the `spike-writeup` response mode. For either, run
+  `scripts/preflight.mjs`; if it exits non-zero, relay its lines verbatim (what's missing +
   where) and WAIT. Then fetch the ticket and start Phase 0.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → present the "Options" section of `reference/usage.md`.

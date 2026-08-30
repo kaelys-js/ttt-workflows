@@ -7,13 +7,14 @@ paths. If the user already pasted a ticket link with clear intent, skip the pick
 
 | label | description |
 |---|---|
-| **Deliver this ticket** | Paste a ClickUp ticket link. I read it and the code, write you a plan, and wait for your OK — then I build it, test it, review my own work, open the pull request, and update the ticket. |
-| **Just the code, skip the ticket** | Same delivery, but I leave the ClickUp ticket untouched and hand you the pull request only. |
+| **Deliver this ticket** | Paste a ClickUp ticket link. I read it and the code, write you a plan, and wait for your OK — then I build it, test it, review my own work, open the pull request, and update the ticket. (Say "just the code" and I'll skip the ticket update and hand you the PR only.) |
+| **Look into it first (a spike)** | If the ticket is really a question, or needs options weighed before anyone commits, I investigate and write it up — no code yet. |
 | **Show me how this works** | A full walkthrough: how I plan, where you approve, and what you get back. |
 | **Options** | The full reference — every way to run it, in one screen. |
 
-**Routing:** Deliver this ticket → full run. · Just the code → the "no ClickUp" path. · Show me
-how this works → present **How it works**. · Options → present **Options**.
+**Routing:** Deliver this ticket → full run (or the "no ClickUp" path if they say just the code).
+· Look into it first → the `spike-writeup` response mode. · Show me how this works → present
+**How it works**. · Options → present **Options**.
 
 ---
 
