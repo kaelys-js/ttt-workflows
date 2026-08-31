@@ -1,7 +1,7 @@
 # TRP gates
 
-AGENTS.md in the operator's workspace is THE LAW — this file indexes and sequences
-it; wherever wording differs, AGENTS.md wins. Read AGENTS.md in FULL before Phase 0.
+These are the gates for TRP delivery — self-contained here. Read this file and
+`phases.md` before Phase 0; `clients.md` carries the per-client specifics.
 
 ## Contents
 - The eight operational gates (index)
@@ -12,7 +12,7 @@ it; wherever wording differs, AGENTS.md wins. Read AGENTS.md in FULL before Phas
 - The PR-done bar
 - Failure catalogue (learned from real rebukes)
 
-## The eight operational gates (AGENTS.md "Operational gate" — index)
+## The eight operational gates
 
 1. Adversarial self-review of your OWN diff before "done" — tests-pass is not this.
 2. A fix must clear the class it fixes — no sibling bugs of the same class.
@@ -31,8 +31,8 @@ it; wherever wording differs, AGENTS.md wins. Read AGENTS.md in FULL before Phas
 
 ## Pre-push gates
 
-Per client — clients.md routes to the law's exact command lists (AGENTS.md
-W-LocalGate for Wheaton; the repo's own scripts for ITC). Universal, regardless of client:
+Per client — `clients.md` carries the exact command lists (Wheaton pre-push gate; the
+repo's own scripts for ITC). Universal, regardless of client:
 
 - HARD RULE: never push with any failing test or red check the CI runs — CI
   continue-on-error is NOT permission (the only exception: provably pre-existing on

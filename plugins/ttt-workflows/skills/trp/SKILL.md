@@ -2,7 +2,7 @@
 name: trp
 description: Runs the Task Resolution Protocol (TRP) end to end for a ClickUp ticket — grounds the ticket in the actual repo with evidence, assembles the Full TRP Package changelog (phases 0-5), STOPS for explicit approval, then implements, verifies through the local gates plus CodeRabbit and the pr-review skill, opens the PR, and posts the two-layer ClickUp update. Works for Wheaton OMS (Azure DevOps) and ITC (GitHub) tickets. Use when the user says "TRP Process for", "TRP", "Task Resolution Protocol", or pastes an app.clickup.com task URL asking for delivery of that ticket.
 license: Proprietary. See LICENSE.
-compatibility: Requires node, git, a ClickUp token, and gh (ITC) or az (Wheaton); network access to ClickUp and the git host.
+compatibility: Requires node, git, a ClickUp token, and gh (ITC) or az (Wheaton). Team-scoped: delivers to the Wheaton OMS (Azure DevOps) and ITC (GitHub) clients defined in reference/clients.md.
 metadata:
   author: ttt-studios
   version: "1.1.0"
@@ -13,8 +13,8 @@ metadata:
 Deliver a ClickUp ticket end to end under the Task Resolution Protocol: ground it in
 the real repo with evidence, present the Full TRP Package, stop for approval, then
 implement → verify → quality-loop (CodeRabbit + pr-review) → PR → two-layer ClickUp
-update. AGENTS.md in the operator's workspace is THE LAW — read it in FULL before
-anything else; this skill sequences it and never overrides it.
+update. This skill is self-contained: the protocol lives in its own `reference/` files
+(phases, gates, clients, templates) — no external rulebook needed.
 
 ## When to invoke
 
@@ -52,7 +52,7 @@ Never start delivery until preflight is clean and the plan is approved (Phase 1)
 - `reference/phases.md` — the phase machine (0 → 5, incl. 3.5) with exit criteria. Read in full.
 - `reference/gates.md` — operational gates, pre-push gates, forbidden vocabulary,
   attribution scan, PR-done bar, failure catalogue. Read in full.
-- `reference/clients.md` — Wheaton (ADO) vs ITC (GitHub) routing; pointers into AGENTS.md.
+- `reference/clients.md` — Wheaton (ADO) vs ITC (GitHub) full delivery protocol, self-contained.
 - `reference/templates.md` — the Full TRP Package, PR bodies, two-layer comment.
 
 ## Workflow
@@ -60,7 +60,7 @@ Never start delivery until preflight is clean and the plan is approved (Phase 1)
 Copy this checklist and work through it:
 
 ```
-- [ ] 0. Read AGENTS.md fully + reference/gates.md + reference/phases.md
+- [ ] 0. Read reference/gates.md + reference/phases.md (+ clients.md for the client)
 - [ ] 1. Fetch ticket + comments (+ GAP-LIST if named) → ticket.json
 - [ ] 2. Phase 0: ground in the repo — file:line evidence, every gap answered yourself
 - [ ] 3. Assemble the Full TRP Package (templates.md) — every mandatory section

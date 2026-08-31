@@ -45,7 +45,7 @@ tradeoffs, ACs — still read-only, still evidence-first. Most tickets skip to 1
 
 Single-PR tickets: a commit × file table (see templates.md). Multi-PR tickets: one PR
 per subtask, each independently safe to merge to trunk in dependency order — no
-long-lived stacked branches (AGENTS.md "Branching & integration"). State whether a
+long-lived stacked branches (this skill's reference files "Branching & integration"). State whether a
 feature flag exists on that client; where none does (Wheaton), the code must be
 correct on merge, and the package says so.
 
