@@ -21,7 +21,7 @@ deterministic scripts. See [plugins/ttt-workflows/README.md](plugins/ttt-workflo
 ## Layout
 
 | Path | What it is |
-|---|---|
+| --- | --- |
 | `.claude-plugin/marketplace.json` | The marketplace manifest (lists the plugin). |
 | `plugins/ttt-workflows/.claude-plugin/plugin.json` | The plugin manifest (name, version). |
 | `plugins/ttt-workflows/skills/<name>/SKILL.md` | Each skill's entry point (frontmatter + instructions). |
@@ -35,7 +35,7 @@ deterministic scripts. See [plugins/ttt-workflows/README.md](plugins/ttt-workflo
 
 There is no build step — skills are files. Before any push, every skill's selftest must be green:
 
-```
+```bash
 for s in pr-review sec-audit trp; do
   node plugins/ttt-workflows/skills/$s/scripts/selftest.mjs
 done
@@ -47,7 +47,7 @@ the description). Every check must print `OK`.
 
 Test a skill interactively before releasing:
 
-```
+```bash
 claude --plugin-dir plugins/ttt-workflows
 /ttt-workflows:pr-review
 ```

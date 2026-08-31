@@ -35,6 +35,8 @@
 				"hooks",
 				"plugin",
 				"marketplace",
+				"website",
+				"security",
 				"deps",
 				"docs",
 				"ci",

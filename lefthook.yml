@@ -21,7 +21,7 @@ pre-commit:
         fi
     format-js:
       priority: 2
-      glob: '*.{js,mjs,json}'
+      glob: '*.{js,mjs,ts,tsx,json}'
       run: ./bin/mise exec -- oxfmt --write {staged_files} && git add {staged_files}
     format-sh:
       priority: 3
@@ -59,6 +59,30 @@ pre-push:
     docs-check:
       priority: 7
       run: ./bin/mise exec -- node scripts/build-docs.mjs --check
+    # The website stages run mise from the repo root (so ./bin/mise resolves),
+    # then cd into the site so its own configs (.oxlintrc, prettier, stylelint)
+    # and node_modules apply.
+    web-format:
+      priority: 8
+      run: ./bin/mise exec -- bash -c 'cd packages/products/website && oxfmt --check src'
+    web-lint:
+      priority: 9
+      run: ./bin/mise exec -- bash -c 'cd packages/products/website && oxlint src'
+    astro-format:
+      priority: 10
+      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec prettier --check "src/**/*.astro"'
+    css-lint:
+      priority: 11
+      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec stylelint "src/**/*.css"'
+    yaml-lint:
+      priority: 12
+      run: ./bin/mise exec -- yamllint .github/workflows/
+    workflow-lint:
+      priority: 13
+      run: ./bin/mise exec -- actionlint
+    markdown-lint:
+      priority: 14
+      run: ./bin/mise exec -- markdownlint-cli2 "*.md"
 
 # ─── Commit Message ──────────────────────────────────────────────────────────
 commit-msg:

@@ -366,3 +366,9 @@ docs/*.pdf.tmp
 # The operator-playbook PDFs are shipped deliverables (kept in sync by
 # `npm run docs:check`), so they override the global *.pdf ignore above.
 !docs/*.pdf
+
+# playbook PDFs copied into the site at build time (source of truth is docs/)
+packages/products/website/public/playbooks/
+
+# The site's own icons/og images are committed (override the global *.png ignore).
+!packages/products/website/public/**/*.png
