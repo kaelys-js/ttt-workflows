@@ -1,7 +1,6 @@
 # sec-audit gates
 
-`security-pocs/AGENTS.md` is THE LAW; this indexes and sequences it. Read it in full
-before any mode. Six hard human-gates are never crossed autonomously — they are the
+This file defines the gates for this skill — self-contained. Read it before any mode. Six hard human-gates are never crossed autonomously — they are the
 whole reason security work is gated.
 
 ## The six hard human-gates (never crossed without explicit approval)
@@ -39,7 +38,7 @@ enforces this plus the attribution + private-first checks mechanically.
 
 ## Chain reciprocity (SR12)
 
-Every `SEC-nn` cross-reference is bidirectional; `scripts/check-chains.sh` (in the repo)
+Every `SEC-nn` cross-reference is bidirectional; `scripts/` (in the repo)
 audits it — run it, don't reimplement it.
 
 ## Coverage honesty (SFP8)
@@ -52,6 +51,6 @@ validates the shape so "covered everything" can never be silent truncation.
 
 No `Co-Authored-By` / "Generated with" / model or vendor names / robot emoji in any
 advisory, PR body, commit, or ClickUp comment. `advisory-lint.mjs` refuses a contaminated
-body. (Note: the repo's own AGENTS.md SRP5 line still shows a `Co-Authored-By: Claude`
+body. (Note: never emit a `Co-Authored-By: Claude`
 author convention — that is the repo's law; sec-audit's own outputs carry no attribution,
 and where the two conflict for sec-audit-authored content, no-attribution wins.)

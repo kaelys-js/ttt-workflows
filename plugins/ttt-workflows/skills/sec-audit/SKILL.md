@@ -1,8 +1,8 @@
 ---
 name: sec-audit
-description: Runs a professional security audit end to end against any target — a GitHub or Azure DevOps repo, a specific GH/ADO pull request, a local repo, or a single file/folder. Routes to four modes (sweep, review, poc, remediate) that sequence the Security Review, Security POC, Systematic Finding, and Systematic Remediation protocols, drive the security-pocs workflows, and produce scored findings, private advisories, reproducible PoCs, GAP-LIST/executive-brief reports, and client fix-PRs. Grounded in PTES, OWASP WSTG, NIST SP 800-115, CVSS 4.0, and coordinated disclosure. Use when the user says "security audit", "SFP", "SRP", "security review", "find vulnerabilities", "build a PoC", "remediate SEC-nn", asks whether something is exploitable or a real security problem, or points at a repo/PR/path to audit.
+description: Runs a professional security audit end to end against any target — a GitHub or Azure DevOps repo, a specific GH/ADO pull request, a local repo, or a single file/folder. Routes to four modes (sweep, review, poc, remediate) that sequence the Security Review, Security POC, Systematic Finding, and Systematic Remediation protocols, drive the skill's own bundled workflows, and produce scored findings, private advisories, reproducible PoCs, GAP-LIST/executive-brief reports, and client fix-PRs. Grounded in PTES, OWASP WSTG, NIST SP 800-115, CVSS 4.0, and coordinated disclosure. Use when the user says "security audit", "SFP", "SRP", "security review", "find vulnerabilities", "build a PoC", "remediate SEC-nn", asks whether something is exploitable or a real security problem, or points at a repo/PR/path to audit.
 license: Proprietary. See LICENSE.
-compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy; the code-audit + poc/remediate modes also need the security-pocs toolkit (SECURITY_POCS_DIR). Network access to the target and Azure.
+compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy for the code layer; network access to the target and Azure.
 metadata:
   author: ttt-studios
   version: "1.1.0"
@@ -10,9 +10,10 @@ metadata:
 
 # sec-audit
 
-Run a professional security audit end to end against any target. `security-pocs/AGENTS.md`
-(the security-pocs toolkit, at the path in `$SECURITY_POCS_DIR`) is THE LAW — read it in FULL before
-any mode; this skill sequences it and never overrides it. Six hard human-gates are never
+Run a professional security audit end to end against any target. Fully self-contained: the
+protocol lives in this skill's own `reference/` files (gates, methodology, and one per mode) and
+its own bundled `scripts/` + `workflows/` — no external repo, no client data. Read
+`reference/gates.md` and the mode's reference before running. Six hard human-gates are never
 crossed autonomously (below).
 
 ## When to invoke
@@ -59,7 +60,7 @@ at the recorded `sha`; `file:line` cites are true at that SHA (SR3).
 
 A real audit finding lives in one of three places, and only one layer reaches each:
 
-1. **Source / IaC** (git) — code + declared infra. The `sweep` mode's `sfp-deep-read.js`
+1. **Source / IaC** (git) — code + declared infra. The `sweep` mode's `expansion-sweep.js`
    workflow + the scanners (`find-findings.sh`: gitleaks/osv/checkov/trivy/semgrep) find
    these (auth logic, mass-assignment, CORS, multer, bicep network/TLS, dep debt).
 2. **Live Azure running-state** (ARM) — firewall rules, TLS floors, KV network/purge,
@@ -73,7 +74,7 @@ Point-at-anything full run (any operator, any repos/tenant):
 ```bash
 # layer 1 — source/IaC (per app + IaC module; multi-agent opt-in)
 node scripts/resolve-target.mjs <repo|path> --out target.json
-#   → drive workflows/sfp-deep-read.js with the app/iac inventory (reference/sweep.md)
+#   → drive workflows/expansion-sweep.js with the app/iac inventory (reference/sweep.md)
 #   → scripts/find-findings.sh --evidence=<repo>   (deps/secrets/IaC-static)
 # expansion — hunt NET-NEW beyond a known list (multi-agent opt-in) → workflows/expansion-sweep.js
 # layer 2 — live Azure (read-only ARM)
@@ -95,16 +96,16 @@ source + running-state + identity, reconciled into one disclosure-standard repor
 
 Read the matching reference in full, then run its sequence.
 
-- **`sweep`** — find new `SEC-nn` (SFP1-12). `reference/sweep.md`. Drives
-  `find-findings.sh` + `workflows/sfp-triage.js` + `sfp-deep-read.js` (multi-agent — needs
-  your explicit opt-in per run) + the two live probes above. Output: candidates, coverage
-  claim, POC stubs, rules.
+- **`sweep`** — find new `SEC-nn` (SFP1-12). `reference/sweep.md`. Drives `scripts/find-findings.sh`
+  (the scanners) + `workflows/expansion-sweep.js` (the semantic deep-read, multi-agent — needs
+  your explicit opt-in per run) + the three live probes above. Output: candidates, coverage
+  claim, findings.
 - **`review`** — assess → scored private finding (SR1-12). `reference/review.md`. Output:
   CVSS 4.0 + CWE finding record, private GHSA-shaped advisory.
-- **`poc`** — prove a finding (SP1-9). `reference/poc.md`. Stamps `templates/security-poc`,
-  drives `workflows/sfp-build-poc.js`. Output: `run-poc.sh` PoC, disclosure-standard README.
-- **`remediate`** — fix on the client repo (SRP1-32). `reference/remediate.md`. Drives
-  `workflows/srp-fix-finding.js`. Output: client-style fix PR (opened, never merged).
+- **`poc`** — prove a finding (SP1-9). Follow `reference/poc.md`, driving standard tools + the
+  bundled PoC template. Output: `run-poc.sh` PoC, disclosure-standard README.
+- **`remediate`** — fix on the client repo (SRP1-32). Follow `reference/remediate.md`, driving
+  standard git/gh. Output: client-style fix PR (opened, never merged).
 
 Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST SP 800-115
 / MITRE, threat modeling, DAST, CWE + compliance reporting) — `reference/methodology.md`.
@@ -112,7 +113,7 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
 ## Workflow
 
 ```
-- [ ] 0. Read security-pocs/AGENTS.md fully + reference/gates.md + the mode's reference
+- [ ] 0. Read reference/gates.md fully + the mode's reference
 - [ ] 1. Resolve the target → target.json (read-only, provenance stamped)
 - [ ] 2. Threat-model the Tier-1 surfaces (methodology.md) before deep analysis
 - [ ] 3. Run the mode sequence; drive the repo's scripts/workflows, don't reimplement
@@ -141,15 +142,17 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
 
 - `scripts/resolve-target.mjs` · `scripts/advisory-lint.mjs` · `scripts/coverage-claim.mjs`
   · `scripts/probe-azure.mjs` · `scripts/probe-entra.mjs` · `scripts/probe-ado.mjs`
-  · `scripts/report.mjs` · `scripts/aggregate.mjs` · `scripts/collect-findings.mjs` · `scripts/preflight.mjs` · `scripts/selftest.mjs`
+  · `scripts/report.mjs` · `scripts/aggregate.mjs` · `scripts/collect-findings.mjs` · `scripts/preflight.mjs` · `scripts/find-findings.sh` · `scripts/selftest.mjs`
 - `reference/{usage,deep-dive,review,poc,sweep,remediate,methodology,gates}.md`
 - `workflows/expansion-sweep.js` — multi-agent net-new hunt (surfaces + known-list via args)
+- `templates/security-poc/` — throwaway PoC scaffold (run-poc.sh + README)
 
 ## Constraints
 
-- Depends on `node`, `git`, `gh`/`az`, the SFP/SRP toolchain (semgrep, gitleaks, checkov,
-  osv-scanner, trivy — sweep.md), and the ClickUp token file (same as pr-review/trp).
-- `target.json` and working drafts live in a scratch dir, never in the audited repo.
-- The repo already has `check-chains.sh` + `bundle-schema-check.py` — use them; this skill
-  only adds the advisory-lint and coverage-claim gates it lacked.
+- Depends on `node`, `git`, `az` (live probes), and the scanners (semgrep, gitleaks, checkov,
+  osv-scanner, trivy) for the code layer. Nothing else — no external repo, no client data.
+- `target.json` and all working files (`*-findings.json`, `coverage.json`, `report.html`,
+  `candidates.jsonl`) live in a scratch dir, never in the audited repo.
+- Self-contained: the protocol (`reference/`), the scanners (`find-findings.sh`), the semantic
+  deep-read (`workflows/expansion-sweep.js`), and the PoC scaffold (`templates/`) all ship here.
 

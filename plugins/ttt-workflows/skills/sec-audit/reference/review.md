@@ -1,19 +1,6 @@
 # review mode — Security Review Protocol (SR1–12)
 
-Assess a target for vulnerabilities and produce a scored, private finding. The LAW is
-`security-pocs/AGENTS.md` "Security Review Protocol" — read it in full; this sequences
-it. Wherever wording differs, AGENTS.md wins.
-
-## Contents
-- Inputs
-- The sequence (SR1–12)
-- Evidence tiers
-- Chain reciprocity
-- Output
-
-## Inputs
-
-A resolved `target.json` (from `resolve-target.mjs`). Findings anchor at the recorded
+Assess a target for vulnerabilities and produce a scored, private finding. This file is the Security Review Protocol for this skill — self-contained.json` (from `resolve-target.mjs`). Findings anchor at the recorded
 `sha`; every claim cites `file:line` at that pinned SHA (SR3), never a moving branch.
 
 ## The sequence
@@ -64,7 +51,7 @@ paragraph on both ends. Chain paragraph states: roles (entry / amplifier / sink 
 collapse), composition ("A + B = capability none alone provides"), effective severity,
 fix order, independence claim. CVSS 4.0 Subsequent-System metrics (`SC`/`SI`/`SA`) score
 the composite; publish a separate "chain finding" GHSA when the composite crosses a
-severity class. The repo's `scripts/check-chains.sh` audits reciprocity — run it.
+severity class. The repo's `scripts/` audits reciprocity — run it.
 
 ## Output
 

@@ -1,8 +1,7 @@
 # remediate mode — Systematic Remediation Protocol (SRP1–32)
 
 Fix a finding on a client repo following coordinated-disclosure discipline — the mirror
-of the find side. The LAW is `security-pocs/AGENTS.md` "Systematic Remediation Protocol"
-(SRP1–32) — read it in full. This sequences it and names the driver; it never forks it.
+of the find side. This file is the Systematic Remediation Protocol (SRP1–32) for this skill — self-contained.
 
 ## Contents
 - The driver
@@ -14,10 +13,10 @@ of the find side. The LAW is `security-pocs/AGENTS.md` "Systematic Remediation P
 
 ## The driver
 
-`workflows/srp-fix-finding.js` (via the Workflow tool) + `scripts/fix-finding.sh` /
-`scripts/srp-run-loop.sh` (the SRP-EE main-context loop wrapper, SRP29). Multi-repo: one
+`reference/remediate.md` (via the Workflow tool) + `scripts/fix-finding.sh` /
+the remediation loop (driving standard git/gh). Multi-repo: one
 driver run per repo (SRP30). Multi-app monorepo discovery handled (SRP31). Multi-ecosystem
-discovery via SRP-BB (SRP21). Drive these; do not reimplement them.
+discovery via SRP-BB (SRP21). Follow this protocol, driving standard git/gh.
 
 ## The sequence (core)
 
@@ -39,7 +38,7 @@ discovery via SRP-BB (SRP21). Drive these; do not reimplement them.
    the finding? introduce a new one? break the client's public API? violate a client rule?
 7. **Run the client's own tests (SRP7).** Detect via package.json/Makefile/pyproject/
    Cargo; run every candidate command. Tests fail → the PR does not open; log to
-   `discovery/fix-log.txt`, no silent skip.
+   `a fix log (scratch dir)`, no silent skip.
 8. **Verify the finding stands down (SRP8).** Copy patched files into the POC evidence
    tree; run every `verify-*` layer that FAILed on vulnerable source — each must now
    STAND-DOWN (exit 0) or the fix is incomplete (block PR-open, log, restore, abort).
@@ -54,7 +53,7 @@ discovery via SRP-BB (SRP21). Drive these; do not reimplement them.
 ## The auto-repair loop (SRP13–20)
 
 When the client CI (Stage F) fails a patch, the driver does NOT accept it: it writes
-`discovery/srp-fail-<sec>-a<N>.json` (prior bundle + failing command + stderr tail) and
+`srp-fail-<sec>-a<N>.json` (prior bundle + failing command + stderr tail) and
 exits 66 for main context to re-invoke in REVISE mode with `previous_attempt` context
 (SRP13). Bundle is `full_content`; adversarial reads the BUNDLE (SRP14). REVISE
 auto-fetches test-runner config on config-shaped failures (SRP15). Attack-outcome
@@ -69,8 +68,8 @@ first (SRP20).
 
 ## Config (SRP12, SRP28)
 
-`srp.env` holds every knob (branch prefix, PR labels/title template, status IDs, test
-command order, time estimates, CODEOWNERS auto-review request SRP23). Repo list in `sfp.env`.
+`the mode config` holds every knob (branch prefix, PR labels/title template, status IDs, test
+command order, time estimates, CODEOWNERS auto-review request SRP23).
 Nothing hardcoded per client — adding a client is one line. Any operator can clone + run
 (SRP28). Terraform/infra fixes handled (SRP32); Prisma raw-SQL detect (SRP26).
 

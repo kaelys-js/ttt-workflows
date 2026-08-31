@@ -6,7 +6,6 @@
 // Usage:  node preflight.mjs [--layers code,azure,entra,ado]   (default: all)
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
 
 const opt = (f) => { const i = process.argv.indexOf(f); return i >= 0 ? process.argv[i + 1] : ""; };
 const layers = (opt("--layers") || "code,azure,entra,ado").split(",").map((s) => s.trim());
@@ -24,8 +23,6 @@ if (layers.includes("code")) {
   for (const [cmd, why] of [["semgrep", "SAST"], ["gitleaks", "secret scan"], ["checkov", "IaC static"], ["osv-scanner", "dependency CVEs"], ["trivy", "container/deps"]])
     warn(cmdOk(cmd, ["--version"]), `${cmd} (${why})`, "source-layer scanner", `install: pipx install ${cmd}  (or: brew install ${cmd})`);
   warn(cmdOk("gh", ["auth", "status"]), "gh (GitHub auth)", "only for GitHub repo/PR targets", "run:  gh auth login");
-  const spd = process.env.SECURITY_POCS_DIR;
-  warn(!!spd && existsSync(spd), "security-pocs toolkit ($SECURITY_POCS_DIR)", "source deep-read + poc/remediate modes", "set SECURITY_POCS_DIR to your security-pocs checkout (not needed for the live-cloud probes)");
 }
 
 // az login covers all three live layers (ARM + Graph + ADO bearer).

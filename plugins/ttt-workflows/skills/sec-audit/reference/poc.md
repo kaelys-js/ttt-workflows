@@ -1,7 +1,6 @@
 # poc mode — Security POC Protocol (SP1–9)
 
-Build or run a proof-of-concept that demonstrates a finding to a skeptic. The LAW is
-`security-pocs/AGENTS.md` "Security POC Protocol" — read it in full. A PoC whose
+Build or run a proof-of-concept that demonstrates a finding to a skeptic. This file is the Security POC Protocol for this skill — self-contained. A PoC whose
 evidence can't be re-derived is a demo, not proof.
 
 ## Contents
@@ -12,13 +11,13 @@ evidence can't be re-derived is a demo, not proof.
 
 ## Inputs + the template contract
 
-A `SEC-nn` with a finding record. Every PoC starts from `templates/security-poc` (SP7)
+A `SEC-nn` with a finding record. Every PoC starts from `reference/poc.md` (SP7)
 — the `run-poc.sh` skeleton, `evidence.lock`, `fetch-evidence.sh`, README standard,
 `SECURITY.md`, `security.txt`, advisory + CVSS rubric, severity→SLA table. Do NOT
 reinvent the harness per finding; improve the template and migrate.
 
 The build/verify workflows already exist in the repo — drive them, don't reimplement:
-- `workflows/sfp-build-poc.js` (and `sfp-build-poc-batch.js`) — stamp + build a PoC.
+- `reference/poc.md` (and `sfp-build-poc-batch.js`) — stamp + build a PoC.
   Multi-agent; needs the operator's explicit multi-agent opt-in per run.
 - `scripts/materialize-poc.py`, `scripts/fetch-fresh-src.sh` — materialize + fetch
   pinned evidence.

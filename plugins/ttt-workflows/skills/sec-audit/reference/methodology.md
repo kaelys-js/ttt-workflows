@@ -73,7 +73,7 @@ risk-acceptance records (SR10). Reports are standard-mapped, not a bag of bullet
   (Stakeholder-Specific Vulnerability Categorization) as a triage framework and CSAF as
   the machine-readable advisory format. Consider SSVC alongside CVSS for prioritization;
   emit CSAF when a consumer wants machine-readable advisories.
-- **Semgrep "Assistant" → "Multimodal"** (renamed 2026-03-19). The AGENTS.md SFP5
+- **Semgrep "Assistant" → "Multimodal"** (renamed 2026-03-19). The SFP5
   reference to "Semgrep Assistant" is the old name; the AI-triage layer is Multimodal.
 - Verify tool versions (sweep.md SFP3) against current releases before a sweep; pin
   deliberately.

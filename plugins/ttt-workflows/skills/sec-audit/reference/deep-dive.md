@@ -1,7 +1,7 @@
 # sec-audit — deep dive
 
 Everything the skill does, end to end, in depth. Read top-to-bottom or jump in. For the security
-protocols in full see the security-pocs `AGENTS.md`; for methodology framing see
+protocols in full see the mode reference files (sweep/review/poc/remediate.md); for methodology framing see
 `methodology.md`; for the six hard gates see `gates.md`.
 
 **Contents**
@@ -78,7 +78,7 @@ Two passes over the source, because pattern-matching and semantic reading catch 
 These are fast and exhaustive over their pattern set, but they can't reason about whether a
 shape actually *bites*.
 
-**Semantic deep-read (`workflows/sfp-deep-read.js`, multi-agent, opt-in)** — decides whether it
+**Semantic deep-read (`workflows/expansion-sweep.js`, multi-agent, opt-in)** — decides whether it
 bites. It reads the actual code and traces attacker-controlled input from an entry point to a
 sink. This is what catches the findings a pattern can't: a `PATCH /users/:id` that lets a
 non-admin set their own `role` field (mass-assignment self-elevation); a rate-limiter mounted
@@ -185,7 +185,7 @@ scorecard: 62 known findings in, 62 accounted for, or it tells you which ones ar
 
 ## 11. The four modes & their protocols
 
-Each mode sequences one of the security-pocs protocols end to end:
+Each mode sequences one of the four security protocols end to end:
 
 | mode | protocol | what happens | output |
 |---|---|---|---|
