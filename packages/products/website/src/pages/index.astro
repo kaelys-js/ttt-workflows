@@ -32,8 +32,10 @@ const skills = [
 		icon: GitPullRequest,
 		name: "pr-review",
 		cmd: "/pr-review",
-		does: "Reviews a GitHub or Azure DevOps pull request from its URL, verifies every finding against the real diff, and labels each by severity.",
-		produces: "One paste-ready review — a verdict, a scan table, and a concrete fix per finding.",
+		does: "Reviews a GitHub or Azure DevOps pull request from its URL. Walks the diff in priority order, proves every finding against the real diff before it surfaces one, and labels each with a Conventional-Comment severity — refuting its own hunches so a nitpick never crowds out the real bug.",
+		tags: ["design", "correctness", "security", "tests"],
+		produces:
+			"One paste-ready review — a scan-first verdict and tally, a one-row-per-finding table, and a concrete fix for each.",
 		boundary: "Read-only",
 		boundaryNote: "Never posts, comments, approves, or merges. You paste the result.",
 	},
@@ -41,7 +43,8 @@ const skills = [
 		icon: ShieldCheck,
 		name: "sec-audit",
 		cmd: "/sec-audit",
-		does: "Audits a repo, a PR, a path, or live Azure, Entra, and ADO — the three places a real vulnerability hides: source and IaC, running cloud state, and the identity and CI plane.",
+		does: "Audits a repo, a PR, a path, or live Azure, Entra, and ADO — the three places a real vulnerability hides: source and IaC (scanners plus a semantic read), running cloud state, and the identity and CI plane. Four modes take one finding from discovery to a fix.",
+		tags: ["sweep", "review", "poc", "remediate"],
 		produces:
 			"Scored findings (CVSS 4.0 + CWE), private advisories, reproducible throwaway PoCs, and a coverage-honest report.",
 		boundary: "Approval-gated",
@@ -51,9 +54,10 @@ const skills = [
 		icon: ClipboardCheck,
 		name: "trp",
 		cmd: "/trp",
-		does: "Delivers a ticket end to end: grounds it in the real repo with evidence, presents a full plan, then implements, verifies through local gates, and opens the PR.",
+		does: "Delivers a ticket end to end through a phase machine. Grounds it in the real repo with file-line evidence, presents a full plan and stops for approval, then implements, runs the real local gates — format, lint, the affected tests, the build — and opens the PR.",
+		tags: ["ground", "plan", "build", "verify", "ship"],
 		produces:
-			"A merged-ready PR that meets the acceptance criteria, plus a two-layer ticket update for the business and for engineers.",
+			"A merge-ready PR that meets the acceptance criteria, plus a two-layer ticket update for the business and for engineers.",
 		boundary: "Approval-gated",
 		boundaryNote:
 			"Stops for approval. No branch, no write, nothing hard to undo before you say go.",
@@ -186,7 +190,7 @@ const playbooks = [
 					review a pull request, run a security audit, or deliver a ticket end to end, from inside Claude
 					Code. Read-only and approval-gated by default.
 				</p>
-				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-2.5">
+				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-3">
 					<CopyCommand client:load cmd={MARKETPLACE_ADD} />
 					<CopyCommand client:load cmd={PLUGIN_INSTALL} />
 				</div>
@@ -251,6 +255,13 @@ const playbooks = [
 								</div>
 							</div>
 							<CardDescription className="leading-relaxed">{s.does}</CardDescription>
+							<div class="flex flex-wrap gap-1.5">
+								{s.tags.map((t) => (
+									<span class="rounded border border-border/70 bg-muted/40 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+										{t}
+									</span>
+								))}
+							</div>
 							<div class="text-[13px] leading-relaxed">
 								<span class="font-medium text-foreground">Produces </span>
 								<span class="text-muted-foreground">{s.produces}</span>
@@ -276,10 +287,10 @@ const playbooks = [
 						Two commands in Claude Code, then invoke a skill whenever you need it.
 					</p>
 				</div>
-				<div class="mt-12 grid items-start gap-8 lg:grid-cols-2" data-stagger>
+				<div class="mt-12 grid gap-8 lg:grid-cols-2" data-stagger>
 					{
 						steps.map((s) => (
-							<div>
+							<div class="flex h-full flex-col">
 								<div class="flex items-center gap-3">
 									<div class="grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
 										{s.n}
@@ -287,7 +298,7 @@ const playbooks = [
 									<h3 class="text-lg font-semibold">{s.title}</h3>
 								</div>
 								<p class="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-								<div class="mt-4">
+								<div class="mt-auto pt-5">
 									<CopyCommand client:visible cmd={s.cmd} />
 								</div>
 							</div>
@@ -299,18 +310,22 @@ const playbooks = [
 						<Terminal className="size-4 text-primary" /> Then invoke a skill
 					</div>
 					<ul class="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
-						<li>
-							Paste a pull-request URL and ask for a review — or run <code
-								class="font-mono text-foreground/80">/pr-review</code
-							>.
+						<li class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 gap-y-1 max-sm:grid-cols-1">
+							<code class="font-mono text-foreground/90">/pr-review</code>
+							<span>Paste a pull-request URL and ask for a review.</span>
 						</li>
-						<li>
-							Point <code class="font-mono text-foreground/80">/sec-audit</code> at a repo, a PR, a path,
-							or a live tenant, and name a mode: sweep, review, poc, or remediate.
+						<li class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 gap-y-1 max-sm:grid-cols-1">
+							<code class="font-mono text-foreground/90">/sec-audit</code>
+							<span>
+								Point it at a repo, a PR, a path, or a live tenant, and name a mode: sweep, review,
+								poc, or remediate.
+							</span>
 						</li>
-						<li>
-							Hand <code class="font-mono text-foreground/80">/trp</code> a ticket URL; it grounds the
-							work, presents a plan, and stops for your approval.
+						<li class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 gap-y-1 max-sm:grid-cols-1">
+							<code class="font-mono text-foreground/90">/trp</code>
+							<span
+								>Hand it a ticket URL; it grounds the work, presents a plan, and stops for approval.</span
+							>
 						</li>
 					</ul>
 				</div>
@@ -389,7 +404,7 @@ const playbooks = [
 				<div class="flex items-center gap-2 text-lg font-semibold">
 					<Blocks className="size-5 text-primary" /> Add it to Claude Code
 				</div>
-				<div class="w-full max-w-md space-y-2.5 text-left">
+				<div class="w-full max-w-xl space-y-3 text-left">
 					<CopyCommand client:visible cmd={MARKETPLACE_ADD} />
 					<CopyCommand client:visible cmd={PLUGIN_INSTALL} />
 				</div>
@@ -426,7 +441,7 @@ const playbooks = [
 				</div>
 
 				<nav aria-label="Product">
-					<h2 class="text-sm font-semibold">Product</h2>
+					<p class="text-sm font-semibold">Product</p>
 					<ul class="mt-4 space-y-3 text-sm text-muted-foreground">
 						<li><a href="#skills" class="transition-colors hover:text-foreground">Skills</a></li>
 						<li><a href="#install" class="transition-colors hover:text-foreground">Install</a></li>
@@ -438,7 +453,7 @@ const playbooks = [
 				</nav>
 
 				<nav aria-label="Resources">
-					<h2 class="text-sm font-semibold">Resources</h2>
+					<p class="text-sm font-semibold">Resources</p>
 					<ul class="mt-4 space-y-3 text-sm text-muted-foreground">
 						<li>
 							<a

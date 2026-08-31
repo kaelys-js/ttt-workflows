@@ -24,7 +24,7 @@ const items = [
 	},
 	{
 		q: 'How do updates work through the marketplace?',
-		a: 'The plugin is installed from a git-backed marketplace, so an update is a version pulled from the same source through the /plugin interface in Claude Code. You control when you update; nothing changes under you.',
+		a: 'A new version reaches you only when the plugin\'s version field is bumped. Third-party marketplaces do not auto-update by default, so you pull the latest with "/plugin marketplace update ttt-workflows" and then "/reload-plugins" — or enable auto-update for the marketplace and Claude Code refreshes it in the background and prompts the reload. Either way you decide when to update; nothing changes under you.',
 	},
 	{
 		q: 'Is my data sent anywhere?',

@@ -9,6 +9,23 @@ const description =
 	"A Claude Code plugin that bundles three self-contained skills: pr-review reviews a pull request, sec-audit runs a security audit, and trp delivers a ticket end to end. Read-only and approval-gated by design. Any repo, any tenant, open source.";
 const ogImage = `${site}${base}/og.png`;
 
+// Structured data for search engines (SoftwareApplication — a free developer tool).
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	name: "ttt-workflows",
+	description,
+	url: canonical,
+	applicationCategory: "DeveloperApplication",
+	operatingSystem: "Claude Code",
+	softwareRequirements: "Claude Code",
+	codeRepository: "https://github.com/kaelys-js/ttt-workflows",
+	license: "https://github.com/kaelys-js/ttt-workflows/blob/main/LICENSE",
+	isAccessibleForFree: true,
+	offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+	author: { "@type": "Person", name: "Cole Beuker" },
+};
+
 // GitHub Pages can't set real HTTP response headers, so we set what's possible via <meta>.
 const csp = [
 	"default-src 'self'",
@@ -38,6 +55,8 @@ const csp = [
 
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
 		<meta name="author" content="ttt-workflows" />
 		<meta name="robots" content="index, follow" />
 		<link rel="canonical" href={canonical} />
