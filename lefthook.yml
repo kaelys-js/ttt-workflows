@@ -1,36 +1,84 @@
-# Git hooks for ttt-skills. Install once:  lefthook install
-# GATES: fix failures, do not bypass with --no-verify.
+# Git hooks for ttt-skills. Install once:  ./bin/mise exec -- lefthook install
+#
+# Every tool runs through ./bin/mise exec so the hook resolves the exact
+# workspace-pinned binary (.mise/installs) regardless of host PATH — a
+# collaborator with only ./bin/mise, no host mise, still passes.
+#
+# GATES ARE UNSKIPPABLE. Do NOT push with --no-verify and do NOT set
+# LEFTHOOK_EXCLUDE. If a gate fails, fix the failing check — never skip it.
+# (One vector no config can catch: LEFTHOOK=0 disables lefthook in the git
+# wrapper before any command here runs. Don't use it.)
 
+# ─── Pre-Commit ──────────────────────────────────────────────────────────────
 pre-commit:
   parallel: false
   commands:
+    no-bypass:
+      priority: 1
+      run: |
+        if [ -n "${LEFTHOOK_EXCLUDE:-}" ]; then
+          echo "LEFTHOOK_EXCLUDE is set — gates are unskippable. Unset it and re-run."; exit 1
+        fi
     format-js:
+      priority: 2
       glob: '*.{js,mjs,json}'
-      run: oxfmt --write {staged_files} && git add {staged_files}
+      run: ./bin/mise exec -- oxfmt --write {staged_files} && git add {staged_files}
     format-sh:
+      priority: 3
       glob: '*.sh'
-      run: shfmt -w {staged_files} && git add {staged_files}
+      run: ./bin/mise exec -- shfmt -w {staged_files} && git add {staged_files}
     validate-skills:
-      run: node scripts/validate-skills.mjs
+      priority: 4
+      run: ./bin/mise exec -- node scripts/validate-skills.mjs
 
+# ─── Pre-Push ────────────────────────────────────────────────────────────────
 pre-push:
   parallel: false
   commands:
+    no-bypass:
+      priority: 1
+      run: |
+        if [ -n "${LEFTHOOK_EXCLUDE:-}" ]; then
+          echo "LEFTHOOK_EXCLUDE is set — gates are unskippable. Unset it and re-run."; exit 1
+        fi
     format-check:
-      run: oxfmt --check --ignore-path=.oxfmtignore .
+      priority: 2
+      run: ./bin/mise exec -- oxfmt --check --ignore-path=.oxfmtignore .
     lint:
-      run: oxlint
+      priority: 3
+      run: ./bin/mise exec -- oxlint
     shfmt-check:
-      run: shfmt -d $(git ls-files '*.sh')
+      priority: 4
+      run: ./bin/mise exec -- shfmt -d $(git ls-files '*.sh')
     shellcheck:
-      run: shellcheck $(git ls-files '*.sh')
+      priority: 5
+      run: ./bin/mise exec -- shellcheck $(git ls-files '*.sh')
     validate-skills:
-      run: node scripts/validate-skills.mjs
+      priority: 6
+      run: ./bin/mise exec -- node scripts/validate-skills.mjs
 
+# ─── Commit Message ──────────────────────────────────────────────────────────
 commit-msg:
+  parallel: false
   commands:
     attribution:
+      priority: 1
       run: |
         if grep -iqE 'co-authored-by|generated with|noreply@anthropic\.com|🤖' {1}; then
-          echo "AI attribution found in commit message - remove it."; exit 1
+          echo "AI attribution found in commit message — remove it."; exit 1
         fi
+    commitlint:
+      priority: 2
+      run: ./bin/mise exec -- commitlint --edit {1}
+
+# ─── Post-Checkout / Post-Merge ──────────────────────────────────────────────
+# Keep pinned tools in sync after branch switches and merges that change
+# mise.toml / mise.lock. Fast no-op when everything is already installed.
+post-merge:
+  commands:
+    tools:
+      run: ./bin/mise install
+post-checkout:
+  commands:
+    tools:
+      run: ./bin/mise install

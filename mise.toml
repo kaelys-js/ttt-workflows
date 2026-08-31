@@ -1,5 +1,43 @@
-# Toolchain for the ttt-skills repo. `mise install` provisions the exact
-# versions the formatters, linters, and hooks use. No monorepo sync machinery.
+# Toolchain for the ttt-skills repo. `./bin/mise install` provisions the exact
+# versions the formatters, linters, and hooks use, into a workspace-local
+# .mise/installs (never the host). No monorepo sync machinery.
+#
+# min_version is intentionally NOT declared — the pinned mise version is
+# enforced by ./bin/mise (which installs and execs .mise/mise-<pin>)
+# regardless of the host mise; [env]._.path below then puts ./bin first on
+# PATH so a bare `mise` resolves to that wrapper inside the workspace.
+
+[settings]
+# Let [tools] below be the single source of truth for Node; still read
+# .node-version / .nvmrc if one appears.
+idiomatic_version_file_enable_tools = ["node"]
+
+# mise owns package managers, not corepack.
+node.corepack = false
+
+# Prefer precompiled binaries when available.
+experimental = true
+
+# Don't auto-install on activate — an explicit `./bin/mise install` is safer
+# for collaborators.
+auto_install = false
+
+# Once mise.lock exists, refuse to install versions that don't match its
+# signed SHAs. First install creates it.
+lockfile = true
+
+[env]
+# Workspace-scoped tool installs — all binaries live inside the repo, never
+# in the host's shared mise data dir.
+MISE_INSTALLS_DIR = "{{config_root}}/.mise/installs"
+
+# Prepend ./bin so a bare `mise` inside this workspace resolves to the pinned
+# ./bin/mise wrapper, not the host binary.
+_.path = ["{{config_root}}/bin"]
+
+# mise manages the package manager, not corepack.
+COREPACK_ENABLE_STRICT = "0"
+
 [tools]
 node = "22"
 shfmt = "3.13.1"
@@ -7,3 +45,4 @@ shfmt = "3.13.1"
 "npm:oxlint" = "1.76.0"
 "npm:oxfmt" = "0.59.0"
 "npm:lefthook" = "1.13.6"
+"npm:@commitlint/cli" = "20.1.0"
