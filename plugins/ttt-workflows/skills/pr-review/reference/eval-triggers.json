@@ -1,0 +1,17 @@
+{
+  "note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
+  "positive": [
+    "review this PR",
+    "code review https://github.com/acme/app/pull/128",
+    "can you review pull request 42",
+    "PR review",
+    "review dev.azure.com/acme/proj/_git/app/pullrequest/9",
+    "review my pull request again, I pushed fixes"
+  ],
+  "negative": [
+    "create a pull request for this change",
+    "merge this PR to main",
+    "write a new endpoint",
+    "run the tests"
+  ]
+}

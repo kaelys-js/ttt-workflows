@@ -127,5 +127,28 @@ check("probe-ado is GET-only (no ADO write verb)", !/-X\s*(POST|PUT|PATCH|DELETE
 { const r = run("preflight.mjs", []);
   check("preflight prints an auth report", /preflight — what this run needs/.test(r.out) && /(✓|✗|–|!)/.test(r.out), (r.out||r.err||"").split("\n")[0]); }
 
+
+// ---- spec conformance + trigger eval (agentskills.io/specification) ----
+{
+  const cat = (p) => spawnSync("cat", [p], { encoding: "utf8" }).stdout || "";
+  const skillDir = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const skillName = spawnSync("basename", [skillDir], { encoding: "utf8" }).stdout.trim();
+  const md = cat(join(skillDir, "SKILL.md"));
+  const fm = md.split(/^---$/m)[1] || "";
+  const field = (k) => { const m = fm.match(new RegExp("^" + k + ":\\s?(.*)$", "m")); return m ? m[1].trim() : null; };
+  const name = field("name"), desc = field("description"), compat = field("compatibility");
+  check("spec: name valid + matches dir", !!name && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(name) && name.length <= 64 && name === skillName, name || "missing");
+  check("spec: description 1..1024 chars", !!desc && desc.length >= 1 && desc.length <= 1024, desc ? String(desc.length) : "missing");
+  check("spec: compatibility <= 500 chars", compat === null || compat.length <= 500, compat ? String(compat.length) : "n/a");
+  check("spec: SKILL.md under 500 lines", md.split("\n").length < 500, String(md.split("\n").length));
+  const ev = JSON.parse(cat(join(skillDir, "reference", "eval-triggers.json")) || "{}");
+  const STOP = new Set(["the","a","an","this","that","for","can","you","please","could","would","with","your","our","my","me","it","is","are","do","does","and","or","to","of","in","on","again","after"]);
+  const dl = (desc || "").toLowerCase();
+  const salient = (s) => (s.toLowerCase().match(/[a-z0-9.]{3,}/g) || []).filter((w) => !STOP.has(w));
+  const miss = (ev.positive || []).filter((p) => !salient(p).some((w) => dl.includes(w)));
+  check("eval: >=5 positive + >=2 negative prompts", (ev.positive || []).length >= 5 && (ev.negative || []).length >= 2, `${(ev.positive || []).length}/${(ev.negative || []).length}`);
+  check("eval: every positive prompt is covered by the description", miss.length === 0, miss.slice(0, 2).join(" | "));
+}
+
 console.log(failures ? `\n${failures} FAILURE(S)` : "\nALL GREEN");
 process.exit(failures ? 1 : 0);
