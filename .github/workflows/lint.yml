@@ -19,12 +19,12 @@ jobs:
     timeout-minutes: 20
     steps:
       # Pinned to a full commit SHA (supply-chain hardening); the comment tracks the version.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # need history to lint the commit range
           persist-credentials: false
       # Cache the workspace toolchain (mise binary + installed tools) by lockfile.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .mise
           key: mise-${{ runner.os }}-${{ hashFiles('mise.lock') }}
