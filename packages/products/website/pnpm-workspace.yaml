@@ -1,5 +1,38 @@
+# https://pnpm.io/pnpm-workspace_yaml
+
 packages:
-  - .
+  - '.'
+
+# pnpm 11 defaults to a supply-chain "release age" gate that rejects packages
+# published within the last day. With exact-pinned devDependencies + a committed
+# lockfile installed via --frozen-lockfile, the gate only ever blocks the pinned
+# toolchain itself. Disabled deliberately.
+minimumReleaseAge: 0
+
+# pnpm 11 made .npmrc auth/registry-only — non-registry settings are read from
+# HERE (or ~/.config/pnpm/config.yaml), not .npmrc. The exact-pin + engine
+# enforcement lives here now.
+saveExact: true
+savePrefix: ''
+engineStrict: true
+
+# Dependencies allowed to run install scripts (pnpm 11 replaced the
+# onlyBuiltDependencies list with this map). esbuild and sharp ship native
+# binaries their postinstall scripts fetch.
 allowBuilds:
   esbuild: true
   sharp: true
+
+# Force a specific transitive-dep version across the workspace. Overrides bypass
+# the resolver's dedupe and lockfile-hash checks, so populate only when a
+# security advisory or ecosystem incompat needs a floor above natural resolution.
+overrides: {}
+
+# Loosen pnpm's peer-dep enforcement for specific packages. Prefer fixing the
+# underlying peer mismatch upstream; populate only when a library ships an
+# overly-strict peer range or a transitive dep is missing a required peer.
+peerDependencyRules: {}
+
+# pnpm 11 catalog: share dep versions across workspace packages by name.
+# Unused here — the website is a single package.
+catalog: {}

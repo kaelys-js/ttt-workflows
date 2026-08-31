@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 
 export default function ThemeToggle() {
 	const [dark, setDark] = useState(false);
+	// Sync React to the DOM theme class set by the pre-hydration inline script (an external
+	// system the component can't read during render), so this setState-in-effect is intended.
+	// oxlint-disable-next-line react/set-state-in-effect
 	useEffect(() => setDark(document.documentElement.classList.contains('dark')), []);
 
 	function toggle() {

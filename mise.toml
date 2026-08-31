@@ -39,16 +39,16 @@ _.path = ["{{config_root}}/bin"]
 COREPACK_ENABLE_STRICT = "0"
 
 [tools]
-node = "22"
-pnpm = "11.23.0" # website package manager
-shfmt = "3.13.1"
+node = "26.8.1"
+pnpm = "11.24.0" # website package manager
+shfmt = "3.14.0"
 "aqua:koalaman/shellcheck" = "0.11.0"
-"npm:oxlint" = "1.76.0"
-"npm:oxfmt" = "0.59.0"
-"npm:lefthook" = "1.13.6"
-"npm:@commitlint/cli" = "20.1.0"
+"npm:oxlint" = "1.80.0"
+"npm:oxfmt" = "0.65.0"
+"npm:lefthook" = "2.1.12"
+"npm:@commitlint/cli" = "21.2.2"
 "aqua:typst/typst" = "0.15.1"
 yamllint = "1.38.0" # YAML lint (workflows)
-actionlint = "1.7.11" # GitHub workflow lint
+actionlint = "1.7.12" # GitHub workflow lint
 "npm:markdownlint-cli2" = "0.23.2" # Markdown lint
 "npm:@taplo/cli" = "0.7.0" # TOML lint
