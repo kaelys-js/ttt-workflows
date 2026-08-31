@@ -17,35 +17,67 @@
 # network egress is whatever those tools already do (e.g. the OSV database query).
 set -euo pipefail
 
-SCAN_ROOT="."; OUT="./candidates.jsonl"; FILTER=""; MODE="run"
+SCAN_ROOT="."
+OUT="./candidates.jsonl"
+FILTER=""
+MODE="run"
 while [ $# -gt 0 ]; do
   case "$1" in
-    --evidence) SCAN_ROOT="$2"; shift 2 ;;
-    --out) OUT="$2"; shift 2 ;;
-    --category) FILTER="$2"; shift 2 ;;
-    --dry-run) MODE="dry-run"; shift ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
-    *) echo "find-findings: unknown arg: $1 (try --help)" >&2; exit 2 ;;
+    --evidence)
+      SCAN_ROOT="$2"
+      shift 2
+      ;;
+    --out)
+      OUT="$2"
+      shift 2
+      ;;
+    --category)
+      FILTER="$2"
+      shift 2
+      ;;
+    --dry-run)
+      MODE="dry-run"
+      shift
+      ;;
+    -h | --help)
+      sed -n '2,20p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "find-findings: unknown arg: $1 (try --help)" >&2
+      exit 2
+      ;;
   esac
 done
-[ -e "$SCAN_ROOT" ] || { echo "find-findings: scan root not found: $SCAN_ROOT" >&2; exit 1; }
+[ -e "$SCAN_ROOT" ] || {
+  echo "find-findings: scan root not found: $SCAN_ROOT" >&2
+  exit 1
+}
 
 : > "$OUT"
 want() { [ -z "$FILTER" ] || [ "$FILTER" = "$1" ]; }
-have() { command -v "$1" >/dev/null 2>&1; }
-emit() { printf '%s\n' "$1" >> "$OUT"; }             # one candidate JSON object per line
+have() { command -v "$1" > /dev/null 2>&1; }
+emit() { printf '%s\n' "$1" >> "$OUT"; } # one candidate JSON object per line
 note() { printf '   %s\n' "$*" >&2; }
 skipped=()
 
 echo "== scanner sweep — root=$SCAN_ROOT  filter=${FILTER:-all}  mode=$MODE  out=$OUT" >&2
 
 run_tool() { # category tool json-cmd...
-  local cat="$1" tool="$2"; shift 2
+  local cat="$1" tool="$2"
+  shift 2
   want "$cat" || return 0
-  if ! have "$tool"; then skipped+=("$tool ($cat)"); note "skip: $tool not installed"; return 0; fi
-  if [ "$MODE" = "dry-run" ]; then note "would run: $tool over $SCAN_ROOT ($cat)"; return 0; fi
+  if ! have "$tool"; then
+    skipped+=("$tool ($cat)")
+    note "skip: $tool not installed"
+    return 0
+  fi
+  if [ "$MODE" = "dry-run" ]; then
+    note "would run: $tool over $SCAN_ROOT ($cat)"
+    return 0
+  fi
   note "run: $tool ($cat)"
-  "$@" 2>/dev/null || true
+  "$@" 2> /dev/null || true
 }
 
 # --- secrets --------------------------------------------------------------

@@ -1,18 +1,18 @@
 {
-  "name": "ttt-skills",
-  "owner": {
-    "name": "Cole Beuker"
-  },
-  "metadata": {
-    "description": "TTT Studios engineering workflow skills.",
-    "version": "1.0.0",
-    "pluginRoot": "./plugins"
-  },
-  "plugins": [
-    {
-      "name": "ttt-workflows",
-      "source": "./plugins/ttt-workflows",
-      "description": "sec-audit + trp + pr-review, bundled."
-    }
-  ]
+	"name": "ttt-skills",
+	"owner": {
+		"name": "Cole Beuker"
+	},
+	"metadata": {
+		"description": "TTT Studios engineering workflow skills.",
+		"version": "1.0.0",
+		"pluginRoot": "./plugins"
+	},
+	"plugins": [
+		{
+			"name": "ttt-workflows",
+			"source": "./plugins/ttt-workflows",
+			"description": "sec-audit + trp + pr-review, bundled."
+		}
+	]
 }

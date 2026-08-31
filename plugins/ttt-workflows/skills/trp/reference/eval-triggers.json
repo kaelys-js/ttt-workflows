@@ -1,16 +1,16 @@
 {
-  "note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
-  "positive": [
-    "TRP Process for: https://app.clickup.com/t/abc123",
-    "run the Task Resolution Protocol on this ticket",
-    "deliver this ClickUp ticket end to end",
-    "TRP this task",
-    "task resolution protocol for app.clickup.com/t/xyz"
-  ],
-  "negative": [
-    "review this PR",
-    "audit our security",
-    "what does this function do?",
-    "create a ClickUp ticket for me"
-  ]
+	"note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
+	"positive": [
+		"TRP Process for: https://app.clickup.com/t/abc123",
+		"run the Task Resolution Protocol on this ticket",
+		"deliver this ClickUp ticket end to end",
+		"TRP this task",
+		"task resolution protocol for app.clickup.com/t/xyz"
+	],
+	"negative": [
+		"review this PR",
+		"audit our security",
+		"what does this function do?",
+		"create a ClickUp ticket for me"
+	]
 }

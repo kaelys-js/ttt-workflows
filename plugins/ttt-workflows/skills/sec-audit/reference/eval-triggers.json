@@ -1,18 +1,18 @@
 {
-  "note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
-  "positive": [
-    "security audit of this repo",
-    "find vulnerabilities in oms-be",
-    "run a security review on https://github.com/acme/app",
-    "is the /users update endpoint exploitable?",
-    "SFP sweep of the codebase",
-    "build a PoC for SEC-01",
-    "audit our Azure for security issues"
-  ],
-  "negative": [
-    "review this pull request",
-    "deploy to production",
-    "write API documentation",
-    "optimize this SQL query"
-  ]
+	"note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
+	"positive": [
+		"security audit of this repo",
+		"find vulnerabilities in oms-be",
+		"run a security review on https://github.com/acme/app",
+		"is the /users update endpoint exploitable?",
+		"SFP sweep of the codebase",
+		"build a PoC for SEC-01",
+		"audit our Azure for security issues"
+	],
+	"negative": [
+		"review this pull request",
+		"deploy to production",
+		"write API documentation",
+		"optimize this SQL query"
+	]
 }

@@ -1,0 +1,9 @@
+# Toolchain for the ttt-skills repo. `mise install` provisions the exact
+# versions the formatters, linters, and hooks use. No monorepo sync machinery.
+[tools]
+node = "22"
+shfmt = "3.13.1"
+"aqua:koalaman/shellcheck" = "0.11.0"
+"npm:oxlint" = "1.76.0"
+"npm:oxfmt" = "0.59.0"
+"npm:lefthook" = "1.13.6"

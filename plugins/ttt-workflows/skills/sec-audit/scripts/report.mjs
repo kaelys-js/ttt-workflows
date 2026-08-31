@@ -10,75 +10,143 @@
 //     osv-be.json coverage.json expansion.json source-findings.json
 //   Every input is optional; the report renders whatever is present and says what was absent.
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const args = process.argv.slice(2);
-const KNOWN = new Set(["--dir", "--title", "--out", "--target", "--sha"]);
-for (let i = 0; i < args.length; i++) if (args[i].startsWith("--")) { if (!KNOWN.has(args[i])) die(`unknown flag ${args[i]}`); if (!args[i+1] || args[i+1].startsWith("--")) die(`${args[i]} needs a value`); i++; }
-const opt = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
-const dir = opt("--dir", ".");
-const title = opt("--title", "Security Audit");
-const target = opt("--target", "");
-const sha = opt("--sha", "");
-const out = opt("--out", "report.html");
-function die(m) { console.error(`report: ${m}`); process.exit(1); }
-const load = (name) => { const p = join(dir, name); if (!existsSync(p)) return null; try { return JSON.parse(readFileSync(p, "utf8")); } catch (e) { console.error(`report: warn — ${name}: ${e.message}`); return null; } };
+const KNOWN = new Set(['--dir', '--title', '--out', '--target', '--sha']);
+for (let i = 0; i < args.length; i++) {
+	if (args[i].startsWith('--')) {
+		if (!KNOWN.has(args[i])) {
+			die(`unknown flag ${args[i]}`);
+		}
+		if (!args[i + 1] || args[i + 1].startsWith('--')) {
+			die(`${args[i]} needs a value`);
+		}
+		i++;
+	}
+}
+const opt = (f, d) => {
+	const i = args.indexOf(f);
+	return i >= 0 ? args[i + 1] : d;
+};
+const dir = opt('--dir', '.');
+const title = opt('--title', 'Security Audit');
+const target = opt('--target', '');
+const sha = opt('--sha', '');
+const out = opt('--out', 'report.html');
+function die(m) {
+	console.error(`report: ${m}`);
+	process.exit(1);
+}
+const load = (name) => {
+	const p = join(dir, name);
+	if (!existsSync(p)) {
+		return null;
+	}
+	try {
+		return JSON.parse(readFileSync(p, 'utf8'));
+	} catch (error) {
+		console.error(`report: warn — ${name}: ${error.message}`);
+		return null;
+	}
+};
 
 // ---- gather ----
-const azure = load("azure-findings.json");
-const entra = load("entra-findings.json");
-const ado = load("ado-findings.json");
-const osvFile = readdirSync(dir).filter((n)=>/^osv.*\.json$/.test(n))[0];
+const azure = load('azure-findings.json');
+const entra = load('entra-findings.json');
+const ado = load('ado-findings.json');
+const osvFile = readdirSync(dir).filter((n) => /^osv.*\.json$/.test(n))[0];
 const osv = osvFile ? load(osvFile) : null;
-const coverage = load("coverage.json");
-const expansion = load("expansion.json");
-const source = load("source-findings.json"); // optional pre-aggregated source findings
+const coverage = load('coverage.json');
+const expansion = load('expansion.json');
+const source = load('source-findings.json'); // optional pre-aggregated source findings
 
 const layers = [];
 const push = (layer, arr) => arr && arr.forEach((f) => layers.push({ ...f, layer }));
-push("Live Azure (ARM)", azure?.findings);
-push("Live Entra (Graph)", entra?.findings);
-push("Live ADO (pipeline)", ado?.findings);
-push("Source / IaC", source?.findings);
-if (expansion?.findings) expansion.findings.forEach((f) => layers.push({ ...f, layer: "Expansion (net-new)", id_hint: f.overlaps_sec || "NEW", novel: true, evidence: f.evidence }));
-const osvCount = osv?.results ? osv.results.flatMap((r) => (r.packages || []).flatMap((p) => p.vulnerabilities || [])).length : 0;
+push('Live Azure (ARM)', azure?.findings);
+push('Live Entra (Graph)', entra?.findings);
+push('Live ADO (pipeline)', ado?.findings);
+push('Source / IaC', source?.findings);
+if (expansion?.findings) {
+	expansion.findings.forEach((f) =>
+		layers.push({
+			...f,
+			layer: 'Expansion (net-new)',
+			id_hint: f.overlaps_sec || 'NEW',
+			novel: true,
+			evidence: f.evidence,
+		}),
+	);
+}
+const osvCount = osv?.results
+	? osv.results.flatMap((r) => (r.packages || []).flatMap((p) => p.vulnerabilities || [])).length
+	: 0;
 
 // ---- severity ordering + palette classes ----
-const SEV = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
-const sevRank = (s) => { const i = SEV.indexOf((s || "INFO").toUpperCase()); return i < 0 ? 4 : i; };
+const SEV = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
+const sevRank = (s) => {
+	const i = SEV.indexOf((s || 'INFO').toUpperCase());
+	return i < 0 ? 4 : i;
+};
 layers.sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
-const sevCount = SEV.reduce((m, s) => ((m[s] = layers.filter((f) => (f.severity || "").toUpperCase() === s).length), m), {});
+const sevCount = SEV.reduce(
+	(m, s) => ((m[s] = layers.filter((f) => (f.severity || '').toUpperCase() === s).length), m),
+	{},
+);
 
 // ---- coverage stats ----
 const cov = coverage?.cov || [];
-const covStat = { found: cov.filter((c) => c.status === "found").length, remediated: cov.filter((c) => c.status === "remediated").length, gap: cov.filter((c) => c.status === "gap").length, total: cov.length };
+const covStat = {
+	found: cov.filter((c) => c.status === 'found').length,
+	remediated: cov.filter((c) => c.status === 'remediated').length,
+	gap: cov.filter((c) => c.status === 'gap').length,
+	total: cov.length,
+};
 
-const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) =>
+	String(s === null ? '' : s).replaceAll(
+		/[&<>"]/g,
+		(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
+	);
 const now = new Date().toISOString().slice(0, 10);
 
 // ---- finding card ----
 const card = (f) => `
-  <article class="finding sev-${(f.severity||"info").toLowerCase()}">
+  <article class="finding sev-${(f.severity || 'info').toLowerCase()}">
     <header>
-      <span class="sev">${esc(f.severity||"INFO")}</span>
-      <span class="fid">${esc(f.id_hint||f.overlaps_sec||"—")}</span>
+      <span class="sev">${esc(f.severity || 'INFO')}</span>
+      <span class="fid">${esc(f.id_hint || f.overlaps_sec || '—')}</span>
       <span class="layer">${esc(f.layer)}</span>
     </header>
-    <h4>${esc(f.title || f.class || f.evidence?.slice(0,80) || "finding")}</h4>
-    ${f.resource ? `<div class="res">${esc(f.resource)}</div>` : ""}
-    ${f.file ? `<div class="res">${esc(f.file)}${f.line?":"+esc(f.line):""}</div>` : ""}
-    <p class="ev">${esc(f.evidence || "")}</p>
-    ${f.cvss ? `<div class="cvss">${esc(f.cvss)}</div>` : ""}
-    ${f.reason ? `<div class="ev muted">verified: ${esc(f.reason)}</div>` : ""}
+    <h4>${esc(f.title || f.class || f.evidence?.slice(0, 80) || 'finding')}</h4>
+    ${f.resource ? `<div class="res">${esc(f.resource)}</div>` : ''}
+    ${f.file ? `<div class="res">${esc(f.file)}${f.line ? `:${esc(f.line)}` : ''}</div>` : ''}
+    <p class="ev">${esc(f.evidence || '')}</p>
+    ${f.cvss ? `<div class="cvss">${esc(f.cvss)}</div>` : ''}
+    ${f.reason ? `<div class="ev muted">verified: ${esc(f.reason)}</div>` : ''}
   </article>`;
 
 // ---- coverage grid cell ----
-const covCell = (c) => `<a class="cell ${c.status}" title="${esc(c.id)} — ${esc(c.title)} [${esc(c.status)}${c.layers?.length?" · "+esc(c.layers.join("+")):""}]">${esc(c.id.replace(/^[A-Za-z]+-/,""))}</a>`;
+const covCell = (c) =>
+	`<a class="cell ${c.status}" title="${esc(c.id)} — ${esc(c.title)} [${esc(c.status)}${c.layers?.length ? ` · ${esc(c.layers.join('+'))}` : ''}]">${esc(c.id.replace(/^[A-Za-z]+-/, ''))}</a>`;
 
-const bar = SEV.map((s) => sevCount[s] ? `<span class="seg sev-${s.toLowerCase()}" style="flex:${sevCount[s]}" title="${s}: ${sevCount[s]}">${sevCount[s]}</span>` : "").join("");
+const bar = SEV.map((s) =>
+	sevCount[s]
+		? `<span class="seg sev-${s.toLowerCase()}" style="flex:${sevCount[s]}" title="${s}: ${sevCount[s]}">${sevCount[s]}</span>`
+		: '',
+).join('');
 
-const absent = [["source-findings.json", source], ["azure", azure], ["entra", entra], ["ado", ado], ["coverage", coverage], ["expansion", expansion]].filter(([, v]) => !v).map(([k]) => k);
+const absent = [
+	['source-findings.json', source],
+	['azure', azure],
+	['entra', entra],
+	['ado', ado],
+	['coverage', coverage],
+	['expansion', expansion],
+]
+	.filter(([, v]) => !v)
+	.map(([k]) => k);
 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
@@ -133,47 +201,57 @@ h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 </style></head><body><div class="wrap">
 <h1>${esc(title)}</h1>
-<div class="sub">${target?`Target <span class="mono">${esc(target)}</span> · `:""}${sha?`<span class="mono">@${esc(sha)}</span> · `:""}Generated ${now} · three-layer audit (source/IaC · live Azure · live Entra/ADO) · read-only</div>
+<div class="sub">${target ? `Target <span class="mono">${esc(target)}</span> · ` : ''}${sha ? `<span class="mono">@${esc(sha)}</span> · ` : ''}Generated ${now} · three-layer audit (source/IaC · live Azure · live Entra/ADO) · read-only</div>
 
 <div class="kpis">
-  <div class="kpi crit"><div class="n">${sevCount.CRITICAL||0}</div><div class="l">Critical</div></div>
-  <div class="kpi"><div class="n">${sevCount.HIGH||0}</div><div class="l">High</div></div>
+  <div class="kpi crit"><div class="n">${sevCount.CRITICAL || 0}</div><div class="l">Critical</div></div>
+  <div class="kpi"><div class="n">${sevCount.HIGH || 0}</div><div class="l">High</div></div>
   <div class="kpi"><div class="n">${layers.length}</div><div class="l">Live findings</div></div>
-  ${cov.length?`<div class="kpi ok"><div class="n">${covStat.found}/${covStat.total}</div><div class="l">GAP-LIST found</div></div>`:""}
-  ${expansion?`<div class="kpi"><div class="n">${expansion.confirmed_novel??0}</div><div class="l">Net-new confirmed</div></div>`:""}
+  ${cov.length > 0 ? `<div class="kpi ok"><div class="n">${covStat.found}/${covStat.total}</div><div class="l">GAP-LIST found</div></div>` : ''}
+  ${expansion ? `<div class="kpi"><div class="n">${expansion.confirmed_novel ?? 0}</div><div class="l">Net-new confirmed</div></div>` : ''}
 </div>
 
 <div class="panel">
-  <div class="note">Severity distribution across ${layers.length} live findings${osvCount?` (+ ${osvCount} dependency CVEs from the scanner layer)`:""}</div>
-  <div class="distbar">${bar||'<span class="seg sev-info" style="flex:1">no findings loaded</span>'}</div>
+  <div class="note">Severity distribution across ${layers.length} live findings${osvCount ? ` (+ ${osvCount} dependency CVEs from the scanner layer)` : ''}</div>
+  <div class="distbar">${bar || '<span class="seg sev-info" style="flex:1">no findings loaded</span>'}</div>
 </div>
 
-${cov.length?`<h2>GAP-LIST coverage — ${covStat.found} found · ${covStat.remediated} remediated · ${covStat.gap} gap</h2>
+${
+	cov.length > 0
+		? `<h2>GAP-LIST coverage — ${covStat.found} found · ${covStat.remediated} remediated · ${covStat.gap} gap</h2>
 <div class="note">Each cell is a known finding from the supplied list. Hover for detail. This audit accounts for every one: found by a layer, or verified remediated in the live estate.</div>
-<div class="grid">${cov.map(covCell).join("")}</div>
-<div class="legend"><span><b style="background:var(--low)"></b>found by a layer</span><span><b style="background:var(--info)"></b>remediated (verified absent)</span><span><b style="background:var(--crit)"></b>uncovered gap</span></div>`:""}
+<div class="grid">${cov.map(covCell).join('')}</div>
+<div class="legend"><span><b style="background:var(--low)"></b>found by a layer</span><span><b style="background:var(--info)"></b>remediated (verified absent)</span><span><b style="background:var(--crit)"></b>uncovered gap</span></div>`
+		: ''
+}
 
-${expansion?.findings?.length?`<h2>Net-new findings — beyond the known list</h2>
+${
+	expansion?.findings?.length
+		? `<h2>Net-new findings — beyond the known list</h2>
 <div class="note">${expansion.confirmed_novel} confirmed of ${expansion.novel_candidates} novel candidates across ${expansion.surfaces} surfaces (adversarially verified).</div>
-${expansion.findings.map((f)=>card({...f,layer:"Expansion (net-new)",id_hint:"NEW"})).join("")}`:""}
+${expansion.findings.map((f) => card({ ...f, layer: 'Expansion (net-new)', id_hint: 'NEW' })).join('')}`
+		: ''
+}
 
 <h2>Findings by severity</h2>
-${layers.length?layers.map(card).join(""):'<div class="note">No layer findings loaded — pass --dir at a directory holding the *-findings.json files.</div>'}
+${layers.length > 0 ? layers.map(card).join('') : '<div class="note">No layer findings loaded — pass --dir at a directory holding the *-findings.json files.</div>'}
 
 <h2>Methodology &amp; frameworks</h2>
 <div class="panel">
   <div class="note">Findings graded against current professional standards. Evidence tiers explicit: live-probe (ARM/Graph GET) and source-traced (file:line) outrank deployment-dependent inference.</div>
   <div class="frameworks">
-    ${["PTES","OWASP WSTG v4.2","OWASP ASVS","NIST SP 800-115","CVSS 4.0","CWE","MITRE ATT&CK","CIS Azure","Coordinated Disclosure"].map((c)=>`<span class="chip">${c}</span>`).join("")}
+    ${['PTES', 'OWASP WSTG v4.2', 'OWASP ASVS', 'NIST SP 800-115', 'CVSS 4.0', 'CWE', 'MITRE ATT&CK', 'CIS Azure', 'Coordinated Disclosure'].map((c) => `<span class="chip">${c}</span>`).join('')}
   </div>
 </div>
 
 <footer>
-  Layers loaded: ${[azure&&"live-azure",entra&&"live-entra",ado&&"live-ado",source&&"source/IaC",osv&&"scanner",expansion&&"expansion"].filter(Boolean).join(" · ")||"none"}.
-  ${absent.length?`Absent (not run / not supplied): ${absent.join(", ")}.`:""}
+  Layers loaded: ${[azure && 'live-azure', entra && 'live-entra', ado && 'live-ado', source && 'source/IaC', osv && 'scanner', expansion && 'expansion'].filter(Boolean).join(' · ') || 'none'}.
+  ${absent.length > 0 ? `Absent (not run / not supplied): ${absent.join(', ')}.` : ''}
   Read-only audit. No PR, ticket, or client resource was mutated. No AI attribution.
 </footer>
 </div></body></html>`;
 
 writeFileSync(out, html);
-console.log(`wrote ${out} — ${layers.length} findings · ${sevCount.CRITICAL||0} crit / ${sevCount.HIGH||0} high${cov.length?` · coverage ${covStat.found}/${covStat.total} found, ${covStat.remediated} remediated, ${covStat.gap} gap`:""}`);
+console.log(
+	`wrote ${out} — ${layers.length} findings · ${sevCount.CRITICAL || 0} crit / ${sevCount.HIGH || 0} high${cov.length > 0 ? ` · coverage ${covStat.found}/${covStat.total} found, ${covStat.remediated} remediated, ${covStat.gap} gap` : ''}`,
+);

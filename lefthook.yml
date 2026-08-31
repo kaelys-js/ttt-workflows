@@ -1,0 +1,36 @@
+# Git hooks for ttt-skills. Install once:  lefthook install
+# GATES: fix failures, do not bypass with --no-verify.
+
+pre-commit:
+  parallel: false
+  commands:
+    format-js:
+      glob: '*.{js,mjs,json}'
+      run: oxfmt --write {staged_files} && git add {staged_files}
+    format-sh:
+      glob: '*.sh'
+      run: shfmt -w {staged_files} && git add {staged_files}
+    validate-skills:
+      run: node scripts/validate-skills.mjs
+
+pre-push:
+  parallel: false
+  commands:
+    format-check:
+      run: oxfmt --check --ignore-path=.oxfmtignore .
+    lint:
+      run: oxlint
+    shfmt-check:
+      run: shfmt -d $(git ls-files '*.sh')
+    shellcheck:
+      run: shellcheck $(git ls-files '*.sh')
+    validate-skills:
+      run: node scripts/validate-skills.mjs
+
+commit-msg:
+  commands:
+    attribution:
+      run: |
+        if grep -iqE 'co-authored-by|generated with|noreply@anthropic\.com|🤖' {1}; then
+          echo "AI attribution found in commit message - remove it."; exit 1
+        fi

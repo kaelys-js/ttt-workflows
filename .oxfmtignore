@@ -1,0 +1,6 @@
+node_modules/
+.git/
+dist/
+build/
+# markdown is hand-authored (reference docs, --help layouts) — never machine-format it
+*.md

@@ -262,8 +262,6 @@ dist_electron/
 
 # Monorepo Dev Tools
 .changeset/
-skills/
-.agents/
 .serena/*.log
 .serena/cache/
 .serena/logs/

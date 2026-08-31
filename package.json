@@ -1,0 +1,16 @@
+{
+	"name": "ttt-skills",
+	"private": true,
+	"description": "Claude Code skills marketplace — the ttt-workflows plugin (pr-review, sec-audit, trp).",
+	"type": "module",
+	"scripts": {
+		"format": "oxfmt --write --ignore-path=.oxfmtignore .",
+		"format:check": "oxfmt --check --ignore-path=.oxfmtignore .",
+		"lint": "oxlint",
+		"shfmt": "shfmt -w $(git ls-files '*.sh')",
+		"shfmt:check": "shfmt -d $(git ls-files '*.sh')",
+		"shellcheck": "shellcheck $(git ls-files '*.sh')",
+		"validate": "node scripts/validate-skills.mjs",
+		"check": "npm run format:check && npm run lint && npm run shfmt:check && npm run shellcheck && npm run validate"
+	}
+}
