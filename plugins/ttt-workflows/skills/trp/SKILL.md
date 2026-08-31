@@ -1,6 +1,11 @@
 ---
 name: trp
 description: Runs the Task Resolution Protocol (TRP) end to end for a ClickUp ticket — grounds the ticket in the actual repo with evidence, assembles the Full TRP Package changelog (phases 0-5), STOPS for explicit approval, then implements, verifies through the local gates plus CodeRabbit and the pr-review skill, opens the PR, and posts the two-layer ClickUp update. Works for Wheaton OMS (Azure DevOps) and ITC (GitHub) tickets. Use when the user says "TRP Process for", "TRP", "Task Resolution Protocol", or pastes an app.clickup.com task URL asking for delivery of that ticket.
+license: Proprietary. See LICENSE.
+compatibility: Requires node, git, a ClickUp token, and gh (ITC) or az (Wheaton); network access to ClickUp and the git host.
+metadata:
+  author: ttt-studios
+  version: "1.1.0"
 ---
 
 # trp

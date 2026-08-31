@@ -1,6 +1,11 @@
 ---
 name: pr-review
 description: Runs a full end-to-end pull request review from a GitHub or Azure DevOps PR URL and returns a paste-ready review comment — it never posts, comments, or otherwise mutates the PR. Fetches the diff, metadata, and existing threads read-only, reviews against a design/correctness/security/tests/behaviour rubric, verifies every finding against the real diff, and outputs a compact, deterministic, plain-language review with severity-labelled findings. Use when the user asks to review a pull request, pastes a github.com or dev.azure.com pull-request link, or says "PR review", "review this PR", or "code review".
+license: Proprietary. See LICENSE.
+compatibility: Requires node and git, plus gh (GitHub) or az (Azure DevOps); network access to the PR host. Optional: a ClickUp token for ticket-linked PRs.
+metadata:
+  author: ttt-studios
+  version: "1.1.0"
 ---
 
 # pr-review
