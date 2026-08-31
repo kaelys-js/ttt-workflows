@@ -1,0 +1,53 @@
+name: Lint
+# Format-check + lint every file type AND lint commit messages, using the same
+# mise-pinned tools and the same lefthook pre-push gate that runs locally.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Pinned to a full commit SHA (supply-chain hardening); the comment tracks the version.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0 # need history to lint the commit range
+          persist-credentials: false
+      # Cache the workspace toolchain (mise binary + installed tools) by lockfile.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .mise
+          key: mise-${{ runner.os }}-${{ hashFiles('mise.lock') }}
+          restore-keys: |
+            mise-${{ runner.os }}-
+      - name: Install the pinned toolchain
+        run: ./bin/mise install
+      - name: Install website deps (for the astro/css/oxlint checks)
+        run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm install --frozen-lockfile'
+      - name: Format-check + lint (all file types)
+        run: ./bin/mise exec -- lefthook run pre-push --all-files
+      - name: Lint commit messages
+        env: # values via env (never interpolated into the script) — injection-safe
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            ./bin/mise exec -- commitlint --from "$PR_BASE" --to "$PR_HEAD"
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            ./bin/mise exec -- commitlint --from "$BEFORE" --to "$SHA"
+          else
+            ./bin/mise exec -- commitlint --from "HEAD~1" --to HEAD
+          fi

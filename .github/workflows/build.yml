@@ -1,0 +1,43 @@
+name: Build
+# Build the marketing site (and type-check it) on every push/PR so breakage is
+# caught before it reaches the Pages deploy. The lint workflow covers the skills
+# validation and the docs-drift check; this one covers the astro build.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read # least privilege: this workflow only reads the repo
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true # a newer push supersedes an in-flight build
+
+defaults:
+  run:
+    working-directory: packages/products/website
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+        with:
+          version: 11.23.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: packages/products/website/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Type-check the site
+        run: pnpm check
+      - name: Build the site
+        run: pnpm build
+      - name: Confirm the site built
+        run: test -f dist/index.html
