@@ -1,13 +1,13 @@
 # TRP templates
 
 The Full TRP Package (the approval-gate deliverable), the PR bodies, and the
-two-layer ClickUp comment. Shapes are from real delivered TRPs (WPMP3-229 is the
+two-layer ClickUp comment. Shapes are from real delivered TRPs (a generic specimen is the
 reference specimen); fill with real evidence, never placeholders.
 
 ## Contents
 - The Full TRP Package
-- PR body — Wheaton (ADO)
-- PR body — ITC (GitHub)
+- PR body — Azure DevOps
+- PR body — GitHub
 - Two-layer ClickUp comment
 
 ## The Full TRP Package
@@ -66,7 +66,7 @@ reviewers; the full drafted PR body>
 <status transitions planned; the drafted two-layer comment>
 ````
 
-## PR body — Wheaton (ADO, 4000-char cap — `wc -c` before the REST call)
+## PR body — Azure DevOps (4000-char cap — `wc -c` before the REST call)
 
 ```markdown
 # Ticket Link
@@ -87,7 +87,7 @@ https://app.clickup.com/t/<team>/<TICKET-ID>
 <trim first when over the cap>
 ```
 
-## PR body — ITC (GitHub)
+## PR body — GitHub
 
 Match the repo's PR template if one exists; otherwise the same section shape as
 above. Link the ClickUp ticket; note CodeRabbit is the CI reviewer and its threads

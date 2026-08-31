@@ -223,7 +223,7 @@ function findTicketRefs(pr) {
   // clickup URLs: app.clickup.com/t/<id> or app.clickup.com/t/<team>/<CUSTOM-ID>
   for (const m of hay.matchAll(/app\.clickup\.com\/t\/(?:(\d+)\/)?([A-Za-z0-9_-]+)/g))
     refs.push({ id: m[2], custom: /^[A-Z][A-Z0-9_]*-\d+$/.test(m[2]) });
-  // custom task ids in prose/branch: WPMP3-261, ITC-477, HAND_ITC-340.
+  // custom task ids in prose/branch: PROJ-261, TEAM-477.
   // Deny common technical tokens that share the shape (SHA-256, UTF-8, ISO-8601, …).
   const DENY = new Set(["SHA", "UTF", "ISO", "RFC", "CVE", "AES", "RSA", "TLS", "HTTP", "HTTP2", "MD", "PG", "IP", "EC", "OAUTH2", "ES", "P", "V"]);
   for (const m of hay.matchAll(/\b([A-Z][A-Z0-9_]{1,15}-\d{1,6})\b/g)) {

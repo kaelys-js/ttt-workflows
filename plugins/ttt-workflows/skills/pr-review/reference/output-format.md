@@ -37,7 +37,7 @@ Two layers. The scan layer is always visible; the depth layer holds the detail.
    whether it is mergeable.
 3. **Does:** the behavioural trace, right after the TL;DR — orientation lives in the
    scan layer, not the footer.
-4. **Ticket line** (when the PR resolves one): `**Ticket:** [WPMP3-261](url) · status`,
+4. **Ticket line** (when the PR resolves one): `**Ticket:** [PROJ-261](url) · status`,
    appending ` — "name"` only when the ticket name differs from the PR title.
 5. **Mergeable after** (request-changes only): the numbered blocking headlines, so the exact
    path to merge is one line: `**Mergeable after:** #1 … · #2 …`.

@@ -28,9 +28,9 @@ const ENV = { CLICKUP_TOKEN: "pk_selftest_dummy" };
 // ---- fetch-ticket: ref parsing (fails at network, which proves parse ran) ----
 
 for (const [name, ref, expectIn] of [
-  ["custom id URL", "https://app.clickup.com/t/8593845/WPMP3-229", "task/WPMP3-229"],
+  ["custom id URL", "https://app.clickup.com/t/8593845/PROJ-123", "task/PROJ-123"],
   ["raw id URL", "https://app.clickup.com/t/868kmd1n7", "task/868kmd1n7"],
-  ["bare custom id", "HAND_ITC-487", "task/HAND_ITC-487"],
+  ["bare custom id", "HAND_GitHub-487", "task/HAND_GitHub-487"],
 ]) {
   const r = run("fetch-ticket.mjs", [ref, "--out", join(tmp, "t.json")], { ...ENV, CLICKUP_TEAM_ID: "1" });
   // dummy token → ClickUp 401; the error URL proves the ref parsed to the right endpoint
@@ -48,18 +48,18 @@ writeFileSync(attr, "**Summary (non-technical):** x\n\n**Technical detail:** Gen
 const single = join(tmp, "single.md");
 writeFileSync(single, "only one layer here\n");
 
-let r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", attr], ENV);
+let r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", attr], ENV);
 check("update refuses attribution (pre-network)", r.code !== 0 && /attribution scan FAILED/.test(r.err) && !/ClickUp/.test(r.err), r.err.trim().slice(0, 100));
 
-r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", single], ENV);
+r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", single], ENV);
 check("update refuses single-layer (pre-network)", r.code !== 0 && /two-layer check FAILED/.test(r.err), r.err.trim().slice(0, 100));
 
-r = run("clickup-update.mjs", ["WPMP3-1"], ENV);
+r = run("clickup-update.mjs", ["PROJ-1"], ENV);
 check("update refuses no-op invocation", r.code !== 0 && /nothing to do/.test(r.err));
 
 // dry-run safety: with a good body + dummy token, the only network call is the initial
 // GET resolve — it 401s, proving no write path was reached before task resolution.
-r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", good], ENV);
+r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", good], ENV);
 check("dry-run reaches only the resolve GET (401, no write)", r.code !== 0 && /ClickUp GET 401/.test(r.err), r.err.trim().slice(0, 100));
 
 // static guard: PUT/POST appear only after the dry-run exit
@@ -73,16 +73,16 @@ check("write verbs only after the dry-run exit", dryExit > 0 && firstPut > dryEx
 check("attribution scan covers model names + robot emoji", /opus|sonnet|haiku/.test(src) && src.includes("1F916"));
 
 // unknown-flag refusals (typo safety: --liv must NOT silently dry-run)
-r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", good, "--liv"], ENV);
+r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", good, "--liv"], ENV);
 check("update refuses typo'd --liv", r.code !== 0 && /unknown flag/.test(r.err), r.err.trim().slice(0, 90));
-r = run("fetch-ticket.mjs", ["WPMP3-1", "--otu", "x.json"], ENV);
+r = run("fetch-ticket.mjs", ["PROJ-1", "--otu", "x.json"], ENV);
 check("fetch-ticket refuses typo'd flag", r.code !== 0 && /unknown flag/.test(r.err), r.err.trim().slice(0, 90));
 
-r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", good, "--status"], ENV);
+r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", good, "--status"], ENV);
 check("update refuses --status with missing value", r.code !== 0 && /needs a value/.test(r.err), r.err.trim().slice(0, 90));
-r = run("fetch-ticket.mjs", ["WPMP3-1", "--out"], ENV);
+r = run("fetch-ticket.mjs", ["PROJ-1", "--out"], ENV);
 check("fetch-ticket refuses --out with missing value", r.code !== 0 && /needs a value/.test(r.err), r.err.trim().slice(0, 90));
-r = run("clickup-update.mjs", ["WPMP3-1", "--comment-file", join(tmp, "cop.md")], ENV, writeFileSync(join(tmp, "cop.md"), "**Summary (non-technical):** x\n\n**Technical detail:** reviewed by Copilot\n"));
+r = run("clickup-update.mjs", ["PROJ-1", "--comment-file", join(tmp, "cop.md")], ENV, writeFileSync(join(tmp, "cop.md"), "**Summary (non-technical):** x\n\n**Technical detail:** reviewed by Copilot\n"));
 check("update refuses other-vendor attribution (copilot)", r.code !== 0 && /attribution scan FAILED/.test(r.err), r.err.trim().slice(0, 90));
 
 

@@ -1,8 +1,8 @@
 ---
 name: trp
-description: Runs the Task Resolution Protocol (TRP) end to end for a ClickUp ticket — grounds the ticket in the actual repo with evidence, assembles the Full TRP Package changelog (phases 0-5), STOPS for explicit approval, then implements, verifies through the local gates plus CodeRabbit and the pr-review skill, opens the PR, and posts the two-layer ClickUp update. Works for Wheaton OMS (Azure DevOps) and ITC (GitHub) tickets. Use when the user says "TRP Process for", "TRP", "Task Resolution Protocol", or pastes an app.clickup.com task URL asking for delivery of that ticket.
+description: Runs the Task Resolution Protocol (TRP) end to end for a ClickUp ticket — grounds the ticket in the actual repo with evidence, assembles the Full TRP Package changelog (phases 0-5), STOPS for explicit approval, then implements, verifies through the local gates plus CodeRabbit and the pr-review skill, opens the PR, and posts the two-layer ClickUp update. Works with GitHub or Azure DevOps repos. Use when the user says "TRP Process for", "TRP", "Task Resolution Protocol", or pastes an app.clickup.com task URL asking for delivery of that ticket.
 license: Proprietary. See LICENSE.
-compatibility: Requires node, git, a ClickUp token, and gh (ITC) or az (Wheaton). Team-scoped: delivers to the Wheaton OMS (Azure DevOps) and ITC (GitHub) clients defined in reference/clients.md.
+compatibility: Requires node, git, a ClickUp token (CLICKUP_TOKEN_FILE), and gh (GitHub) or az (Azure DevOps). Works with any GitHub or Azure DevOps repo; the platform is detected from the repo remote.
 metadata:
   author: ttt-studios
   version: "1.1.0"
@@ -52,7 +52,7 @@ Never start delivery until preflight is clean and the plan is approved (Phase 1)
 - `reference/phases.md` — the phase machine (0 → 5, incl. 3.5) with exit criteria. Read in full.
 - `reference/gates.md` — operational gates, pre-push gates, forbidden vocabulary,
   attribution scan, PR-done bar, failure catalogue. Read in full.
-- `reference/clients.md` — Wheaton (ADO) vs ITC (GitHub) full delivery protocol, self-contained.
+- `reference/clients.md` — Azure DevOps vs GitHub full delivery protocol, self-contained.
 - `reference/templates.md` — the Full TRP Package, PR bodies, two-layer comment.
 
 ## Workflow
@@ -99,7 +99,7 @@ node $D/trp/scripts/clickup-update.mjs "<TICKET_URL>" --status "in review" --com
   scanned before every push and post; the scripts refuse contaminated bodies.
 - **FAIL loops close internally** (gates.md #8). Only PASS, a genuine external
   blocker, or an exhausted stop-and-report ever surfaces.
-- **Client routing is real** (clients.md). Wheaton and ITC are not interchangeable.
+- **Platform routing is real** (clients.md). GitHub and Azure DevOps are detected from the repo remote and never mixed.
 
 ## Constraints
 

@@ -47,14 +47,6 @@ Portability differs by skill. Be straight with your team about it:
 |---|---|---|
 | **pr-review** | ✅ **Fully portable.** Works on any GitHub / Azure DevOps PR. | `node`, and `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional (`CLICKUP_TOKEN_FILE`), only for ticket-linked PRs. |
 | **sec-audit** | ✅ **Fully self-contained & agnostic.** Point it at any repo/PR/tenant. | `node`, `git`, and `az` for the live-cloud probes; the scanners `semgrep`/`gitleaks`/`checkov`/`osv-scanner`/`trivy` for the code layer (a missing one is reported, never silently skipped). No external repo, no client data — coverage against a prior audit is a file *you* pass in (`--known`). |
-| **trp** | 👥 **Self-contained & team-scoped.** No external rulebook needed. | `node`, a ClickUp token (`CLICKUP_TOKEN_FILE`), and `gh` (ITC) or `az` (Wheaton). Delivers to two specific clients — Wheaton OMS (Azure DevOps) and ITC (GitHub) — whose full protocol is bundled in `reference/clients.md`. A teammate on those clients can run it end to end; it's not meant for arbitrary projects. |
+| **trp** | ✅ **Self-contained & agnostic.** Works with any GitHub or Azure DevOps repo. | `node`, a ClickUp token (`CLICKUP_TOKEN_FILE`), and `gh` (GitHub) or `az` (Azure DevOps). The platform is detected from the repo's remote; the full delivery protocol is bundled in `reference/`. No external rulebook, no client-specific config baked in. |
 
-**Bottom line:** share **pr-review** with anyone. Share **sec-audit** with anyone — it's self-contained (just install the scanners for the code layer). Share **trp** with teammates who work the same clients.
-
-Environment overrides (set these instead of relying on default paths):
-
-- `CLICKUP_TOKEN_FILE` — the file holding the ClickUp `pk_` token (pr-review, trp).
-- `AZURE_CONFIG_DIR` — select a non-default `az` context for the live probes.
-
-Every script is read-only by default and refuses to emit AI attribution. Each skill checks its
-own prerequisites on start (`preflight.mjs`) and tells the operator exactly what's missing.
+**Bottom line:** all three are self-contained and portable — share them with anyone. pr-review works on any PR, sec-audit on any repo/Azure tenant, trp on any GitHub/Azure DevOps repo.

@@ -2,7 +2,7 @@
 
 Everything the skill does, end to end, in depth. Read top-to-bottom or jump in. For the full
 phase machine see `phases.md`; for every gate and the failure catalogue see `gates.md`; for the
-client specifics see `clients.md`; for the plan/PR/comment templates see `templates.md`.
+platform routing see `clients.md`; for the plan/PR/comment templates see `templates.md`.
 
 **Contents**
 1. [The shape of a delivery](#1-the-shape-of-a-delivery)
@@ -40,8 +40,8 @@ is cheap (edit the plan) instead of expensive (throw away code).
 
 ## 2. Preflight — access before anything
 
-`preflight.mjs [--client wheaton|itc]` runs first: `node`, a ClickUp token (hard — the workflow
-reads and updates a ticket), and the git host for the client (`gh` for ITC, `az` for Wheaton).
+`preflight.mjs [--platform github|ado]` runs first: `node`, a ClickUp token (hard — the workflow
+reads and updates a ticket), and the git host (`gh` for GitHub, `az` for Azure DevOps).
 Anything missing is named with the exact fix — the login command, or the token file path + the
 `CLICKUP_TOKEN_FILE` env var — and the run stops until it's clean.
 
@@ -69,8 +69,8 @@ per-package; it doesn't carry to later, separate work.
 ## 5. Phase 1.5 — breaking up bigger work
 
 A single-PR ticket skips this. When the change is larger, it's broken into small,
-independently-mergeable PRs, each safe to merge to the trunk on its own. Where there are no
-feature flags (Wheaton), that means each PR must be correct on merge, not gated behind a switch —
+independently-mergeable PRs, each safe to merge to the trunk on its own. Where the platform has no
+feature flags, that means each PR must be correct on merge, not gated behind a switch —
 so the breakdown is planned so nothing half-built ever lands.
 
 ## 6. Phase 2–3 — build & verify
@@ -141,12 +141,12 @@ phases apply:
 | **spike-writeup** | options / investigation, no code yet | 0 → 1, then a written recommendation with options + trade-offs + acceptance criteria |
 | **support** | a question or triage | 0, then a grounded answer |
 
-## 12. Client routing, in detail
+## 12. Platform routing, in detail
 
-Wheaton and ITC are genuinely different stacks (`clients.md`) — the skill routes automatically
-and never mixes them:
+GitHub and Azure DevOps are different stacks (`clients.md`) — the skill detects the platform from
+the repo's remote and routes accordingly:
 
-| | Wheaton (OMS) | ITC |
+| | Azure DevOps | GitHub |
 |---|---|---|
 | host | Azure DevOps | GitHub |
 | default branch | `develop` (BE) / `main` (FE) | trunk |
@@ -156,7 +156,7 @@ and never mixes them:
 | CI | ADO pipelines (dockerized tests, SonarQube) | Nx affected + checks |
 | ticket | ClickUp | ClickUp |
 
-The consequence that matters most: with no feature flags on Wheaton, nothing half-built can land
+The consequence that matters most: with no feature flags, nothing half-built can land
 safely, so the plan and the breakdown are shaped accordingly.
 
 ## 13. The gates that never bend
@@ -188,7 +188,7 @@ head and re-derived from the real merge-base.
 | `scripts/clickup-update.mjs` | Phase 5 status + two-layer comment; dry-run by default, `--live` to execute; attribution + two-layer + landed gates built in |
 | `reference/phases.md` | the phase machine (0 → 5, incl. 3.5) with exit criteria |
 | `reference/gates.md` | operational gates, pre-push gates, the failure catalogue |
-| `reference/clients.md` | Wheaton (ADO) vs ITC (GitHub) routing |
+| `reference/clients.md` | Azure DevOps vs GitHub routing |
 | `reference/templates.md` | the Full TRP Package, PR body, two-layer comment |
 
 Working files (`ticket.json`, the plan draft, `phase5.md`) live in a scratch dir, never in the
@@ -200,4 +200,4 @@ target repo. The pr-review skill is a sibling, invoked read-only in Phase 3.5.
 - **A verifier returns FAIL** → it's not handed to you as a question; the fix + re-verify run internally until PASS. You only hear about it if it's a genuine external blocker.
 - **The ClickUp comment didn't land** → `clickup-update.mjs` re-reads the latest comment to confirm; if it shows a system event instead of the two-layer write, Phase 5 re-runs.
 - **A pre-existing test is red on the baseline** → proven pre-existing (stash-diff), it doesn't block the push; anything the change touched must be green.
-- **Wrong client tooling invoked** → routing is explicit in `clients.md`; Wheaton is ADO + `az`, ITC is GitHub + `gh` — they're never interchangeable.
+- **Wrong platform tooling invoked** → routing is explicit in `clients.md`; Azure DevOps uses `az` + ADO REST, GitHub uses `gh` — detect from the repo remote.

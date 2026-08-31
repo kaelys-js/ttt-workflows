@@ -4,7 +4,7 @@
 //
 // Usage:  node fetch-ticket.mjs <TICKET_URL_OR_ID> [--out ticket.json]
 // Accepts: app.clickup.com/t/<team>/<CUSTOM-ID>, app.clickup.com/t/<id>,
-//          a bare custom id (WPMP3-229, HAND_ITC-487), or a raw id (868…).
+//          a bare custom id (PROJ-123, HAND_GitHub-487), or a raw id (868…).
 //
 // READ-ONLY: GET requests only. The token is sent in the Authorization header and is
 // never printed or written to the output file.

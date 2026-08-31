@@ -31,8 +31,8 @@ These are the gates for TRP delivery — self-contained here. Read this file and
 
 ## Pre-push gates
 
-Per client — `clients.md` carries the exact command lists (Wheaton pre-push gate; the
-repo's own scripts for ITC). Universal, regardless of client:
+Per platform — `clients.md` says to run the project's OWN configured checks (formatter, lint,
+tests, build), discovered from the repo. Universal, regardless of platform:
 
 - HARD RULE: never push with any failing test or red check the CI runs — CI
   continue-on-error is NOT permission (the only exception: provably pre-existing on
@@ -87,8 +87,8 @@ every number/claim in the body re-measured at the current head.
   reading it is part of Phase 0.
 - **Phase 5 as status-flip only.** Both actions, every round; verify the comment
   landed by re-fetch.
-- **Treating clients as interchangeable.** Wheaton (ADO, no flags, ADO REST quirks)
-  and ITC (GitHub, CodeRabbit CI, deploy scripts) diverge — route via clients.md.
+- **Treating platforms as interchangeable.** GitHub (`gh`) and Azure DevOps (`az` + ADO REST)
+  diverge — detect the platform from the repo remote and route via clients.md.
 - **New branch/PR without approval.** Work lands where the approved package says;
   never open a new branch or PR the operator did not approve.
 - **Stale numbers after a push.** Every count in body/ticket/report is re-measured

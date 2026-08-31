@@ -3,14 +3,14 @@
 // provide and where. Run it first; if it exits non-zero, relay the ✗ lines to the operator
 // and wait for them to provide the missing auth before fetching the ticket.
 //
-// Usage:  node preflight.mjs [--client wheaton|itc]
+// Usage:  node preflight.mjs [--platform github|ado]
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 const opt = (f) => { const i = process.argv.indexOf(f); return i >= 0 ? process.argv[i + 1] : ""; };
-const client = opt("--client");
+const platform = opt("--platform");   // github | ado | "" (check either)
 const cmdOk = (cmd, args) => { try { execFileSync(cmd, args, { stdio: "ignore" }); return true; } catch { return false; } };
 
 const rows = []; let missing = 0;
@@ -23,15 +23,16 @@ const tokenFile = process.env.CLICKUP_TOKEN_FILE || `${homedir()}/.config/ttt/cl
 need(existsSync(tokenFile), "ClickUp token", `reads/updates the ticket — read from ${tokenFile}`,
      `put your ClickUp pk_ token in ${tokenFile}  (run: mkdir -p "$(dirname ${tokenFile})" first), or set CLICKUP_TOKEN_FILE=<path>`);
 
-// Git host — client-dependent. Wheaton = Azure DevOps (az); ITC = GitHub (gh).
+// Git host — GitHub needs gh, Azure DevOps needs az. Detected from the repo at run time;
+// preflight just confirms the right tool (or either) is authenticated.
 const ghOk = cmdOk("gh", ["auth", "status"]);
 const azOk = cmdOk("az", ["account", "show"]);
-if (client === "wheaton") need(azOk, "az (Azure DevOps login)", "push branches + open the PR", "run:  az login --tenant <your-tenant>");
-else if (client === "itc") need(ghOk, "gh (GitHub auth)", "push branches + open the PR", "run:  gh auth login");
+if (platform === "github") need(ghOk, "gh (GitHub auth)", "push the branch + open the PR", "run:  gh auth login");
+else if (platform === "ado") need(azOk, "az (Azure DevOps login)", "push the branch + open the PR", "run:  az login --tenant <tenant>");
 else {
-  need(ghOk || azOk, "gh OR az", "ITC uses GitHub (gh); Wheaton uses Azure DevOps (az)", "gh auth login   (ITC)   |   az login --tenant <tenant>   (Wheaton)");
-  if (ghOk) rows.push({ ok: true, label: "gh (GitHub / ITC)", detail: "authenticated" });
-  if (azOk) rows.push({ ok: true, label: "az (Azure DevOps / Wheaton)", detail: "authenticated" });
+  need(ghOk || azOk, "gh or az", "GitHub repos need gh; Azure DevOps repos need az", "gh auth login   (GitHub)   |   az login --tenant <tenant>   (Azure DevOps)");
+  if (ghOk) rows.push({ ok: true, label: "gh (GitHub)", detail: "authenticated" });
+  if (azOk) rows.push({ ok: true, label: "az (Azure DevOps)", detail: "authenticated" });
 }
 
 console.log("trp preflight — what this run needs:\n");

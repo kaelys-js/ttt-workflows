@@ -48,7 +48,7 @@ and what to do when a fetch fails. All access is read-only.
 ## ClickUp ticket resolution
 
 If the PR title, body, or branch references a ClickUp ticket — an
-`app.clickup.com/t/...` URL, a custom id like `WPMP3-261`, or a raw id like
+`app.clickup.com/t/...` URL, a custom id like `PROJ-261`, or a raw id like
 `868kwybyx` — `fetch-pr.mjs` resolves it read-only and adds a `ticket` object (plus `tickets[]` with every distinct ticket that resolves, so multi-ticket PRs lose nothing)
 (`id`, `custom_id`, `name`, `status`, `url`, `description`) to `pr.json`, so Step 0
 can diff the change against the ticket's real description/AC instead of trusting the
