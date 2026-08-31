@@ -31,7 +31,7 @@ and what to do when a fetch fails. All access is read-only.
   stable Azure DevOps AAD resource GUID). It never uses `az rest` — that drops the
   resource and returns the sign-in HTML page.
 - **Tenant selection:** if the org lives in a non-default tenant, point `az` at the
-  right config dir. For Wheaton: `AZURE_CONFIG_DIR=$HOME/.azure-wpm node …/fetch-pr.mjs …`.
+  right config dir: `AZURE_CONFIG_DIR=<path> node …/fetch-pr.mjs …`.
 - **How the diff is built:** ADO REST has no unified-diff endpoint. The script resolves
   the PR org-level (`/_apis/git/pullrequests/<id>`), which returns project + repo +
   the source and target merge commits. For each changed file it fetches the blob at
@@ -55,7 +55,7 @@ can diff the change against the ticket's real description/AC instead of trusting
 PR body.
 
 - **Token:** `$CLICKUP_TOKEN`, else the file at `$CLICKUP_TOKEN_FILE`, else
-  `~/work/ttt/pr-reviews/.env.clickup` (a bare `pk_` value, no `KEY=` prefix). Sent
+  the file named by `CLICKUP_TOKEN_FILE` (default `~/.config/ttt/clickup.token`; a bare `pk_` value, no `KEY=` prefix). Sent
   in the Authorization header only; never printed, never written to `pr.json`.
 - **Team id** (for custom ids): `$CLICKUP_TEAM_ID`, default `8593845`.
 - All failures are non-fatal: no token, a 404, or a foreign ref just leaves

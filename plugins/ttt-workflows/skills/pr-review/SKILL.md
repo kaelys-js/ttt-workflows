@@ -75,7 +75,7 @@ node $D/pr-review/scripts/fetch-pr.mjs "<PR_URL>" --out pr.json
 ```
 
 GitHub needs `gh auth status` green. Azure DevOps needs an `az` login for the PR's
-tenant — for Wheaton, prefix `AZURE_CONFIG_DIR=$HOME/.azure-wpm`. See
+tenant — for a non-default tenant, prefix `AZURE_CONFIG_DIR=<path>`. See
 `reference/platforms.md` if the fetch errors.
 
 **2. Read `pr.json`.** Title, body, unified `diff`, `files`, existing `threads`, and —

@@ -2,7 +2,7 @@
 name: sec-audit
 description: Runs a professional security audit end to end against any target — a GitHub or Azure DevOps repo, a specific GH/ADO pull request, a local repo, or a single file/folder. Routes to four modes (sweep, review, poc, remediate) that sequence the Security Review, Security POC, Systematic Finding, and Systematic Remediation protocols, drive the security-pocs workflows, and produce scored findings, private advisories, reproducible PoCs, GAP-LIST/executive-brief reports, and client fix-PRs. Grounded in PTES, OWASP WSTG, NIST SP 800-115, CVSS 4.0, and coordinated disclosure. Use when the user says "security audit", "SFP", "SRP", "security review", "find vulnerabilities", "build a PoC", "remediate SEC-nn", asks whether something is exploitable or a real security problem, or points at a repo/PR/path to audit.
 license: Proprietary. See LICENSE.
-compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy; network access to the target and the Azure subscription.
+compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy; the code-audit + poc/remediate modes also need the security-pocs toolkit (SECURITY_POCS_DIR). Network access to the target and Azure.
 metadata:
   author: ttt-studios
   version: "1.1.0"
@@ -11,7 +11,7 @@ metadata:
 # sec-audit
 
 Run a professional security audit end to end against any target. `security-pocs/AGENTS.md`
-(at `~/work/personal/.todo/trp-srp-sfp/security-pocs/`) is THE LAW — read it in FULL before
+(the security-pocs toolkit, at the path in `$SECURITY_POCS_DIR`) is THE LAW — read it in FULL before
 any mode; this skill sequences it and never overrides it. Six hard human-gates are never
 crossed autonomously (below).
 
