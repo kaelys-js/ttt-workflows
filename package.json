@@ -11,6 +11,8 @@
 		"shfmt:check": "shfmt -d $(git ls-files '*.sh')",
 		"shellcheck": "shellcheck $(git ls-files '*.sh')",
 		"validate": "node scripts/validate-skills.mjs",
-		"check": "npm run format:check && npm run lint && npm run shfmt:check && npm run shellcheck && npm run validate"
+		"docs": "./bin/mise exec -- node scripts/build-docs.mjs",
+		"docs:check": "./bin/mise exec -- node scripts/build-docs.mjs --check",
+		"check": "npm run format:check && npm run lint && npm run shfmt:check && npm run shellcheck && npm run validate && npm run docs:check"
 	}
 }

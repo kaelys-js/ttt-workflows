@@ -56,6 +56,9 @@ pre-push:
     validate-skills:
       priority: 6
       run: ./bin/mise exec -- node scripts/validate-skills.mjs
+    docs-check:
+      priority: 7
+      run: ./bin/mise exec -- node scripts/build-docs.mjs --check
 
 # ─── Commit Message ──────────────────────────────────────────────────────────
 commit-msg:

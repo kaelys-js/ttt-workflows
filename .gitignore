@@ -359,3 +359,10 @@ temp/
 # Lock files — DO NOT IGNORE
 # pnpm-lock.yaml MUST be committed
 !pnpm-lock.yaml
+
+# typst docs build-check scratch
+docs/*.pdf.tmp
+
+# The operator-playbook PDFs are shipped deliverables (kept in sync by
+# `npm run docs:check`), so they override the global *.pdf ignore above.
+!docs/*.pdf
