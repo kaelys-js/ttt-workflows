@@ -29,7 +29,7 @@ works · Options), then route:
   `scripts/preflight.mjs`; if it exits non-zero, relay its lines verbatim (what's missing +
   where) and WAIT. Then fetch the ticket and start Phase 0.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
-- **Options** → present the "Options" section of `reference/usage.md`.
+- **Options** → open a second **Ask** picker of the topics defined in the `reference/usage.md` "Options — drill-down" section; present the chosen subsection, then offer the topic picker again so they can read another.
 - **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never start delivery until preflight is clean and the plan is approved (Phase 1).

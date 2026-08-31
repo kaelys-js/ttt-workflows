@@ -39,36 +39,42 @@ after itself, or write the fix and open it for your review — I never merge it 
 
 ---
 
-## Options
+## Options — drill-down
 
-```
-sec-audit — check code + live cloud + accounts/pipelines → one report (look-only)
+When the operator picks **Options**, open a second **Ask** picker (AskUserQuestion) with these
+topics, present the matching subsection, then offer the picker again so they can read another.
 
-WHAT I CAN DO
-  Full check-up            look everywhere, report everything
-  Look into one finding    rate how serious a specific worry is
-  Prove it's real          a safe demo that cleans up after itself
-  Write the fix            prepare it, open it for your review — never merged
+**Question:** What would you like to see? · **header:** sec-audit · single-select
 
-WHERE I LOOK               a full check-up covers all three
-  your code                logins, input handling, file handling, out-of-date parts
-  your live cloud          public databases, weak encryption, open vaults, missing alerts
-  your accounts/pipelines  sign-in flaws, long-lived secrets, secrets left in plain sight
+| topic | show |
+|---|---|
+| **What I can do** | `do` below |
+| **Where I look** | `look` below |
+| **What you get** | `output` below |
+| **What I need** | `need` below |
 
-COMPARE TO A PAST AUDIT    hand me your previous list of issues, get back:
-  what's fixed · what's still open · what's new
+### do
+- **Full check-up** — look everywhere, report everything.
+- **Look into one finding** — you name a worry, I rate how serious it really is.
+- **Prove it's real** — a safe demo that cleans up after itself.
+- **Write the fix** — I prepare it and open it for your review; I never merge it myself.
 
-WHAT YOU GET
-  one report — what's exposed, how bad, how to fix it, and what I couldn't reach
+### look
+A full check-up covers three places at once:
+- **Your code** — how the app handles logins, input, and files, plus out-of-date parts.
+- **Your live cloud** — public databases, weak encryption, open vaults, missing alerts.
+- **Your accounts & pipelines** — sign-in flaws, long-lived secrets, secrets left in plain sight.
 
-WHAT I NEED
-  to read code: point me at a project, pull request, or folder
-  to check your live cloud: you signed in to Azure   (I'll say if anything's missing)
+**Comparing to a past audit?** Hand me your previous list of issues and I'll show you what's
+fixed, what's still open, and what's new.
 
-I NEVER  change anything without your OK · only look at your live cloud, never touch it
+### output
+**One report** — what's exposed, how serious it is, and how to fix it — plus an honest note on
+anything I couldn't reach. I change nothing without your OK, and I only ever *look* at your live
+cloud.
 
-EXAMPLES
-  "check this repo:  https://github.com/org/repo"
-  "audit ./oms-be and compare to last quarter's findings"
-  "is the /users update endpoint a real problem?"
-```
+### need
+- **To read code:** point me at a project, a pull request, or a folder.
+- **To check your live cloud:** you signed in to Azure. I'll say on the spot if anything's missing.
+
+Prefer the whole technical picture at once? Say **deep dive**.

@@ -28,7 +28,7 @@ Re-check after changes · Show me how this works · Options), then route on the 
   non-zero, relay its `✗` lines verbatim (what's missing + where to put it) and WAIT. Then ask
   for the PR link if not supplied, and run the Workflow.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
-- **Options** → present the "Options" section of `reference/usage.md`.
+- **Options** → open a second **Ask** picker of the topics defined in the `reference/usage.md` "Options — drill-down" section; present the chosen subsection, then offer the topic picker again so they can read another.
 - **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never run the review until preflight is clean.

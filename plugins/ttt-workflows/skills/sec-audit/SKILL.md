@@ -26,7 +26,7 @@ the **Ask** picker: call AskUserQuestion with the four paths defined in `referen
   `remediate`). For either, run `scripts/preflight.mjs`; if it exits non-zero, relay its lines
   verbatim (what's missing + where) and WAIT. Then confirm target + mode and run.
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
-- **Options** → present the "Options" section of `reference/usage.md`.
+- **Options** → open a second **Ask** picker of the topics defined in the `reference/usage.md` "Options — drill-down" section; present the chosen subsection, then offer the topic picker again so they can read another.
 - **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never start a run until preflight is clean.

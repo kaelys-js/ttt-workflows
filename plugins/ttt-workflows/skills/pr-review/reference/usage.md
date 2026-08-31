@@ -32,31 +32,39 @@ I'll never post, comment, approve, or change the PR · add an AI credit · or ho
 
 ---
 
-## Options
+## Options — drill-down
 
-```
-pr-review — review a PR, output a paste-ready comment (never posts it)
+When the operator picks **Options**, open a second **Ask** picker (AskUserQuestion) with these
+topics, present the matching subsection, then offer the picker again so they can read another.
 
-WHAT I CAN DO
-  Review a pull request    read the whole change, write the review
-  Re-check after changes   same PR after a push — only what's new
-  (ticket check)           automatic when the PR is linked to a ClickUp task
+**Question:** What would you like to see? · **header:** pr-review · single-select
 
-WHAT I LOOK AT              most important first
-  design · correctness · security · tests · then the smaller stuff
-  + does the code do what the PR says, and is it current best practice
+| topic | show |
+|---|---|
+| **What I check** | `check` below |
+| **What you get** | `output` below |
+| **What I need** | `need` below |
+| **Examples** | `examples` below |
 
-WHAT YOU GET
-  a verdict · a short list of what I found · a concrete fix for each
+### check
+In order of what matters: **design, correctness, security, tests,** then the smaller stuff. I
+read every changed line — only generated files get skimmed. Two checks most tools skip: does the
+code actually do what the PR says, and is it current best practice (I check the vendor's live
+docs, not memory). One verified blocker beats ten nitpicks — I drop what I can't confirm, and I
+never block on lint or problems that were already there.
 
-WHAT I NEED
-  a link to a GitHub or Azure DevOps pull request
-  (a ClickUp connection is optional — only to check against a linked ticket)
+### output
+A **verdict** — good to go, a few fixes, or not yet. A **short table** of what I found. And a
+**specific fix** for each, ready to apply. Short enough to skim, detailed enough to act on.
 
-I NEVER  post/comment/approve · add an AI credit · block on lint or pre-existing issues
+### need
+A **GitHub or Azure DevOps pull-request link.** You'll need to be signed in — `gh` for GitHub,
+`az` for Azure DevOps; I check on start and say if anything's missing. A **ClickUp** connection
+is optional, only for checking a PR against its linked ticket.
 
-EXAMPLES
-  https://github.com/org/repo/pull/128
-  https://dev.azure.com/org/proj/_git/repo/pullrequest/2189
-  "review PR #128 again — I pushed fixes"
-```
+### examples
+- "review https://github.com/org/repo/pull/128"
+- a `dev.azure.com/…/pullrequest/N` link
+- "review PR #128 again — I pushed fixes"
+
+Prefer the whole technical picture at once? Say **deep dive**.

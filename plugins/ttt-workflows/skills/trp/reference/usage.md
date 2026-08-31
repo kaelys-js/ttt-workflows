@@ -33,33 +33,37 @@ something you approved · add an AI credit · or push with a failing test.
 
 ---
 
-## Options
+## Options — drill-down
 
-```
-trp — take a ClickUp ticket to a merge-ready pull request (plan first, always your call)
+When the operator picks **Options**, open a second **Ask** picker (AskUserQuestion) with these
+topics, present the matching subsection, then offer the picker again so they can read another.
 
-WHAT I CAN DO
-  Deliver this ticket      plan → your OK → build → pull request → update the ticket
-  Just the code            same, but leave the ticket alone — hand you the PR only
-  From a spec              point me at a linked GAP-LIST and I plan around it
-  Look into it only        if the ticket is really a question, I investigate + write up options
+**Question:** What would you like to see? · **header:** trp · single-select
 
-HOW IT GOES
-  1 read the ticket + code   2 write a plan   3 STOP for your OK
-  4 build + test   5 review my own work to clean   6 open the PR + update the ticket
+| topic | show |
+|---|---|
+| **Ways to run it** | `ways` below |
+| **How it goes** | `flow` below |
+| **What you get** | `output` below |
+| **What I need** | `need` below |
 
-WHAT YOU GET
-  a plan to approve, then a pull request that's ready to merge and a written-up ticket
+### ways
+- **Deliver this ticket** — plan → your OK → build → pull request → update the ticket.
+- **Just the code** — same, but I leave the ticket alone and hand you the PR only.
+- **From a spec** — point me at a linked GAP-LIST and I'll plan around it.
+- **Look into it only** — if the ticket is really a question, I investigate and write up options, no code.
 
-WHAT I NEED
-  a ClickUp connection (to read + update the ticket)
-  access to the code — GitHub or Azure DevOps, depending on the project
-  (I'll tell you if anything's missing)
+### flow
+1. Read the ticket and the code. 2. Write you a plan. 3. **Stop for your OK.**
+4. Build and test. 5. Review my own work until it's clean. 6. Open the PR and update the ticket.
 
-I NEVER  build before you approve · ship a guessed cause · add an AI credit · push a failing test
+### output
+A **plan to approve,** then a **pull request that's ready to merge** and a **written-up ticket** —
+a plain-language summary for your team and manager, plus the technical detail.
 
-EXAMPLES
-  "TRP Process for: https://app.clickup.com/t/abc123"
-  "TRP Process for: https://app.clickup.com/t/abc123 — just the code"
-  "TRP Process for: https://app.clickup.com/t/abc123 — use the linked GAP-LIST"
-```
+### need
+- A **ClickUp** connection, to read and update the ticket.
+- **Access to the code** — GitHub or Azure DevOps, depending on the project.
+- I'll tell you if anything's missing.
+
+Prefer the whole technical picture at once? Say **deep dive**.
