@@ -14,7 +14,7 @@ const favicon = readFileSync(join(pub, 'favicon.svg'));
 
 // Accent gradient shared with favicon.svg / the site theme.
 const grad = `<linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#f6903a"/><stop offset="1" stop-color="#e2541f"/></linearGradient>`;
+    <stop offset="0" stop-color="#1eafd0"/><stop offset="1" stop-color="#0c81b3"/></linearGradient>`;
 
 // Maskable icon: full-bleed background with the mark inside the safe zone (~60%).
 const maskable = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -30,7 +30,7 @@ const font = 'font-family="Helvetica Neue, Helvetica, Arial, sans-serif"';
 const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
   <defs>${grad}
     <radialGradient id="glow" cx="0.16" cy="0.1" r="0.9">
-      <stop offset="0" stop-color="#e2541f" stop-opacity="0.18"/><stop offset="0.6" stop-color="#e2541f" stop-opacity="0"/>
+      <stop offset="0" stop-color="#1eafd0" stop-opacity="0.20"/><stop offset="0.6" stop-color="#1eafd0" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="1200" height="630" fill="#0b0b0d"/>
@@ -41,7 +41,7 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
   </g>
   <text x="182" y="136" ${font} font-size="40" font-weight="700" fill="#f4f4f5">ttt-workflows</text>
   <text x="80" y="296" ${font} font-size="64" font-weight="800" fill="#fafafa">Three engineering workflows,</text>
-  <text x="80" y="376" ${font} font-size="64" font-weight="800" fill="#fafafa">one <tspan fill="#f6903a">plugin.</tspan></text>
+  <text x="80" y="376" ${font} font-size="64" font-weight="800" fill="#fafafa">one <tspan fill="#22b8da">plugin.</tspan></text>
   <text x="80" y="460" ${font} font-size="32" font-weight="600" fill="#a1a1aa">pr-review · sec-audit · trp</text>
   <rect x="80" y="506" width="1040" height="1.5" fill="#27272a"/>
   <text x="80" y="552" ${font} font-size="27" fill="#8b8b93">A Claude Code plugin — read-only and approval-gated by default.</text>
