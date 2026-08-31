@@ -1,0 +1,135 @@
+---
+import "@/styles/global.css";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const site = Astro.site?.href.replace(/\/$/, "") ?? "https://kaelys-js.github.io";
+const canonical = `${site}${base}/`;
+const title = "ttt-workflows — three engineering workflows, one Claude Code plugin";
+const description =
+	"A Claude Code plugin that bundles three self-contained skills: pr-review reviews a pull request, sec-audit runs a security audit, and trp delivers a ticket end to end. Read-only and approval-gated by design. Any repo, any tenant, open source.";
+const ogImage = `${site}${base}/og.png`;
+
+// GitHub Pages can't set real HTTP response headers, so we set what's possible via <meta>.
+const csp = [
+	"default-src 'self'",
+	"img-src 'self' data:",
+	"style-src 'self' 'unsafe-inline'",
+	"script-src 'self' 'unsafe-inline'",
+	"connect-src 'self' https://api.github.com",
+	"font-src 'self'",
+	"base-uri 'self'",
+	"form-action 'self'",
+	// frame-ancestors is intentionally omitted: it is ignored in a <meta> CSP (and logs a
+	// console error). Clickjacking protection needs a real response header, which static
+	// GitHub Pages can't set.
+].join("; ");
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta http-equiv="Content-Security-Policy" content={csp} />
+		<meta name="referrer" content="strict-origin-when-cross-origin" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="author" content="ttt-workflows" />
+		<meta name="robots" content="index, follow" />
+		<link rel="canonical" href={canonical} />
+		<link rel="sitemap" href={`${base}/sitemap-index.xml`} />
+
+		<!-- Icons -->
+		<link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+		<link rel="icon" href={`${base}/favicon-32.png`} sizes="32x32" type="image/png" />
+		<link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
+		<link rel="manifest" href={`${base}/manifest.webmanifest`} />
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="ttt-workflows" />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta
+			property="og:image:alt"
+			content="ttt-workflows — three engineering workflows, one Claude Code plugin"
+		/>
+		<meta property="og:locale" content="en_US" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+		<meta
+			name="twitter:image:alt"
+			content="ttt-workflows — three engineering workflows, one Claude Code plugin"
+		/>
+
+		<!-- Set theme + mark JS on before paint to avoid a flash -->
+		<script is:inline>
+			const t = localStorage.getItem("theme");
+			if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches))
+				document.documentElement.classList.add("dark");
+			document.documentElement.classList.add("js");
+		</script>
+	</head>
+	<body class="min-h-screen antialiased">
+		<a
+			href="#main"
+			class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+			>Skip to content</a
+		>
+		<slot />
+
+		<!-- Reveal-on-scroll. prefers-reduced-motion and no-JS are handled in CSS (the
+		     hiding is scoped to html.js inside a no-preference query). A liveness probe
+		     reveals everything if IntersectionObserver never delivers callbacks (some
+		     embedded/headless renderers), so content is never left hidden. -->
+		<script is:inline>
+			(function () {
+				var els = [].slice.call(document.querySelectorAll("[data-reveal],[data-stagger]"));
+				if (!els.length) return;
+				function show(el) {
+					el.classList.add("is-visible");
+				}
+				if (!("IntersectionObserver" in window)) {
+					els.forEach(show);
+					return;
+				}
+				var io = new IntersectionObserver(
+					function (entries) {
+						entries.forEach(function (en) {
+							if (en.isIntersecting) {
+								show(en.target);
+								io.unobserve(en.target);
+							}
+						});
+					},
+					{ rootMargin: "0px 0px -10% 0px", threshold: 0.1 },
+				);
+				els.forEach(function (el) {
+					io.observe(el);
+				});
+				// If IO never fires (dead in some renderers), reveal all after a beat.
+				var alive = false;
+				var probe = new IntersectionObserver(function () {
+					alive = true;
+					probe.disconnect();
+				});
+				probe.observe(document.body);
+				setTimeout(function () {
+					if (!alive) els.forEach(show);
+				}, 1200);
+			})();
+		</script>
+	</body>
+</html>

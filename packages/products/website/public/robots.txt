@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kaelys-js.github.io/ttt-workflows/sitemap-index.xml

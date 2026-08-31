@@ -1,0 +1,491 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import PrReviewMockup from "@/components/PrReviewMockup.astro";
+import SecAuditMockup from "@/components/SecAuditMockup.astro";
+import TrpMockup from "@/components/TrpMockup.astro";
+import ThemeToggle from "@/components/ThemeToggle.tsx";
+import GithubButton from "@/components/GithubButton.tsx";
+import GithubMark from "@/components/GithubMark.astro";
+import Faq from "@/components/Faq.tsx";
+import CopyCommand from "@/components/CopyCommand.tsx";
+import { Card, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+	GitPullRequest,
+	ShieldCheck,
+	ClipboardCheck,
+	Sparkles,
+	Eye,
+	Terminal,
+	FileText,
+	Blocks,
+	GitBranch,
+} from "lucide-react";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const REPO = "https://github.com/kaelys-js/ttt-workflows";
+const MARKETPLACE_ADD = "/plugin marketplace add kaelys-js/ttt-workflows";
+const PLUGIN_INSTALL = "/plugin install ttt-workflows";
+
+const skills = [
+	{
+		icon: GitPullRequest,
+		name: "pr-review",
+		cmd: "/pr-review",
+		does: "Reviews a GitHub or Azure DevOps pull request from its URL, verifies every finding against the real diff, and labels each by severity.",
+		produces: "One paste-ready review — a verdict, a scan table, and a concrete fix per finding.",
+		boundary: "Read-only",
+		boundaryNote: "Never posts, comments, approves, or merges. You paste the result.",
+	},
+	{
+		icon: ShieldCheck,
+		name: "sec-audit",
+		cmd: "/sec-audit",
+		does: "Audits a repo, a PR, a path, or live Azure, Entra, and ADO — the three places a real vulnerability hides: source and IaC, running cloud state, and the identity and CI plane.",
+		produces:
+			"Scored findings (CVSS 4.0 + CWE), private advisories, reproducible throwaway PoCs, and a coverage-honest report.",
+		boundary: "Approval-gated",
+		boundaryNote: "Read-only until you approve. A fix is a PR opened, never merged.",
+	},
+	{
+		icon: ClipboardCheck,
+		name: "trp",
+		cmd: "/trp",
+		does: "Delivers a ticket end to end: grounds it in the real repo with evidence, presents a full plan, then implements, verifies through local gates, and opens the PR.",
+		produces:
+			"A merged-ready PR that meets the acceptance criteria, plus a two-layer ticket update for the business and for engineers.",
+		boundary: "Approval-gated",
+		boundaryNote:
+			"Stops for approval. No branch, no write, nothing hard to undo before you say go.",
+	},
+];
+
+const steps = [
+	{
+		n: "1",
+		title: "Add the marketplace",
+		body: "Point Claude Code at the git-backed marketplace once. It stays available for every project.",
+		cmd: MARKETPLACE_ADD,
+	},
+	{
+		n: "2",
+		title: "Install the plugin",
+		body: "Install ttt-workflows and all three skills register at once — nothing else to set up.",
+		cmd: PLUGIN_INSTALL,
+	},
+];
+
+const playbooks = [
+	{
+		slug: "pr-review",
+		name: "PR Review",
+		body: "Read every changed line, prove what you find, and hand back one review that lands in a single round — the craft the skill automates, done by hand.",
+	},
+	{
+		slug: "sec-audit",
+		name: "Security Audit",
+		body: "Look in all three places a vulnerability hides, prove what you find, and never touch a live system until someone says go — the full manual method.",
+	},
+	{
+		slug: "trp",
+		name: "Task Resolution Protocol",
+		body: "Take a ticket from assigned to merged: ground it in real code, get the plan approved, then build, prove, and close it out.",
+	},
+];
+---
+
+<Layout>
+	<!-- backdrop -->
+	<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+		<div
+			class="absolute -top-40 left-1/2 h-[36rem] w-[72rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+		>
+		</div>
+		<div
+			class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-border)_1px,transparent_0)] [background-size:26px_26px] opacity-40"
+		>
+		</div>
+	</div>
+
+	<!-- nav -->
+	<header class="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+		<nav aria-label="Main" class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5">
+			<a
+				href="#main"
+				class="flex items-center gap-2.5 font-semibold"
+				aria-label="ttt-workflows, home"
+			>
+				<span
+					class="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[#f6903a] to-[#e2541f] text-white"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						class="size-5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.4"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"><path d="M7 8l4 4-4 4"></path><path d="M13 16h5"></path></svg
+					>
+				</span>
+				<span class="font-mono">ttt-workflows</span>
+			</a>
+			<div class="ml-auto hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+				<a href="#skills" class="transition-colors hover:text-foreground">Skills</a>
+				<a href="#install" class="transition-colors hover:text-foreground">Install</a>
+				<a href="#playbooks" class="transition-colors hover:text-foreground">Playbooks</a>
+				<a href="#faq" class="transition-colors hover:text-foreground">FAQ</a>
+			</div>
+			<div class="ml-auto flex items-center gap-2 md:ml-6">
+				<a
+					href={REPO}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="grid size-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					aria-label="View on GitHub (opens in a new tab)"><GithubMark class="size-5" /></a
+				>
+				<ThemeToggle client:load />
+				<a
+					href="#install"
+					class="hidden h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:inline-flex"
+					>Install</a
+				>
+			</div>
+		</nav>
+	</header>
+
+	<main id="main">
+		<!-- hero -->
+		<section class="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-2">
+			<!-- Hero entrance: the LCP headline animates transform-only (data-hero="lcp",
+			     never opacity:0) so LCP stays fast; the rest fade+rise with a light stagger. -->
+			<div>
+				<span data-hero class="inline-block">
+					<Badge className="border-primary/20 bg-primary/10 text-primary"
+						><Sparkles className="size-3.5" /> Open source · Claude Code plugin</Badge
+					>
+				</span>
+				<h1
+					data-hero="lcp"
+					class="mt-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+				>
+					Three engineering workflows, <span
+						class="bg-gradient-to-r from-[#f2762a] to-[#e2541f] bg-clip-text text-transparent"
+						>one plugin.</span
+					>
+				</h1>
+				<p
+					data-hero
+					style="--hd:120ms"
+					class="mt-5 max-w-xl text-lg text-muted-foreground text-pretty"
+				>
+					ttt-workflows bundles <span class="font-mono text-foreground/80">pr-review</span>, <span
+						class="font-mono text-foreground/80">sec-audit</span
+					>, and <span class="font-mono text-foreground/80">trp</span> — three self-contained skills that
+					review a pull request, run a security audit, or deliver a ticket end to end, from inside Claude
+					Code. Read-only and approval-gated by default.
+				</p>
+				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-2.5">
+					<CopyCommand client:load cmd={MARKETPLACE_ADD} />
+					<CopyCommand client:load cmd={PLUGIN_INSTALL} />
+				</div>
+				<div data-hero style="--hd:240ms" class="mt-5 flex flex-wrap items-center gap-3">
+					<a href="#install" class="text-sm font-medium text-primary hover:underline"
+						>How it works ↓</a
+					>
+					<span class="text-sm text-muted-foreground">·</span>
+					<a
+						href={REPO}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+						>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+					>
+				</div>
+			</div>
+			<div data-hero style="--hd:140ms" class="flex justify-center lg:justify-end">
+				<PrReviewMockup />
+			</div>
+		</section>
+
+		<!-- trust bar -->
+		<section class="border-y border-border/60 bg-muted/30">
+			<div
+				class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-5 py-6 text-sm text-muted-foreground"
+			>
+				<span class="inline-flex items-center gap-2"
+					><Eye className="size-4 text-primary" /> Read-only by default</span
+				>
+				<span class="inline-flex items-center gap-2"
+					><ShieldCheck className="size-4 text-primary" /> Writes are approval-gated</span
+				>
+				<span class="inline-flex items-center gap-2"
+					><GitBranch className="size-4 text-primary" /> Any repo, any tenant</span
+				>
+				<span class="inline-flex items-center gap-2"
+					><GithubMark class="size-4 text-primary" /> Open source</span
+				>
+			</div>
+		</section>
+
+		<!-- skills -->
+		<section id="skills" class="mx-auto max-w-6xl px-5 py-20">
+			<div class="mx-auto max-w-2xl text-center">
+				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Three skills</h2>
+				<p class="mt-3 text-muted-foreground">
+					Each is self-contained and portable — any repo, any tenant, no client data baked in.
+				</p>
+			</div>
+			<div class="mt-12 grid gap-5 lg:grid-cols-3" data-stagger>
+				{
+					skills.map((s) => (
+						<Card className="gap-4 transition-shadow hover:shadow-md">
+							<div class="flex items-center gap-3">
+								<div class="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
+									<s.icon className="size-5" />
+								</div>
+								<div class="leading-tight">
+									<CardTitle className="font-mono text-base">{s.name}</CardTitle>
+									<code class="text-xs text-muted-foreground">{s.cmd}</code>
+								</div>
+							</div>
+							<CardDescription className="leading-relaxed">{s.does}</CardDescription>
+							<div class="text-[13px] leading-relaxed">
+								<span class="font-medium text-foreground">Produces </span>
+								<span class="text-muted-foreground">{s.produces}</span>
+							</div>
+							<div class="mt-auto flex items-start gap-2 border-t border-border/60 pt-4">
+								<span class="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+									{s.boundary}
+								</span>
+								<span class="text-[12px] leading-snug text-muted-foreground">{s.boundaryNote}</span>
+							</div>
+						</Card>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- install -->
+		<section id="install" class="border-y border-border/60 bg-muted/30">
+			<div class="mx-auto max-w-6xl px-5 py-20">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Install once</h2>
+					<p class="mt-3 text-muted-foreground">
+						Two commands in Claude Code, then invoke a skill whenever you need it.
+					</p>
+				</div>
+				<div class="mt-12 grid items-start gap-8 lg:grid-cols-2" data-stagger>
+					{
+						steps.map((s) => (
+							<div>
+								<div class="flex items-center gap-3">
+									<div class="grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+										{s.n}
+									</div>
+									<h3 class="text-lg font-semibold">{s.title}</h3>
+								</div>
+								<p class="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+								<div class="mt-4">
+									<CopyCommand client:visible cmd={s.cmd} />
+								</div>
+							</div>
+						))
+					}
+				</div>
+				<div class="mx-auto mt-12 max-w-3xl rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
+					<div class="flex items-center gap-2 text-sm font-semibold">
+						<Terminal className="size-4 text-primary" /> Then invoke a skill
+					</div>
+					<ul class="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+						<li>
+							Paste a pull-request URL and ask for a review — or run <code
+								class="font-mono text-foreground/80">/pr-review</code
+							>.
+						</li>
+						<li>
+							Point <code class="font-mono text-foreground/80">/sec-audit</code> at a repo, a PR, a path,
+							or a live tenant, and name a mode: sweep, review, poc, or remediate.
+						</li>
+						<li>
+							Hand <code class="font-mono text-foreground/80">/trp</code> a ticket URL; it grounds the
+							work, presents a plan, and stops for your approval.
+						</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<!-- skills in action -->
+		<section class="mx-auto max-w-6xl px-5 py-20">
+			<div class="mx-auto max-w-2xl text-center">
+				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Skills in action</h2>
+				<p class="mt-3 text-muted-foreground">
+					Real output shapes, rendered inside a Claude Code session.
+				</p>
+			</div>
+			<div class="mt-12 grid items-start justify-items-center gap-8 md:grid-cols-2">
+				<figure class="w-full" data-reveal>
+					<SecAuditMockup />
+					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
+						sec-audit sweeps all three layers and scores what it finds.
+					</figcaption>
+				</figure>
+				<figure class="w-full" data-reveal>
+					<TrpMockup />
+					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
+						trp presents the plan and stops — the approval gate is absolute.
+					</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<!-- playbooks -->
+		<section id="playbooks" class="border-y border-border/60 bg-muted/30">
+			<div class="mx-auto max-w-6xl px-5 py-20">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>
+						Operator's playbooks
+					</h2>
+					<p class="mt-3 text-muted-foreground">
+						Each skill ships a companion PDF: the what, how, and why of doing that work by hand.
+					</p>
+				</div>
+				<div class="mt-12 grid gap-5 md:grid-cols-3" data-stagger>
+					{
+						playbooks.map((p) => (
+							<Card className="gap-3 transition-shadow hover:shadow-md">
+								<div class="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
+									<FileText className="size-5" />
+								</div>
+								<CardTitle className="text-base">{p.name}</CardTitle>
+								<CardDescription className="leading-relaxed">{p.body}</CardDescription>
+								<a
+									href={`${base}/playbooks/${p.slug}.pdf`}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+								>
+									Open the PDF<span class="sr-only"> for {p.name} (opens in a new tab)</span>
+									<span aria-hidden="true">→</span>
+								</a>
+							</Card>
+						))
+					}
+				</div>
+			</div>
+		</section>
+
+		<!-- faq -->
+		<section id="faq" class="mx-auto max-w-3xl px-5 py-20">
+			<div class="text-center">
+				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Questions</h2>
+			</div>
+			<div class="mt-10"><Faq client:visible /></div>
+			<div
+				class="mt-12 flex flex-col items-center gap-5 rounded-2xl border border-border/60 bg-card p-8 text-center"
+			>
+				<div class="flex items-center gap-2 text-lg font-semibold">
+					<Blocks className="size-5 text-primary" /> Add it to Claude Code
+				</div>
+				<div class="w-full max-w-md space-y-2.5 text-left">
+					<CopyCommand client:visible cmd={MARKETPLACE_ADD} />
+					<CopyCommand client:visible cmd={PLUGIN_INSTALL} />
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="border-t border-border/60 bg-muted/20">
+		<div class="mx-auto max-w-6xl px-5 py-14">
+			<div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+				<div class="max-w-sm lg:col-span-2">
+					<div class="flex items-center gap-2.5 font-semibold">
+						<span
+							class="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[#f6903a] to-[#e2541f] text-white"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								class="size-5"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.4"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"><path d="M7 8l4 4-4 4"></path><path d="M13 16h5"></path></svg
+							>
+						</span>
+						<span class="font-mono">ttt-workflows</span>
+					</div>
+					<p class="mt-4 text-sm leading-relaxed text-muted-foreground">
+						Three engineering skills — review, audit, and deliver — in one Claude Code plugin.
+						Read-only and approval-gated by default. Open source.
+					</p>
+					<div class="mt-6"><GithubButton client:visible size="default" /></div>
+				</div>
+
+				<nav aria-label="Product">
+					<h2 class="text-sm font-semibold">Product</h2>
+					<ul class="mt-4 space-y-3 text-sm text-muted-foreground">
+						<li><a href="#skills" class="transition-colors hover:text-foreground">Skills</a></li>
+						<li><a href="#install" class="transition-colors hover:text-foreground">Install</a></li>
+						<li>
+							<a href="#playbooks" class="transition-colors hover:text-foreground">Playbooks</a>
+						</li>
+						<li><a href="#faq" class="transition-colors hover:text-foreground">FAQ</a></li>
+					</ul>
+				</nav>
+
+				<nav aria-label="Resources">
+					<h2 class="text-sm font-semibold">Resources</h2>
+					<ul class="mt-4 space-y-3 text-sm text-muted-foreground">
+						<li>
+							<a
+								href={REPO}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Source on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${base}/playbooks/pr-review.pdf`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>PR Review playbook<span class="sr-only"> (PDF, opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${base}/playbooks/sec-audit.pdf`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Security Audit playbook<span class="sr-only"> (PDF, opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${base}/playbooks/trp.pdf`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Task Resolution playbook<span class="sr-only"> (PDF, opens in a new tab)</span></a
+							>
+						</li>
+					</ul>
+				</nav>
+			</div>
+
+			<div
+				class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row"
+			>
+				<span>© 2026 ttt-workflows · Open source.</span>
+				<span>Runs inside Claude Code. Not affiliated with Anthropic.</span>
+			</div>
+		</div>
+	</footer>
+</Layout>

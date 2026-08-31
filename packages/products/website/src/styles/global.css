@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+	--radius: 0.65rem;
+	--background: oklch(100% 0 0deg);
+	--foreground: oklch(14.5% 0 0deg);
+	--card: oklch(100% 0 0deg);
+	--card-foreground: oklch(14.5% 0 0deg);
+	--popover: oklch(100% 0 0deg);
+	--popover-foreground: oklch(14.5% 0 0deg);
+	--primary: oklch(64.6% 0.199 41.116deg);
+	--primary-foreground: oklch(98% 0.02 60deg);
+	--secondary: oklch(97% 0 0deg);
+	--secondary-foreground: oklch(20.5% 0 0deg);
+	--muted: oklch(97% 0 0deg);
+	--muted-foreground: oklch(55.6% 0 0deg);
+	--accent: oklch(97% 0 0deg);
+	--accent-foreground: oklch(20.5% 0 0deg);
+	--destructive: oklch(57.7% 0.245 27.325deg);
+	--border: oklch(92.2% 0 0deg);
+	--input: oklch(92.2% 0 0deg);
+	--ring: oklch(64.6% 0.199 41.116deg);
+}
+
+.dark {
+	--background: oklch(14.5% 0 0deg);
+	--foreground: oklch(98.5% 0 0deg);
+	--card: oklch(20.5% 0 0deg);
+	--card-foreground: oklch(98.5% 0 0deg);
+	--popover: oklch(20.5% 0 0deg);
+	--popover-foreground: oklch(98.5% 0 0deg);
+	--primary: oklch(70% 0.19 45deg);
+	--primary-foreground: oklch(20% 0.05 45deg);
+	--secondary: oklch(26.9% 0 0deg);
+	--secondary-foreground: oklch(98.5% 0 0deg);
+	--muted: oklch(26.9% 0 0deg);
+	--muted-foreground: oklch(70.8% 0 0deg);
+	--accent: oklch(26.9% 0 0deg);
+	--accent-foreground: oklch(98.5% 0 0deg);
+	--destructive: oklch(70.4% 0.191 22.216deg);
+	--border: oklch(100% 0 0deg / 10%);
+	--input: oklch(100% 0 0deg / 15%);
+	--ring: oklch(70% 0.19 45deg);
+}
+
+@theme inline {
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+}
+
+@layer base {
+	* {
+		border-color: var(--border);
+	}
+
+	body {
+		background-color: var(--background);
+		color: var(--foreground);
+		-webkit-font-smoothing: antialiased;
+	}
+}
+
+/* Scroll-reveal. Scoped to html.js so no-JS visitors always see content, and wrapped in
+   the no-preference query so prefers-reduced-motion disables it entirely. Only opacity and
+   transform animate — neither triggers layout, so this adds no CLS. */
+@media (prefers-reduced-motion: no-preference) {
+	html.js [data-reveal],
+	html.js [data-stagger] > * {
+		opacity: 0;
+		transform: translateY(12px);
+		transition:
+			opacity 0.5s ease,
+			transform 0.5s ease;
+	}
+
+	html.js [data-reveal].is-visible,
+	html.js [data-stagger].is-visible > * {
+		opacity: 1;
+		transform: none;
+	}
+
+	html.js [data-stagger].is-visible > *:nth-child(2) {
+		transition-delay: 60ms;
+	}
+
+	html.js [data-stagger].is-visible > *:nth-child(3) {
+		transition-delay: 120ms;
+	}
+
+	html.js [data-stagger].is-visible > *:nth-child(4) {
+		transition-delay: 180ms;
+	}
+
+	html.js [data-stagger].is-visible > *:nth-child(5) {
+		transition-delay: 240ms;
+	}
+
+	html.js [data-stagger].is-visible > *:nth-child(6) {
+		transition-delay: 300ms;
+	}
+}
+
+/* Hero entrance. Runs on load (above the fold, so no IntersectionObserver). The LCP
+   element ([data-hero="lcp"], the headline) animates transform ONLY and never drops below
+   opacity 1 — Chromium excludes opacity:0 nodes from LCP but not transformed ones, so this
+   keeps LCP fast. Everything else may fade. Scoped to html.js and gated by reduced-motion;
+   transforms/opacity don't reflow, so CLS stays 0. */
+@media (prefers-reduced-motion: no-preference) {
+	@keyframes haf-rise {
+		from {
+			transform: translateY(14px);
+		}
+
+		to {
+			transform: none;
+		}
+	}
+
+	@keyframes haf-rise-fade {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	html.js [data-hero] {
+		animation: haf-rise-fade 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: var(--hd, 0ms);
+	}
+
+	html.js [data-hero='lcp'] {
+		animation-name: haf-rise;
+	}
+}
+
+/* Theme-toggle animation. The View Transitions API handles the crossfade where supported;
+   this is the fallback path (class added only during a manual toggle, never on first paint),
+   and it tunes the View Transition timing. Both are inside the no-preference query. */
+@media (prefers-reduced-motion: no-preference) {
+	html.theme-anim,
+	html.theme-anim body,
+	html.theme-anim *:not(svg *) {
+		transition:
+			background-color 0.3s ease,
+			border-color 0.3s ease,
+			color 0.3s ease,
+			fill 0.3s ease;
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.3s;
+	}
+}

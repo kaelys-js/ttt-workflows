@@ -1,0 +1,83 @@
+---
+// A neutral recreation of a pr-review run in Claude Code (no real repo, no real
+// findings). Semantic tokens only, so it renders true light/dark with the rest of
+// the page — no rasterized screenshot, no placeholder artifacts.
+type Sev = "blocking" | "warn" | "info";
+const dot: Record<Sev, string> = {
+	blocking: "bg-[#e5484d]",
+	warn: "bg-[#f2762a]",
+	info: "bg-muted-foreground/50",
+};
+type Finding = { sev: Sev; label: string; head: string; at: string };
+const findings: Finding[] = [
+	{
+		sev: "blocking",
+		label: "issue",
+		head: "PATCH /users/:id has no object-level authz",
+		at: "users.controller.ts:88",
+	},
+	{
+		sev: "warn",
+		label: "suggestion",
+		head: "Empty string slips past the filter, widening the query",
+		at: "repo.ts:41",
+	},
+	{
+		sev: "info",
+		label: "nitpick",
+		head: "Comment restates the code instead of the why",
+		at: "token.ts:12",
+	},
+];
+---
+
+<div
+	class="w-full max-w-md overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-black/10 ring-1 ring-black/5 dark:shadow-black/40"
+	role="img"
+	aria-label="A pr-review run in Claude Code: a request-changes verdict with one blocking finding and two non-blocking findings, each anchored to a file and line, returned as a paste-ready comment."
+>
+	<div class="flex items-center gap-2 border-b border-border/60 px-4 py-3">
+		<span class="size-3 rounded-full bg-[#ff5f57]"></span>
+		<span class="size-3 rounded-full bg-[#febc2e]"></span>
+		<span class="size-3 rounded-full bg-[#28c840]"></span>
+		<span class="ml-2 text-xs font-medium text-muted-foreground">Claude Code · pr-review</span>
+	</div>
+
+	<div class="px-5 py-4 font-mono text-[12px] leading-relaxed">
+		<div class="text-muted-foreground">
+			<span class="text-primary">❯</span> pr-review github.com/acme/api/pull/482
+		</div>
+	</div>
+
+	<div class="border-t border-border/60 px-5 py-4">
+		<div class="flex items-center gap-2">
+			<span class="size-2 rounded-full bg-[#e5484d]"></span>
+			<span class="text-sm font-semibold">Request changes</span>
+			<span class="text-xs text-muted-foreground">· 1 blocking, 2 non-blocking</span>
+		</div>
+		<div class="mt-1 font-mono text-[11px] text-muted-foreground">
+			6 files · +214 −38 · read-only
+		</div>
+
+		<ul class="mt-4 space-y-3">
+			{
+				findings.map((f) => (
+					<li class="flex items-start gap-2.5 text-[13px]">
+						<span class={`mt-1.5 size-1.5 shrink-0 rounded-full ${dot[f.sev]}`} />
+						<div class="min-w-0 leading-snug">
+							<span class="font-medium">{f.label}</span>
+							<span class="text-muted-foreground"> — {f.head}</span>
+							<div class="font-mono text-[11px] text-muted-foreground/80">{f.at}</div>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+
+	<div class="border-t border-border/60 px-5 py-3">
+		<span class="text-xs text-muted-foreground"
+			>Nothing posted — the review is handed back for you to paste.</span
+		>
+	</div>
+</div>
