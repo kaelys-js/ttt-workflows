@@ -47,7 +47,7 @@ Portability differs by skill. Be straight with your team about it:
 |---|---|---|
 | **pr-review** | ✅ **Fully portable.** Works on any GitHub / Azure DevOps PR. | `node`, and `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional (`CLICKUP_TOKEN_FILE`), only for ticket-linked PRs. |
 | **sec-audit** | ✅ **Fully self-contained & agnostic.** Point it at any repo/PR/tenant. | `node`, `git`, and `az` for the live-cloud probes; the scanners `semgrep`/`gitleaks`/`checkov`/`osv-scanner`/`trivy` for the code layer (a missing one is reported, never silently skipped). No external repo, no client data — coverage against a prior audit is a file *you* pass in (`--known`). |
-| **trp** | 👥 **Team-scoped.** Not a general-purpose skill. | Built for two specific clients (Wheaton = Azure DevOps, ITC = GitHub), the team's workspace `AGENTS.md`, and a ClickUp token. Teammates on those clients can use it; it won't apply to arbitrary projects. |
+| **trp** | 👥 **Self-contained & team-scoped.** No external rulebook needed. | `node`, a ClickUp token (`CLICKUP_TOKEN_FILE`), and `gh` (ITC) or `az` (Wheaton). Delivers to two specific clients — Wheaton OMS (Azure DevOps) and ITC (GitHub) — whose full protocol is bundled in `reference/clients.md`. A teammate on those clients can run it end to end; it's not meant for arbitrary projects. |
 
 **Bottom line:** share **pr-review** with anyone. Share **sec-audit** with anyone — it's self-contained (just install the scanners for the code layer). Share **trp** with teammates who work the same clients.
 
