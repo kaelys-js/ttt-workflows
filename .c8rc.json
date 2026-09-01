@@ -1,0 +1,17 @@
+{
+	"all": false,
+	"include": ["plugins/ttt-workflows/skills/**/scripts/*.mjs"],
+	"exclude": [
+		"**/selftest.mjs",
+		"**/preflight.mjs",
+		"**/fetch-pr.mjs",
+		"**/fetch-ticket.mjs",
+		"**/probe-*.mjs"
+	],
+	"reporter": ["text-summary"],
+	"check-coverage": true,
+	"lines": 75,
+	"functions": 75,
+	"statements": 75,
+	"branches": 50
+}

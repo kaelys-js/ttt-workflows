@@ -22,18 +22,18 @@ test.describe('visual — hero', () => {
 	});
 });
 
+// Reveal-on-scroll starts elements at opacity:0 and fades them in on intersection; force the
+// end state so a section is never captured mid-reveal regardless of scroll timing.
+const revealAll = (page: Page) =>
+	page.evaluate(() =>
+		document
+			.querySelectorAll('[data-reveal],[data-stagger]')
+			.forEach((el) => el.classList.add('is-visible')),
+	);
+
 // Every other section, in both themes, so a colour or layout regression anywhere on the page is
 // caught — not just in the hero.
 test.describe('visual — page sections', () => {
-	// Reveal-on-scroll starts elements at opacity:0 and fades them in on intersection; force the
-	// end state so a section is never captured mid-reveal regardless of scroll timing.
-	const revealAll = (page: Page) =>
-		page.evaluate(() =>
-			document
-				.querySelectorAll('[data-reveal],[data-stagger]')
-				.forEach((el) => el.classList.add('is-visible')),
-		);
-
 	const SECTIONS: { name: string; selector: string; ready?: string }[] = [
 		{ name: 'nav', selector: 'header' },
 		{ name: 'trust', selector: '#trust', ready: 'Read-only by default' },

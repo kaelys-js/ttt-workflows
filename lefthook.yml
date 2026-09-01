@@ -63,6 +63,9 @@ pre-push:
     validate-skills:
       priority: 7
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:validate-skills
+    scripts-test:
+      priority: 7
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:scripts-test
     docs-check:
       priority: 8
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:docs-check

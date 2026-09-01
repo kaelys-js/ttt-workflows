@@ -53,6 +53,15 @@
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
+		"qa:scripts-test": {
+			"inputs": [
+				"plugins/ttt-workflows/skills/**/scripts/*.mjs",
+				"scripts/test-skills.mjs",
+				".c8rc.json"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
 		"qa:docs-check": {
 			"inputs": ["docs/**", "scripts/build-docs.mjs"],
 			"outputs": [],
