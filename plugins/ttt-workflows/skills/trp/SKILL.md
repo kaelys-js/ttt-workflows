@@ -1,11 +1,12 @@
 ---
 name: trp
+model: claude-opus-4-7
 description: Runs the Task Resolution Protocol (TRP) end to end for a ClickUp ticket — grounds the ticket in the actual repo with evidence, assembles the Full TRP Package changelog (phases 0-5), STOPS for explicit approval, then implements, verifies through the local gates plus CodeRabbit and the pr-review skill, opens the PR, and posts the two-layer ClickUp update. Works with GitHub or Azure DevOps repos. Use when the user says "TRP Process for", "TRP", "Task Resolution Protocol", or pastes an app.clickup.com task URL asking for delivery of that ticket.
 license: Proprietary. See LICENSE.
 compatibility: Requires node, git, a ClickUp token (CLICKUP_TOKEN_FILE), and gh (GitHub) or az (Azure DevOps). Works with any GitHub or Azure DevOps repo; the platform is detected from the repo remote.
 metadata:
   author: ttt-studios
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # trp
@@ -83,6 +84,8 @@ node $D/trp/scripts/clickup-update.mjs "<TICKET_URL>" --status "in review" --com
 ```
 
 ## Hard rules
+
+- **Model pin (config-driven).** This skill runs on `claude-opus-4-7` (SKILL.md frontmatter). Every subagent and workflow it launches uses the same model: pass `model: 'claude-opus-4-7'` on each `agent()` call and Agent-tool subagent, so delegated work never silently drops to another model.
 
 - **The approval gate is absolute.** Everything before the operator's approval is
   read-only. No branch, no subagent, no write — including "obvious" work.

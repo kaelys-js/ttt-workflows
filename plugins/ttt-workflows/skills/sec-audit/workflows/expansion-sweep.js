@@ -71,7 +71,7 @@ FOCUS LENS: ${s.lens}
 Read the actual files under ROOT (ls/grep/cat/read). Trace real data flow from an attacker-controlled entry to a sink. For each finding: cite file:line you actually read, state the concrete exploit path, set severity by real impact.${knownBlock}
 
 Adversarially self-refute each candidate before reporting (R2): if the exploit is actually closed, drop it. Report only what survives (empty array if none).`,
-				{ label: `hunt:${s.label}`, phase: 'Hunt', schema: SCHEMA },
+				{ label: `hunt:${s.label}`, phase: 'Hunt', schema: SCHEMA, model: 'claude-opus-4-7' },
 			).then((r) => ({ surface: s.label, findings: r?.findings || [] })),
 	),
 );
@@ -98,6 +98,7 @@ Read the actual file and surrounding code. A refute must prove the exploit is CL
 				{
 					label: `verify:${f.surface}`,
 					phase: 'Verify',
+					model: 'claude-opus-4-7',
 					schema: {
 						type: 'object',
 						required: ['verdict', 'reason'],

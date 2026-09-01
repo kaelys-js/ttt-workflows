@@ -1,11 +1,12 @@
 ---
 name: pr-review
+model: claude-opus-4-7
 description: Runs a full end-to-end pull request review from a GitHub or Azure DevOps PR URL and returns a paste-ready review comment — it never posts, comments, or otherwise mutates the PR. Fetches the diff, metadata, and existing threads read-only, reviews against a design/correctness/security/tests/behaviour rubric, verifies every finding against the real diff, and outputs a compact, deterministic, plain-language review with severity-labelled findings. Use when the user asks to review a pull request, pastes a github.com or dev.azure.com pull-request link, or says "PR review", "review this PR", or "code review".
 license: Proprietary. See LICENSE.
 compatibility: Requires node and git, plus gh (GitHub) or az (Azure DevOps); network access to the PR host. Optional: a ClickUp token for ticket-linked PRs.
 metadata:
   author: ttt-studios
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # pr-review
@@ -134,6 +135,8 @@ and re-run. Never hand-edit the block to get around the gate.
 block so it copies cleanly. Do not post it anywhere.
 
 ## Hard rules
+
+- **Model pin (config-driven).** This skill runs on `claude-opus-4-7` (SKILL.md frontmatter). Every subagent and workflow it launches uses the same model: pass `model: 'claude-opus-4-7'` on each `agent()` call and Agent-tool subagent, so delegated work never silently drops to another model.
 
 - **Read-only. Never mutate the PR (R9).** No `gh pr review` / `comment` / `edit` /
   `merge` / `ready`, no Azure DevOps thread or vote writes, no write API calls. The
