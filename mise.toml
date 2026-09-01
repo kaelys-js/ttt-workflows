@@ -52,3 +52,4 @@ yamllint = "1.38.0" # YAML lint (workflows)
 actionlint = "1.7.12" # GitHub workflow lint
 "npm:markdownlint-cli2" = "0.23.2" # Markdown lint
 "npm:@taplo/cli" = "0.7.0" # TOML lint
+git-cliff = "2.13.0"

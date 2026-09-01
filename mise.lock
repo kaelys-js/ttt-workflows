@@ -124,6 +124,45 @@ checksum = "sha256:19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6
 url = "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/typst/typst/releases/assets/480303335"
 
+[[tools.git-cliff]]
+version = "2.13.0"
+backend = "aqua:orhun/git-cliff"
+
+[tools.git-cliff."platforms.linux-arm64"]
+checksum = "sha256:e768da9e3f2aa4fefbafad8ffa8fe45428237462863fc005c6a0c0278eb2cd66"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405835084"
+
+[tools.git-cliff."platforms.linux-arm64-musl"]
+checksum = "sha256:27b9216d92a254fb03d18008252a7c8c7bc803b4616bf69175ff448918a9606a"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405835197"
+
+[tools.git-cliff."platforms.linux-x64"]
+checksum = "sha256:29d816ea0a1f73febb9e7fe34e09d837abe8c492ee7f9c20277c3e3d0c076a49"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405835039"
+
+[tools.git-cliff."platforms.linux-x64-musl"]
+checksum = "sha256:132539f836416563e86621ff0649f0c0c766cf32ea1be85f3ba0d34f043ce86a"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405835258"
+
+[tools.git-cliff."platforms.macos-arm64"]
+checksum = "sha256:72e8d1f4d1dca4312ccf979c72a094e5bab0a659ec6c8d4e1bbea19f9cc65b23"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405834908"
+
+[tools.git-cliff."platforms.macos-x64"]
+checksum = "sha256:ad980b6bd5c52deec7c24a55599f652607d40d221f0bfb75142017a9fc82f7c4"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-x86_64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405835125"
+
+[tools.git-cliff."platforms.windows-x64"]
+checksum = "sha256:17f891a0ec38f8c9ef6440eed31be43117491b05afeba6093a15545633eae6ff"
+url = "https://github.com/orhun/git-cliff/releases/download/v2.13.0/git-cliff-2.13.0-x86_64-pc-windows-msvc.zip"
+url_api = "https://api.github.com/repos/orhun/git-cliff/releases/assets/405836366"
+
 [[tools.node]]
 version = "26.8.1"
 backend = "core:node"
