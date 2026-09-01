@@ -83,6 +83,17 @@
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
+		"qa:web-typecheck": {
+			"inputs": [
+				"packages/products/website/src/**",
+				"packages/products/website/e2e/**",
+				"packages/products/website/test/**",
+				"packages/products/website/tsconfig.json",
+				"packages/products/website/package.json"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
 		"qa:astro-format": {
 			"inputs": [
 				"packages/products/website/src/**/*.astro",

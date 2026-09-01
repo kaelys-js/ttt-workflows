@@ -20,6 +20,7 @@
 		"qa:markdown-lint": "markdownlint-cli2 \"*.md\"",
 		"qa:web-format": "cd packages/products/website && oxfmt --check src",
 		"qa:web-lint": "cd packages/products/website && oxlint src",
+		"qa:web-typecheck": "cd packages/products/website && pnpm exec tsc --noEmit",
 		"qa:astro-format": "cd packages/products/website && pnpm exec prettier --check \"src/**/*.astro\"",
 		"qa:css-lint": "cd packages/products/website && pnpm exec stylelint \"src/**/*.css\"",
 		"qa:web-test": "cd packages/products/website && pnpm exec vitest run --coverage",

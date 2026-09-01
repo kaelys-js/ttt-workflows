@@ -72,6 +72,9 @@ pre-push:
     web-lint:
       priority: 10
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-lint
+    web-typecheck:
+      priority: 10
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-typecheck
     astro-format:
       priority: 11
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:astro-format

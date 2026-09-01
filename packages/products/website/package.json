@@ -7,6 +7,7 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"check": "astro check",
+		"typecheck": "tsc --noEmit",
 		"format": "prettier --write \"src/**/*.astro\"",
 		"format:check": "prettier --check \"src/**/*.astro\"",
 		"lint:css": "stylelint \"src/**/*.css\"",
