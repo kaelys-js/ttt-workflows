@@ -43,3 +43,13 @@ test('external GitHub links open in a new tab safely', async ({ page }) => {
 	await expect(gh).toHaveAttribute('target', '_blank');
 	await expect(gh).toHaveAttribute('rel', /noopener/);
 });
+
+// Runs under both the desktop and mobile projects, so it fails if any content (e.g. a long
+// copy command) widens the page past the viewport instead of scrolling within its own row.
+test('the page never scrolls horizontally', async ({ page }) => {
+	await page.goto('./');
+	const overflow = await page.evaluate(
+		() => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+	);
+	expect(overflow).toBeLessThanOrEqual(1);
+});

@@ -158,7 +158,9 @@ const playbooks = v.parse(PlaybooksSchema, [
 
 	<main id="main">
 		<!-- hero -->
-		<section class="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-2">
+		<section
+			class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-2"
+		>
 			<!-- Hero entrance: the LCP headline animates transform-only (data-hero="lcp",
 			     never opacity:0) so LCP stays fast; the rest fade+rise with a light stagger. -->
 			<div>
@@ -243,7 +245,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 			     tags / produces / boundary), so those sections line up across all three cards
 			     regardless of copy length; the 1fr description row absorbs the difference. -->
 			<div
-				class="mt-12 grid gap-5 lg:grid-cols-3 lg:grid-rows-[auto_1fr_auto_auto_auto] lg:gap-y-4"
+				class="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:grid-rows-[auto_1fr_auto_auto_auto] lg:gap-y-4"
 				data-stagger
 			>
 				{
@@ -291,7 +293,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 						Two commands in Claude Code, then invoke a skill whenever you need it.
 					</p>
 				</div>
-				<div class="mt-12 grid gap-8 lg:grid-cols-2" data-stagger>
+				<div class="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2" data-stagger>
 					{
 						steps.map((s) => (
 							<div class="flex h-full flex-col">
@@ -344,7 +346,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 					What each skill actually returns, rendered inside a Claude Code session.
 				</p>
 			</div>
-			<div class="mt-12 grid items-start justify-items-center gap-8 md:grid-cols-2">
+			<div class="mt-12 grid grid-cols-1 items-start justify-items-center gap-8 md:grid-cols-2">
 				<figure class="w-full" data-reveal>
 					<SecAuditMockup />
 					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
@@ -371,7 +373,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 						Each skill ships a companion PDF: the what, how, and why of doing that work by hand.
 					</p>
 				</div>
-				<div class="mt-12 grid gap-5 md:grid-cols-3" data-stagger>
+				<div class="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3" data-stagger>
 					{
 						playbooks.map((p) => (
 							<Card class="gap-3 transition-shadow hover:shadow-md">
@@ -418,7 +420,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 
 	<footer class="border-t border-border/60 bg-muted/20">
 		<div class="mx-auto max-w-6xl px-5 py-14">
-			<div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+			<div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
 				<div class="max-w-sm lg:col-span-2">
 					<div class="flex items-center gap-2.5 font-semibold">
 						<span

@@ -180,23 +180,26 @@
 	}
 }
 
-/* Copy button: a brief pop when the check-mark swaps in after a successful copy. The icon is
-   display:none until then, so the animation only runs when it appears. Replaces tw-animate-css's
-   animate-in/zoom/fade for this one micro-interaction, so the site ships no animation library. */
-@media (prefers-reduced-motion: no-preference) {
-	@keyframes copied-pop {
-		from {
-			opacity: 0;
-			transform: scale(0.5);
-		}
-
-		to {
-			opacity: 1;
-			transform: none;
-		}
+/* FAQ disclosure: animate the native <details> open/close. `interpolate-size: allow-keywords`
+   lets height animate to/from `auto` (the 2026-standard way); `::details-content` is the panel
+   the browser toggles. Guarded by @supports so browsers without it still open/close correctly,
+   just without the glide. The chevron rotation (group-open:rotate-180) transitions on its own. */
+@supports (interpolate-size: allow-keywords) {
+	:root {
+		interpolate-size: allow-keywords;
 	}
 
-	.copied-pop {
-		animation: copied-pop 0.3s ease both;
+	@media (prefers-reduced-motion: no-preference) {
+		#faq details::details-content {
+			height: 0;
+			overflow: hidden;
+			transition:
+				height 0.28s ease,
+				content-visibility 0.28s ease allow-discrete;
+		}
+
+		#faq details[open]::details-content {
+			height: auto;
+		}
 	}
 }
