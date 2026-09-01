@@ -2,11 +2,11 @@
 name: sec-audit
 model: claude-opus-4-7
 description: Runs a professional security audit end to end against any target — a GitHub or Azure DevOps repo, a specific GH/ADO pull request, a local repo, or a single file/folder. Routes to four modes (sweep, review, poc, remediate) that sequence the Security Review, Security POC, Systematic Finding, and Systematic Remediation protocols, drive the skill's own bundled workflows, and produce scored findings, private advisories, reproducible PoCs, GAP-LIST/executive-brief reports, and client fix-PRs. Grounded in PTES, OWASP WSTG, NIST SP 800-115, CVSS 4.0, and coordinated disclosure. Use when the user says "security audit", "SFP", "SRP", "security review", "find vulnerabilities", "build a PoC", "remediate SEC-nn", asks whether something is exploitable or a real security problem, or points at a repo/PR/path to audit.
-license: Proprietary. See LICENSE.
+license: MIT. See LICENSE.
 compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy for the code layer; network access to the target and Azure.
 metadata:
   author: ttt-studios
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # sec-audit

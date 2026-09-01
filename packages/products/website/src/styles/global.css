@@ -79,11 +79,31 @@
 		border-color: var(--border);
 	}
 
+	html {
+		/* No grey tap-flash on iOS Safari; our own :active/hover states are the feedback. */
+		-webkit-tap-highlight-color: transparent;
+	}
+
 	body {
 		background-color: var(--background);
 		color: var(--foreground);
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Better line breaking (the 2026 text feature; Safari 17.5+ / Chrome). balance evens out a
+	   heading's lines; pretty avoids orphans and ragged ends in running copy. Degrades to normal
+	   wrapping where unsupported, so it's purely additive. */
+	h1,
+	h2,
+	h3,
+	h4 {
+		text-wrap: balance;
+	}
+
+	p,
+	li {
+		text-wrap: pretty;
 	}
 
 	/* Windows High Contrast / forced-colors: the palette is replaced by system colors, which
@@ -92,6 +112,18 @@
 		:focus-visible {
 			outline: 2px solid CanvasText;
 			outline-offset: 2px;
+		}
+	}
+
+	/* Respect a request for reduced transparency: make the translucent sticky nav fully opaque
+	   and drop its blur, so the setting is honoured rather than ignored. */
+	@media (prefers-reduced-transparency: reduce) {
+		header.backdrop-blur-xl {
+			background-color: var(--background);
+			/* stylelint-disable-next-line property-no-vendor-prefix -- Safari needs the -webkit- form
+			   to cancel the blur; this project has no autoprefixer step. */
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
 		}
 	}
 }

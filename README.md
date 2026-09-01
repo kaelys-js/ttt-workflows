@@ -11,7 +11,7 @@ any tenant; no client data baked in.
 [![Pages](https://github.com/kaelys-js/ttt-workflows/actions/workflows/pages.yml/badge.svg)](https://github.com/kaelys-js/ttt-workflows/actions/workflows/pages.yml)
 ![Node](https://img.shields.io/badge/node-26.8.1-339933?logo=node.js)
 ![pnpm](https://img.shields.io/badge/pnpm-11.24.0-F69220?logo=pnpm)
-![License](https://img.shields.io/badge/license-Proprietary-red)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 Site: [kaelys-js.github.io/ttt-workflows](https://kaelys-js.github.io/ttt-workflows/)
 
@@ -155,4 +155,4 @@ with", or model names in commits, PRs, or code.
 
 ## License
 
-Proprietary. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

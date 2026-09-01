@@ -474,6 +474,35 @@ const playbooks = v.parse(PlaybooksSchema, [
 						</li>
 						<li>
 							<a
+								href={`${REPO}/releases`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Releases<span class="sr-only"> (opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${REPO}/releases/latest`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Changelog<span class="sr-only">
+									(latest release notes, opens in a new tab)</span
+								></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${REPO}/blob/main/LICENSE`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>MIT License<span class="sr-only"> (opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
 								href={`${base}/playbooks/pr-review.pdf`}
 								target="_blank"
 								rel="noopener noreferrer"
