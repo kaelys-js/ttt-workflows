@@ -27,6 +27,7 @@ for (let i = 0; i < args.length; i++) {
 		i++;
 	}
 }
+/* c8 ignore start -- live Azure posture I/O below; exercised by real sweeps, not unit tests */
 const opt = (f, d) => {
 	const i = args.indexOf(f);
 	return i >= 0 ? args[i + 1] : d;
@@ -332,3 +333,4 @@ const bySev = findings.reduce((m, f) => ((m[f.severity] = (m[f.severity] || 0) +
 console.log(
 	`wrote ${out} — ${findings.length} live-Azure findings ${JSON.stringify(bySev)} · ids: ${[...new Set(findings.map((f) => f.id_hint))].join(', ')}`,
 );
+/* c8 ignore stop */

@@ -24,6 +24,7 @@ for (let i = 0; i < args.length; i++) {
 		i++;
 	}
 }
+/* c8 ignore start -- live Azure DevOps posture I/O below; exercised by real sweeps, not unit tests */
 const opt = (f, d) => {
 	const i = args.indexOf(f);
 	return i >= 0 ? args[i + 1] : d;
@@ -137,3 +138,4 @@ writeFileSync(
 console.log(
 	`wrote ${out} — ${findings.length} live-ADO findings (${vg.value.length} vargroups + ${defCount} build defs) · ids: ${[...new Set(findings.map((f) => f.id_hint))].join(', ') || '(none)'}`,
 );
+/* c8 ignore stop */

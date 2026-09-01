@@ -24,6 +24,7 @@ for (let i = 0; i < args.length; i++) {
 		i++;
 	}
 }
+/* c8 ignore start -- live Entra posture I/O below; exercised by real sweeps, not unit tests */
 const opt = (f, d) => {
 	const i = args.indexOf(f);
 	return i >= 0 ? args[i + 1] : d;
@@ -183,3 +184,4 @@ const ids = [...new Set(findings.map((f) => f.id_hint))].join(', ');
 console.log(
 	`wrote ${out} — ${findings.length} live-Entra findings across ${scoped.length} app-regs · ids: ${ids || '(none)'}`,
 );
+/* c8 ignore stop */

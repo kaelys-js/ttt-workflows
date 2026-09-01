@@ -123,6 +123,7 @@ function gitInfo(dir, subpath) {
 	return { sha, remote, scope: subpath || null };
 }
 
+/* c8 ignore start -- live clone + pr-review delegation (git/network); real runs cover it */
 function cloneRepo({ url, platform }) {
 	const tmp = mkdtempSync(join(tmpdir(), 'sec-audit-'));
 	const dest = join(tmp, 'repo');
@@ -183,6 +184,7 @@ async function resolvePR({ url, platform }) {
 		diffProvenance: sha256(pr.diff || ''),
 	};
 }
+/* c8 ignore stop */
 
 function resolveLocal({ path, kind }) {
 	const dir = kind === 'file' ? (path.includes('/') ? path.replace(/\/[^/]+$/, '') : '.') : path;

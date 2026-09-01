@@ -6,7 +6,7 @@
 // is proven by real runs, not here.
 
 import { spawnSync } from 'node:child_process';
-import { writeFileSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, mkdtempSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -380,6 +380,340 @@ check(
 		'eval: every positive prompt is covered by the description',
 		miss.length === 0,
 		miss.slice(0, 2).join(' | '),
+	);
+}
+
+// ---- aggregate: reconcile layer findings into a coverage matrix --------------
+// Pure fs transform (no network), driven with fixtures across every mode + error path.
+{
+	const dir = join(tmp, 'agg');
+	mkdirSync(dir, { recursive: true });
+	writeFileSync(
+		join(dir, 'azure-findings.json'),
+		JSON.stringify({
+			findings: [
+				{
+					id_hint: 'SEC-AZ-1',
+					title: 'open firewall',
+					severity: 'HIGH',
+					class: 'net',
+					evidence: '0.0.0.0',
+					file: 'main.tf',
+					ref_ids: ['SEC-AZ-1'],
+				},
+			],
+			referenced_ids: ['SEC-REF-9'],
+			corpus: 'a keyworded blob about weak tls',
+		}),
+	);
+	writeFileSync(
+		join(dir, 'source-findings.json'),
+		JSON.stringify({ findings: [{ id_hint: 'SEC-SRC-2', title: 'sqli', severity: 'CRITICAL' }] }),
+	);
+	writeFileSync(
+		join(dir, 'osv-scan.json'),
+		JSON.stringify({ results: [{ packages: [{ vulnerabilities: [{}, {}] }] }] }),
+	);
+	const knownRows = [
+		{ id: 'SEC-AZ-1', title: 'open firewall', severity: 'HIGH' },
+		{ id: 'SEC-SRC-2', title: 'sqli', severity: 'CRITICAL' },
+		{ id: 'SEC-MAP-3', title: 'keyworded', severity: 'MEDIUM' },
+		{ id: 'SEC-REM-4', title: 'fixed', severity: 'LOW' },
+		{ id: 'SEC-GAP-5', title: 'missing', severity: 'LOW' },
+	];
+	const csv = join(tmp, 'known.csv');
+	writeFileSync(
+		csv,
+		`id,title,severity\n${knownRows.map((r) => `${r.id},${r.title},${r.severity}`).join('\n')}\n`,
+	);
+	const knownJson = join(tmp, 'known.json');
+	writeFileSync(knownJson, JSON.stringify(knownRows));
+	const mapJson = join(tmp, 'map.json');
+	writeFileSync(mapJson, JSON.stringify({ 'SEC-MAP-3': 'weak tls' }));
+
+	const rNone = run('aggregate.mjs', ['--dir', dir]);
+	check('aggregate: no --known → rollup only', rNone.code === 0 && /rollup only/.test(rNone.out));
+	check('aggregate: counts dep CVEs from osv-*.json', /2 dep CVEs/.test(rNone.err));
+
+	const covPath = join(tmp, 'cov.json');
+	const rCsv = run('aggregate.mjs', [
+		'--dir',
+		dir,
+		'--known',
+		csv,
+		'--map',
+		mapJson,
+		'--remediated',
+		'SEC-REM-4',
+		'--out',
+		covPath,
+	]);
+	const cov = JSON.parse(readFileSync(covPath, 'utf8'));
+	const st = (id) => cov.cov.find((x) => x.id === id)?.status;
+	check(
+		'aggregate: coverage matrix (found/remediated/gap) from CSV known-list',
+		rCsv.code === 0 &&
+			st('SEC-AZ-1') === 'found' &&
+			st('SEC-SRC-2') === 'found' &&
+			st('SEC-MAP-3') === 'found' &&
+			st('SEC-REM-4') === 'remediated' &&
+			st('SEC-GAP-5') === 'gap',
+		JSON.stringify(cov.cov.map((x) => `${x.id}:${x.status}`)),
+	);
+	const rJson = run('aggregate.mjs', [
+		'--dir',
+		dir,
+		'--known',
+		knownJson,
+		'--out',
+		join(tmp, 'covj.json'),
+	]);
+	check('aggregate: accepts a JSON known-list', rJson.code === 0 && /of 5/.test(rJson.out));
+
+	check(
+		'aggregate: refuses a missing --known file',
+		run('aggregate.mjs', ['--dir', dir, '--known', '/nonexistent.csv']).code !== 0,
+	);
+	const badCsv = join(tmp, 'bad.csv');
+	writeFileSync(badCsv, 'name,sev\nx,HIGH\n');
+	check(
+		'aggregate: refuses a CSV with no id column',
+		/no 'id' column/.test(run('aggregate.mjs', ['--dir', dir, '--known', badCsv]).err),
+	);
+	check(
+		'aggregate: refuses an unknown flag',
+		/unknown flag/.test(run('aggregate.mjs', ['--nope', 'x']).err),
+	);
+}
+
+// ---- collect-findings: normalize workflow output into flat findings JSON ------
+{
+	const result = join(tmp, 'result.json');
+	writeFileSync(
+		result,
+		JSON.stringify({
+			findings: [
+				{
+					summary: 'idor on the orders endpoint',
+					severity: 'high',
+					proposed_sec: 'SEC-R-1',
+					evidence: [{ file: 'orders.ts', line: 5, snippet: 'no authz check' }],
+				},
+			],
+		}),
+	);
+	const jdir = join(tmp, 'jr');
+	mkdirSync(jdir, { recursive: true });
+	writeFileSync(
+		join(jdir, 'journal.jsonl'),
+		[
+			JSON.stringify({
+				type: 'result',
+				value: {
+					findings: [
+						{
+							verdict: 'CONFIRMED',
+							summary: 'confirmed sqli in the search filter',
+							proposed_sec: 'SEC-J-1',
+							proposed_cvss: '8.1 high',
+							evidence: [{ file: 'search.ts', line: 42, snippet: 'raw string concat into SQL' }],
+						},
+						{ verdict: 'REFUTED', summary: 'not a real bug' },
+						// duplicate title (deduped) and a placeholder title (filtered) exercise those guards
+						{ verdict: 'CONFIRMED', summary: 'confirmed sqli in the search filter' },
+						{ verdict: 'CONFIRMED', summary: 'item 1' },
+					],
+				},
+			}),
+			// a result whose value is a JSON string (the workflow's stringified form)
+			JSON.stringify({
+				type: 'result',
+				value: JSON.stringify({
+					findings: [{ verdict: 'CONFIRMED', summary: 'weak jwt secret', proposed_cvss: 'low' }],
+				}),
+			}),
+			JSON.stringify({ type: 'log', value: 'noise' }),
+			'{ not json',
+			'',
+		].join('\n'),
+	);
+
+	const rRes = run('collect-findings.mjs', ['--result', result, '--out', join(tmp, 'exp.json')]);
+	const exp = JSON.parse(readFileSync(join(tmp, 'exp.json'), 'utf8'));
+	check(
+		'collect-findings --result: passes a workflow result through',
+		rRes.code === 0 && exp.findings.length === 1,
+		rRes.out.trim(),
+	);
+	const srcOut = join(tmp, 'src.json');
+	const rJr = run('collect-findings.mjs', ['--journal', jdir, '--out', srcOut]);
+	const src = JSON.parse(readFileSync(srcOut, 'utf8'));
+	check(
+		'collect-findings --journal: keeps CONFIRMED, drops REFUTED/dupes/placeholders',
+		rJr.code === 0 &&
+			src.findings.length === 2 &&
+			src.findings.some((f) => f.id_hint === 'SEC-J-1' && f.severity === 'HIGH') &&
+			src.findings.some((f) => f.severity === 'LOW'),
+		JSON.stringify(src.findings.map((f) => `${f.id_hint}:${f.severity}`)),
+	);
+	const rMerge = run('collect-findings.mjs', [
+		'--merge-results',
+		result,
+		'--out',
+		join(tmp, 'merged.json'),
+	]);
+	check(
+		'collect-findings --merge-results: merges results',
+		rMerge.code === 0 && /merged from 1/.test(rMerge.out),
+	);
+
+	check(
+		'collect-findings: needs --out',
+		/need --out/.test(run('collect-findings.mjs', ['--journal', jdir]).err),
+	);
+	check(
+		'collect-findings: needs a mode',
+		/need --journal/.test(run('collect-findings.mjs', ['--out', join(tmp, 'x.json')]).err),
+	);
+	check(
+		'collect-findings: modes are mutually exclusive',
+		/mutually exclusive/.test(
+			run('collect-findings.mjs', [
+				'--journal',
+				jdir,
+				'--result',
+				result,
+				'--out',
+				join(tmp, 'x.json'),
+			]).err,
+		),
+	);
+	const noFind = join(tmp, 'nofind.json');
+	writeFileSync(noFind, JSON.stringify({ nope: true }));
+	check(
+		'collect-findings --result: refuses a result with no findings[]',
+		/no findings\[\] array/.test(
+			run('collect-findings.mjs', ['--result', noFind, '--out', join(tmp, 'x.json')]).err,
+		),
+	);
+	check(
+		'collect-findings: refuses an unknown flag',
+		/unknown flag/.test(
+			run('collect-findings.mjs', ['--nope', 'x', '--out', join(tmp, 'x.json')]).err,
+		),
+	);
+}
+
+// ---- report: renders finding cards + the coverage grid from real fixtures ----
+// The prior report test renders an empty dir; drive it against findings + a coverage matrix so the
+// card, coverage-cell, and severity-rank renderers actually run.
+{
+	const rep = join(tmp, 'rep');
+	mkdirSync(rep, { recursive: true });
+	writeFileSync(
+		join(rep, 'azure-findings.json'),
+		JSON.stringify({
+			findings: [
+				{
+					id_hint: 'SEC-AZ-1',
+					severity: 'HIGH',
+					cvss: '7.5',
+					title: 'Postgres firewall allows 0.0.0.0/0',
+					file: 'main.tf',
+					resource: 'pg-flex-01',
+					evidence: 'startIpAddress 0.0.0.0 endIpAddress 255.255.255.255',
+				},
+			],
+		}),
+	);
+	writeFileSync(
+		join(rep, 'coverage.json'),
+		JSON.stringify({
+			total: 2,
+			rollup: { CRITICAL: 0, HIGH: 1, MEDIUM: 0, LOW: 1, INFO: 0 },
+			osvCount: 0,
+			cov: [
+				{
+					id: 'SEC-AZ-1',
+					title: 'open firewall',
+					severity: 'HIGH',
+					status: 'found',
+					layers: ['live-azure'],
+				},
+				{ id: 'SEC-GAP-2', title: 'unmapped item', severity: 'LOW', status: 'gap', layers: [] },
+			],
+		}),
+	);
+	const repOut = join(tmp, 'report.html');
+	const rRep = run('report.mjs', ['--dir', rep, '--title', 'Selftest Audit', '--out', repOut]);
+	const html = readFileSync(repOut, 'utf8');
+	check(
+		'report: renders finding cards + coverage grid from findings',
+		rRep.code === 0 &&
+			html.includes('Postgres firewall') &&
+			html.includes('SEC-AZ-1') &&
+			/gap/i.test(html) &&
+			html.includes('Selftest Audit'),
+		rRep.err.trim().slice(0, 60),
+	);
+}
+
+// ---- resolve-target: local repo + file resolution ---------------------------
+// The clone + pr-review-delegation paths need git/network and are c8-ignored; the local-repo and
+// single-file resolution (git sha + provenance stamping) is proven here against a real temp repo.
+{
+	const repo = join(tmp, 'localrepo');
+	mkdirSync(repo, { recursive: true });
+	const git = (...a) => spawnSync('git', a, { cwd: repo, encoding: 'utf8' });
+	git('init', '-q');
+	git('config', 'user.email', 't@example.com');
+	git('config', 'user.name', 'selftest');
+	writeFileSync(join(repo, 'a.ts'), 'export const x = 1;\n');
+	git('add', '-A');
+	git('commit', '-qm', 'init');
+
+	const tgtPath = join(tmp, 'tgt.json');
+	const rRepo = run('resolve-target.mjs', [repo, '--out', tgtPath]);
+	const tgt = JSON.parse(readFileSync(tgtPath, 'utf8'));
+	check(
+		'resolve-target: local repo → kind=repo, platform=local, sha stamped',
+		rRepo.code === 0 && tgt.kind === 'repo' && tgt.platform === 'local' && Boolean(tgt.sha),
+		JSON.stringify({ kind: tgt.kind, platform: tgt.platform, sha: Boolean(tgt.sha) }),
+	);
+	const tgtfPath = join(tmp, 'tgtf.json');
+	const rFile = run('resolve-target.mjs', [join(repo, 'a.ts'), '--out', tgtfPath]);
+	const tgtf = JSON.parse(readFileSync(tgtfPath, 'utf8'));
+	check(
+		'resolve-target: local file → kind=file, path-scoped, content hashed',
+		rFile.code === 0 &&
+			tgtf.kind === 'file' &&
+			Array.isArray(tgtf.scope) &&
+			Boolean(tgtf.provenance?.contentSha256),
+		JSON.stringify({ kind: tgtf.kind, scope: tgtf.scope }),
+	);
+}
+
+// ---- probe-{azure,entra,ado}: arg-parse hardening ----------------------------
+// The live cloud posture I/O is c8-ignored (real sweeps cover it); the argument surface must
+// still refuse a bad invocation before any az/Graph call, and that is proven here.
+for (const [script, valid] of [
+	['probe-azure.mjs', '--sub'],
+	['probe-entra.mjs', '--filter'],
+	['probe-ado.mjs', '--org'],
+]) {
+	// A valid flag followed by an unknown one: exercises the valid-flag advance AND the unknown-flag
+	// refusal, and exits before the first live call.
+	const rUnknown = run(script, [valid, 'x', '--nope', 'y']);
+	check(
+		`${script} refuses an unknown flag (pre-network)`,
+		rUnknown.code !== 0 && /unknown flag/.test(rUnknown.err),
+		rUnknown.err.trim().slice(0, 50),
+	);
+	const rNoVal = run(script, [valid]);
+	check(
+		`${script} refuses a flag with no value (pre-network)`,
+		rNoVal.code !== 0 && /needs a value/.test(rNoVal.err),
+		rNoVal.err.trim().slice(0, 50),
 	);
 }
 
