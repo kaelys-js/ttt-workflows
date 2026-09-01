@@ -22,7 +22,7 @@ export default defineConfig({
 	webServer: {
 		// astro preview/build can hang when backgrounded in a sandbox, so `test:e2e` builds
 		// first and this only serves the pre-built dist statically from the server root.
-		command: 'python3 -m http.server 4321 --directory dist',
+		command: 'node serve.mjs',
 		url: base,
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,

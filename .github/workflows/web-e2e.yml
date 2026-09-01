@@ -1,0 +1,49 @@
+name: Web E2E
+# Website E2E + visual regression, run inside the SAME pinned Playwright container the local
+# `web-e2e` lefthook gate uses (mcr.microsoft.com/playwright), so browser rendering is
+# byte-identical everywhere. The Checks job defers this to keep local == CI without a double run.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/products/website/**'
+      - '.github/workflows/web-e2e.yml'
+  pull_request:
+    paths:
+      - 'packages/products/website/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-e2e:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    timeout-minutes: 20
+    env:
+      # Point pnpm's store at a workspace path so it can be cached across runs — the container
+      # reinstalls deps every run otherwise.
+      npm_config_store_dir: ${{ github.workspace }}/.pnpm-store
+    defaults:
+      run:
+        working-directory: packages/products/website
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('packages/products/website/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+      - name: Website E2E + visual (Playwright, containerized)
+        env:
+          PLAYWRIGHT_IN_CONTAINER: '1'
+        run: bash ./run-web-e2e.sh

@@ -16,6 +16,15 @@ const outDir = join(here, '..', 'public', 'playbooks');
 
 const pdfs = ['pr-review.pdf', 'sec-audit.pdf', 'trp.pdf'];
 
+// The containerized E2E/visual build mounts only the website dir, so the repo's docs/ is
+// absent there. The playbooks are download links, not needed to render or test the pages, so
+// skip cleanly in that context. The real Pages build has the full repo (docs/ present) and the
+// docs-drift gate guarantees the PDFs exist, so a genuine miss can't reach production silently.
+if (!existsSync(srcDir)) {
+	console.log(`copy-playbooks: ${srcDir} not present (containerized build?) — skipping.`);
+	process.exit(0);
+}
+
 mkdirSync(outDir, { recursive: true });
 for (const f of pdfs) {
 	const src = join(srcDir, f);

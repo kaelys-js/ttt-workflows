@@ -1,4 +1,4 @@
-name: Lint
+name: Checks
 # Format-check + lint every file type AND lint commit messages, using the same
 # mise-pinned tools and the same lefthook pre-push gate that runs locally.
 on:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: lint-${{ github.ref }}
+  group: checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

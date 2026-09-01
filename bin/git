@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# git wrapper — refuses every `git push` bypass attempt. There is no escape
+# hatch. If a hook is broken, fix the hook (never push around it).
+#
+# It works because mise's `[env]._.path` puts this repo's `bin/` first on PATH
+# (see mise.toml), so every `git` from a shell in this workspace passes through
+# here first. Verify with `which git` (prints this file) and `git push -n`
+# (exits non-zero with a banner).
+#
+# Refused vectors on `git push`:
+#   1. `--no-verify` / `-n`     — skips ALL git hooks including lefthook.
+#   2. `LEFTHOOK=0` in env      — lefthook's installed .git/hooks wrapper exits
+#                                 0 before its config runs.
+#   3. `LEFTHOOK_EXCLUDE=...`   — skips named hooks.
+set -euo pipefail
+
+SELF_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+REAL_GIT=""
+_IFS_SAVE="$IFS"
+IFS=":"
+for dir in $PATH; do
+	[ "$dir" = "$SELF_DIR" ] && continue
+	if [ -x "$dir/git" ]; then
+		REAL_GIT="$dir/git"
+		break
+	fi
+done
+IFS="$_IFS_SAVE"
+if [ -z "$REAL_GIT" ]; then
+	for candidate in /opt/homebrew/bin/git /usr/local/bin/git /usr/bin/git; do
+		if [ -x "$candidate" ]; then
+			REAL_GIT="$candidate"
+			break
+		fi
+	done
+fi
+if [ -z "$REAL_GIT" ]; then
+	echo "git-wrapper: could not locate the real git binary. Fix your PATH." >&2
+	exit 127
+fi
+
+subcommand="${1:-}"
+if [ "$subcommand" = "push" ]; then
+	for arg in "$@"; do
+		case "$arg" in
+		--no-verify | -n)
+			cat >&2 <<'EOF'
+=====================================================================
+  git-wrapper: refusing 'git push --no-verify'.
+
+  The pre-push hook exists to catch failures (lint / format / tests /
+  coverage / visual regression) before they reach CI. --no-verify
+  bypasses it. If a check is broken, fix it — there is NO escape hatch.
+=====================================================================
+EOF
+			exit 1
+			;;
+		esac
+	done
+
+	if [ "${LEFTHOOK:-}" = "0" ] || [ -n "${LEFTHOOK_EXCLUDE:-}" ]; then
+		cat >&2 <<'EOF'
+=====================================================================
+  git-wrapper: refusing 'git push' with a LEFTHOOK bypass env.
+
+  LEFTHOOK=0 disables lefthook at its installed .git/hooks/pre-push
+  wrapper (before any config runs). LEFTHOOK_EXCLUDE skips named hooks.
+  Neither is a legitimate way to push — fix the failing check first.
+  There is NO escape hatch.
+=====================================================================
+EOF
+		exit 1
+	fi
+fi
+
+exec "$REAL_GIT" "$@"

@@ -35,12 +35,18 @@ pre-commit:
 pre-push:
   parallel: false
   commands:
+    # Gates are unskippable. bin/git refuses `git push --no-verify`; this refuses the
+    # LEFTHOOK=0 / LEFTHOOK_EXCLUDE env bypasses (which act at lefthook's own hook wrapper).
     no-bypass:
       priority: 1
       run: |
-        if [ -n "${LEFTHOOK_EXCLUDE:-}" ]; then
-          echo "LEFTHOOK_EXCLUDE is set — gates are unskippable. Unset it and re-run."; exit 1
+        if [ -n "${LEFTHOOK_EXCLUDE:-}" ] || [ "${LEFTHOOK:-}" = "0" ]; then
+          echo "BLOCKED: lefthook gates are unskippable (LEFTHOOK/LEFTHOOK_EXCLUDE set)."; exit 1
         fi
+    # Enforce CI == lefthook parity and that no test input is hidden by .gitignore.
+    preflight:
+      priority: 1
+      run: ./bin/preflight.sh
     format-check:
       priority: 2
       run: ./bin/mise exec -- oxfmt --check --ignore-path=.oxfmtignore .
@@ -49,10 +55,10 @@ pre-push:
       run: ./bin/mise exec -- oxlint
     shfmt-check:
       priority: 4
-      run: ./bin/mise exec -- shfmt -d $(git ls-files '*.sh')
+      run: ./bin/mise exec -- shfmt -d $(git ls-files '*.sh') bin/git
     shellcheck:
       priority: 5
-      run: ./bin/mise exec -- shellcheck $(git ls-files '*.sh')
+      run: ./bin/mise exec -- shellcheck $(git ls-files '*.sh') bin/git
     validate-skills:
       priority: 6
       run: ./bin/mise exec -- node scripts/validate-skills.mjs
@@ -83,11 +89,24 @@ pre-push:
     markdown-lint:
       priority: 14
       run: ./bin/mise exec -- markdownlint-cli2 "*.md"
-    # Website unit + behaviour tests with a 75% coverage floor. The heavier E2E +
-    # visual-regression suite needs a browser and runs in CI (test.yml).
+    # Website unit + behaviour tests with a 75% coverage floor.
     web-test:
       priority: 15
       run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec vitest run --coverage'
+    # Website E2E + visual regression in the pinned Playwright container, so rendering is
+    # byte-identical everywhere. Runs locally wherever Docker is available; in CI it defers to
+    # the web-e2e.yml container job (which runs run-web-e2e.sh directly) to avoid a double run.
+    web-e2e:
+      priority: 16
+      run: |
+        cd packages/products/website
+        if [ -n "${CI:-}" ]; then
+          echo "web-e2e: deferred to the web-e2e.yml container job."
+        elif docker info >/dev/null 2>&1; then
+          ./run-web-e2e.sh
+        else
+          echo "web-e2e: Docker unavailable here — this check runs in the web-e2e.yml CI job."
+        fi
 
 # ─── Commit Message ──────────────────────────────────────────────────────────
 commit-msg:
