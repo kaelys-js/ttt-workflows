@@ -10,6 +10,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseRef, token } from './fetch-ticket.mjs';
 
 const D = dirname(fileURLToPath(import.meta.url));
 const tmp = mkdtempSync(join(tmpdir(), 'trp-selftest-'));
@@ -244,6 +245,97 @@ check(
 		'eval: every positive prompt is covered by the description',
 		miss.length === 0,
 		miss.slice(0, 2).join(' | '),
+	);
+}
+
+// ---- fetch-ticket: offline ref parsing + token resolution --------------------
+// The live ClickUp GET is c8-ignored (real runs cover it); what the skill decides offline —
+// how it reads a ticket ref (URL forms and bare ids), how it finds the token, and every
+// argument refusal — is proven here.
+
+const pr1 = parseRef('https://app.clickup.com/t/8593845/WPMP3-219');
+check('fetch-ticket parseRef: custom-id URL', pr1.id === 'WPMP3-219' && pr1.custom === true);
+const pr2 = parseRef('https://app.clickup.com/t/868abc');
+check('fetch-ticket parseRef: raw-id URL', pr2.id === '868abc' && pr2.custom === false);
+check('fetch-ticket parseRef: bare custom id (PROJ-123)', parseRef('PROJ-123').custom === true);
+check('fetch-ticket parseRef: bare raw id (868…)', parseRef('868xyz').custom === false);
+
+const savedTok = process.env.CLICKUP_TOKEN;
+process.env.CLICKUP_TOKEN = 'pk_env_tok';
+check('fetch-ticket token: reads $CLICKUP_TOKEN', token() === 'pk_env_tok');
+delete process.env.CLICKUP_TOKEN;
+{
+	// Fresh module instance (query-busted) so TOKEN_FILE re-reads the env we just set — proves the
+	// token-file branch without a network call.
+	const tf = join(tmp, 'clickup.token');
+	writeFileSync(tf, 'pk_file_tok\n');
+	process.env.CLICKUP_TOKEN_FILE = tf;
+	const fresh = await import(`./fetch-ticket.mjs?ft=${tf.length}`);
+	check('fetch-ticket token: reads the token file', fresh.token() === 'pk_file_tok');
+	delete process.env.CLICKUP_TOKEN_FILE;
+}
+if (savedTok !== undefined) {
+	process.env.CLICKUP_TOKEN = savedTok;
+}
+
+const ftRefusals = [
+	{ name: 'no ref -> usage', args: [], want: /usage:/ },
+	{ name: 'unknown flag', args: ['--nope', 'x'], want: /unknown flag/ },
+	{ name: 'flag needs value', args: ['--out'], want: /needs a value/ },
+	{
+		name: 'no token',
+		args: ['PROJ-123'],
+		env: { CLICKUP_TOKEN: '', CLICKUP_TOKEN_FILE: '/nonexistent' },
+		want: /no ClickUp token/,
+	},
+];
+for (const t of ftRefusals) {
+	const r = run('fetch-ticket.mjs', t.args, t.env || {});
+	check(
+		`fetch-ticket refusal: ${t.name}`,
+		r.code !== 0 && t.want.test(r.err),
+		`code=${r.code} err=${r.err.slice(0, 50)}`,
+	);
+}
+
+// ---- clickup-update: offline token + arg/gate surface ------------------------
+// The gates (attribution + two-layer) and no-op refusal are covered above; here the token-file
+// branch and the remaining arg refusals. The live status/comment writes are c8-ignored.
+{
+	const tf = join(tmp, 'cu.token');
+	writeFileSync(tf, 'pk_cu_file\n');
+	const savedTok = process.env.CLICKUP_TOKEN;
+	delete process.env.CLICKUP_TOKEN;
+	process.env.CLICKUP_TOKEN_FILE = tf;
+	const cu = await import(`./clickup-update.mjs?cu=${tf.length}`);
+	check('clickup-update token: reads the token file', cu.token() === 'pk_cu_file');
+	check('clickup-update parseRef: custom id', cu.parseRef('WPMP3-9').custom === true);
+	delete process.env.CLICKUP_TOKEN_FILE;
+	if (savedTok !== undefined) {
+		process.env.CLICKUP_TOKEN = savedTok;
+	}
+}
+const cuRefusals = [
+	{ name: '--live without a ref -> usage', args: ['--live'], env: ENV, want: /usage:/ },
+	{
+		name: 'ref --live without status/comment -> nothing to do',
+		args: ['PROJ-1', '--live'],
+		env: ENV,
+		want: /nothing to do/,
+	},
+	{
+		name: 'no token',
+		args: ['PROJ-1', '--status', 'x'],
+		env: { CLICKUP_TOKEN: '', CLICKUP_TOKEN_FILE: '/nonexistent' },
+		want: /no ClickUp token/,
+	},
+];
+for (const t of cuRefusals) {
+	const r = run('clickup-update.mjs', t.args, t.env || {});
+	check(
+		`clickup-update refusal: ${t.name}`,
+		r.code !== 0 && t.want.test(r.err),
+		`code=${r.code} err=${r.err.slice(0, 50)}`,
 	);
 }
 
