@@ -6,7 +6,7 @@ license: MIT. See LICENSE.
 compatibility: Requires node and git, plus gh (GitHub) or az (Azure DevOps); network access to the PR host. Optional: a ClickUp token for ticket-linked PRs.
 metadata:
   author: ttt-studios
-  version: "1.2.1"
+  version: "1.2.2"
 ---
 
 # pr-review
