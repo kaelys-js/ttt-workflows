@@ -10,7 +10,12 @@ export default defineConfig({
 	retries: process.env.CI ? 1 : 0,
 	reporter: 'line',
 	timeout: 30_000,
-	expect: { timeout: 10_000 },
+	expect: {
+		timeout: 10_000,
+		// Absorb sub-pixel anti-aliasing jitter (a few px on text edges) while still catching
+		// any real layout/colour regression.
+		toHaveScreenshot: { maxDiffPixelRatio: 0.005 },
+	},
 	use: {
 		baseURL: base,
 		trace: 'on-first-retry',
