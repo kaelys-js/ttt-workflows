@@ -15,9 +15,11 @@ const { cmd } = Astro.props;
 >
 	{
 		/* min-w-0 lets the code shrink so a long command scrolls INSIDE the row instead of widening
-	    the page (mobile); the right-edge mask fades the cutoff as a "there is more, scroll" cue. */
+	    the page (mobile); the right-edge mask fades the cutoff as a "there is more, scroll" cue.
+	    tabindex=0 makes that scroll region keyboard-reachable (WCAG scrollable-region-focusable). */
 	}
 	<code
+		tabindex="0"
 		class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-foreground/90 [-webkit-mask-image:linear-gradient(to_right,#000_calc(100%-1.25rem),transparent)] [mask-image:linear-gradient(to_right,#000_calc(100%-1.25rem),transparent)]"
 		>{cmd}</code
 	>
