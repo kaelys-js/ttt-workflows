@@ -5,12 +5,12 @@
 //   node scripts/release-draft.mjs 1.2.3            print the drafted section
 //   node scripts/release-draft.mjs 1.2.3 --write    insert it into CHANGELOG.md under [Unreleased]
 //   node scripts/release-draft.mjs 1.2.3 --polish   rewrite the bullets as user-facing prose via
-//                                                    the local `claude` CLI (falls back to raw)
+//                                                    Claude (needs ANTHROPIC_API_KEY; else raw)
 //
 // After drafting: review the section, bump plugin.json's version to match, and commit — the
 // version-sync gate then holds VERSION + CHANGELOG + the tag in lockstep. release.yml publishes
-// this section as the GitHub Release notes. git-cliff and claude are invoked from PATH, so run
-// this under mise (e.g. `./bin/mise exec -- node scripts/release-draft.mjs …`).
+// this section as the GitHub Release notes. git-cliff is invoked from PATH, so run this under mise
+// (e.g. `./bin/mise exec -- node scripts/release-draft.mjs …`).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -54,19 +54,51 @@ if (!body) {
 }
 
 // Optional: rewrite the grouped, commit-flavoured bullets into user-facing "What's New" prose with
-// the local claude CLI. Never blocks a release — if claude is absent or errors, keep the raw notes.
+// Claude (the Anthropic Messages API, keyed by ANTHROPIC_API_KEY). Never blocks a release — with no
+// key, or on any API error, it keeps the raw git-cliff notes and points to the in-session route
+// (asking Claude Code to rewrite the drafted section is the same polish, done by hand).
 if (polish) {
-	try {
-		const prompt =
-			'Rewrite the following release notes as concise, user-facing bullets for a product "What\'s New". ' +
-			'Plain language, benefit-led, no commit types, scopes, or engineering jargon. One bullet per ' +
-			'user-visible change. Output only the bullets, each starting with "- ", no headings, no preamble.';
-		const polished = sh('claude', ['-p', prompt], body);
-		if (polished) {
-			body = polished;
+	const key = process.env.ANTHROPIC_API_KEY;
+	if (key) {
+		try {
+			const prompt =
+				'Rewrite the following release notes as concise, user-facing bullets for a product "What\'s New". ' +
+				'Plain language, benefit-led, no commit types, scopes, or engineering jargon. One bullet per ' +
+				'user-visible change. If nothing is user-facing, say so in one honest line. Output only the ' +
+				`bullets, each starting with "- ", no headings, no preamble.\n\n${body}`;
+			const res = await fetch('https://api.anthropic.com/v1/messages', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+					'x-api-key': key,
+					'anthropic-version': '2023-06-01',
+				},
+				body: JSON.stringify({
+					model: process.env.RELEASE_NOTES_MODEL || 'claude-sonnet-5',
+					max_tokens: 1024,
+					messages: [{ role: 'user', content: prompt }],
+				}),
+			});
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}`);
+			}
+			const data = await res.json();
+			const text = (data.content ?? [])
+				.map((block) => block.text ?? '')
+				.join('')
+				.trim();
+			if (text) {
+				body = text;
+			}
+		} catch (error) {
+			console.error(
+				`release-draft: polish via the Anthropic API failed, keeping raw notes (${error.message})`,
+			);
 		}
-	} catch (error) {
-		console.error(`release-draft: claude polish unavailable, using raw notes (${error.message})`);
+	} else {
+		console.error(
+			'release-draft: no ANTHROPIC_API_KEY set — keeping the raw notes. Set the key for automatic polish, or ask Claude Code to rewrite the drafted section for users.',
+		);
 	}
 }
 
