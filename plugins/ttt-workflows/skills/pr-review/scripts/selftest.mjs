@@ -12,8 +12,10 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseUrl } from './fetch-pr.mjs';
 
 const RENDER = join(dirname(fileURLToPath(import.meta.url)), 'render-review.mjs');
+const FETCH = join(dirname(fileURLToPath(import.meta.url)), 'fetch-pr.mjs');
 const tmp = mkdtempSync(join(tmpdir(), 'pr-review-selftest-'));
 let failures = 0;
 
@@ -538,6 +540,71 @@ check(
 		'eval: every positive prompt is covered by the description',
 		miss.length === 0,
 		miss.slice(0, 2).join(' | '),
+	);
+}
+
+// ---- fetch-pr: URL parsing (unit) + arg/refusal surface (CLI) ----------------
+// The live gh/az fetchers are c8-ignored (real runs cover them); everything the skill decides
+// offline — which platform a URL is, its owner/repo/org/number, and every refusal — is proven here.
+
+function runFetch(args) {
+	const r = spawnSync('node', [FETCH, ...args], { encoding: 'utf8' });
+	return { code: r.status ?? 1, out: r.stdout || '', err: r.stderr || '' };
+}
+
+const gh = parseUrl('https://github.com/kaelys-js/ttt-workflows/pull/42');
+check(
+	'fetch-pr parseUrl: github owner/repo/number',
+	gh.platform === 'github' &&
+		gh.owner === 'kaelys-js' &&
+		gh.repo === 'ttt-workflows' &&
+		gh.number === '42',
+	JSON.stringify(gh),
+);
+const ghe = parseUrl('https://ghe.example.github.com/o/r/pull/3');
+check('fetch-pr parseUrl: *.github.com host', ghe.platform === 'github' && ghe.number === '3');
+const ado = parseUrl('https://dev.azure.com/wpm/OMS/_git/OMS-BE/pullrequest/123');
+check(
+	'fetch-pr parseUrl: dev.azure.com org/base/number',
+	ado.platform === 'ado' &&
+		ado.org === 'wpm' &&
+		ado.base === 'https://dev.azure.com/wpm' &&
+		ado.number === '123',
+	JSON.stringify(ado),
+);
+const vs = parseUrl('https://myorg.visualstudio.com/proj/_git/repo/pullrequest/7');
+check(
+	'fetch-pr parseUrl: *.visualstudio.com org/base/number',
+	vs.platform === 'ado' &&
+		vs.org === 'myorg' &&
+		vs.base === 'https://myorg.visualstudio.com' &&
+		vs.number === '7',
+	JSON.stringify(vs),
+);
+
+const fetchRefusals = [
+	{ name: 'no args -> usage', args: [], want: /usage:/ },
+	{ name: 'unknown flag', args: ['--nope', 'x'], want: /unknown flag/ },
+	{ name: 'flag needs value', args: ['--out'], want: /needs a value/ },
+	{ name: 'not a URL', args: ['notaurl'], want: /not a URL/ },
+	{ name: 'unsupported host', args: ['https://gitlab.com/a/b/pull/1'], want: /unsupported host/ },
+	{
+		name: 'github no numeric id',
+		args: ['https://github.com/o/r/issues/5'],
+		want: /unrecognized GitHub/,
+	},
+	{
+		name: 'ado no numeric id',
+		args: ['https://dev.azure.com/org/proj/_git/repo/pullrequest/xx'],
+		want: /unrecognized Azure DevOps/,
+	},
+];
+for (const t of fetchRefusals) {
+	const r = runFetch(t.args);
+	check(
+		`fetch-pr refusal: ${t.name}`,
+		r.code !== 0 && t.want.test(r.err),
+		`code=${r.code} err=${r.err.slice(0, 60)}`,
 	);
 }
 

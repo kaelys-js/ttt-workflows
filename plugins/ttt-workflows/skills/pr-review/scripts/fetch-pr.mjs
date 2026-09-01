@@ -14,6 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 if (typeof fetch !== 'function') {
 	console.error('fetch-pr: Node 18+ required (global fetch missing)');
@@ -39,7 +40,10 @@ function sh(cmd, args, opts = {}) {
 
 // ---- URL parsing ------------------------------------------------------------
 
-function parseUrl(raw) {
+// Exported so the offline URL-parsing surface (both platforms and every refusal branch) is
+// unit-tested directly, not just through the CLI. The network fetchers below are the only part
+// that needs live gh/az; they are c8-ignored and covered by real runs.
+export function parseUrl(raw) {
 	let u;
 	try {
 		u = new URL(raw.trim());
@@ -84,6 +88,7 @@ function parseUrl(raw) {
 
 // ---- GitHub -----------------------------------------------------------------
 
+/* c8 ignore start -- live gh/az/ClickUp I/O; exercised by real fetch runs, not unit tests */
 function fetchGitHub({ owner, repo, number }) {
 	const R = `${owner}/${repo}`;
 	const meta = JSON.parse(
@@ -452,56 +457,75 @@ async function fetchTicket(pr) {
 		);
 	}
 }
+/* c8 ignore stop */
 
 // ---- main -------------------------------------------------------------------
 
-const args = process.argv.slice(2);
-const KNOWN_FLAGS = new Set(['--out']);
-for (let i = 0; i < args.length; i++) {
-	if (args[i].startsWith('--')) {
-		if (!KNOWN_FLAGS.has(args[i])) {
-			die(`unknown flag '${args[i]}' (known: ${[...KNOWN_FLAGS].join(', ')})`);
+// The arg + URL-parse surface here is unit/CLI-tested; the network call onward needs live tools,
+// so it is c8-ignored (real runs cover it).
+async function main() {
+	const args = process.argv.slice(2);
+	const KNOWN_FLAGS = new Set(['--out']);
+	for (let i = 0; i < args.length; i++) {
+		if (args[i].startsWith('--')) {
+			if (!KNOWN_FLAGS.has(args[i])) {
+				die(`unknown flag '${args[i]}' (known: ${[...KNOWN_FLAGS].join(', ')})`);
+			}
+			const v = args[i + 1];
+			if (v === undefined || v.startsWith('--')) {
+				die(`flag '${args[i]}' needs a value`);
+			}
+			i++;
 		}
-		const v = args[i + 1];
-		if (v === undefined || v.startsWith('--')) {
-			die(`flag '${args[i]}' needs a value`);
-		}
-		i++;
 	}
-}
-const url = args.find((a) => !a.startsWith('--'));
-if (!url) {
-	die('usage: node fetch-pr.mjs <PR_URL> [--out <path>]');
-}
-const outIdx = args.indexOf('--out');
-const out = outIdx >= 0 ? args[outIdx + 1] : 'pr.json';
+	const url = args.find((a) => !a.startsWith('--'));
+	if (!url) {
+		die('usage: node fetch-pr.mjs <PR_URL> [--out <path>]');
+	}
+	const outIdx = args.indexOf('--out');
+	const out = outIdx >= 0 ? args[outIdx + 1] : 'pr.json';
 
-const target = parseUrl(url);
-const pr = target.platform === 'github' ? fetchGitHub(target) : await fetchAdo(target);
-await fetchTicket(pr);
-// ADO REST has no additions/deletions counters — derive them from the reconstructed diff
-// so the renderer's scope chip and oversize gate work on both platforms.
-if (typeof pr.additions !== 'number') {
-	let add = 0,
-		del = 0;
-	for (const ln of pr.diff.split('\n')) {
-		if (ln.startsWith('+') && !ln.startsWith('+++')) {
-			add++;
-		} else if (ln.startsWith('-') && !ln.startsWith('---')) {
-			del++;
+	const target = parseUrl(url);
+	/* c8 ignore start -- live gh/az fetch + write; exercised by real runs */
+	const pr = target.platform === 'github' ? fetchGitHub(target) : await fetchAdo(target);
+	await fetchTicket(pr);
+	// ADO REST has no additions/deletions counters — derive them from the reconstructed diff
+	// so the renderer's scope chip and oversize gate work on both platforms.
+	if (typeof pr.additions !== 'number') {
+		let add = 0,
+			del = 0;
+		for (const ln of pr.diff.split('\n')) {
+			if (ln.startsWith('+') && !ln.startsWith('+++')) {
+				add++;
+			} else if (ln.startsWith('-') && !ln.startsWith('---')) {
+				del++;
+			}
 		}
+		pr.additions = add;
+		pr.deletions = del;
 	}
-	pr.additions = add;
-	pr.deletions = del;
+	pr.fetchedAt = new Date().toISOString();
+	pr.diffBytes = pr.diff.length;
+	writeFileSync(out, JSON.stringify(pr, null, 2));
+	const ticketNote = pr.ticket
+		? ` · ticket ${pr.ticket.custom_id || pr.ticket.id} (${pr.ticket.status})`
+		: pr.ticketRefs?.length
+			? ` · ticket refs unresolved: ${pr.ticketRefs.join(',')}`
+			: '';
+	console.log(
+		`wrote ${out} — ${pr.platform} ${pr.owner || pr.org}/${pr.repo}#${pr.number} "${pr.title}" · ${pr.files.length} files · ${pr.diffBytes} diff bytes · ${pr.threads.length} threads${ticketNote}`,
+	);
+	/* c8 ignore stop */
 }
-pr.fetchedAt = new Date().toISOString();
-pr.diffBytes = pr.diff.length;
-writeFileSync(out, JSON.stringify(pr, null, 2));
-const ticketNote = pr.ticket
-	? ` · ticket ${pr.ticket.custom_id || pr.ticket.id} (${pr.ticket.status})`
-	: pr.ticketRefs?.length
-		? ` · ticket refs unresolved: ${pr.ticketRefs.join(',')}`
-		: '';
-console.log(
-	`wrote ${out} — ${pr.platform} ${pr.owner || pr.org}/${pr.repo}#${pr.number} "${pr.title}" · ${pr.files.length} files · ${pr.diffBytes} diff bytes · ${pr.threads.length} threads${ticketNote}`,
-);
+
+// Run only as a CLI entrypoint, so importing parseUrl for unit tests never triggers a fetch.
+/* c8 ignore start -- entrypoint dispatch */
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+	try {
+		await main();
+	} catch (error) {
+		console.error(`fetch-pr: ${error.message}`);
+		process.exit(1);
+	}
+}
+/* c8 ignore stop */

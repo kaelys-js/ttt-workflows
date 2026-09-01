@@ -42,7 +42,7 @@ async function optimizeSvg(path) {
 const files = await readdir(publicDir);
 let before = 0;
 let after = 0;
-for (const f of files.sort()) {
+for (const f of files.toSorted()) {
 	const path = join(publicDir, f);
 	let r;
 	if (f.endsWith('.png')) r = await optimizePng(path);
