@@ -24,13 +24,13 @@ split_commits = false
 # Only user-facing types reach the changelog; release plumbing (chore/ci/test/style/build) is
 # dropped. Ordered so Features lead, then Fixes, then the rest.
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->Features" },
-  { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
-  { message = "^perf", group = "<!-- 2 -->Performance" },
-  { message = "^docs", group = "<!-- 3 -->Documentation" },
-  { message = "^refactor", group = "<!-- 4 -->Refactor" },
-  { message = "^revert", group = "<!-- 5 -->Reverts" },
-  { message = ".*", skip = true },
+	{ message = "^feat", group = "<!-- 0 -->Features" },
+	{ message = "^fix", group = "<!-- 1 -->Bug Fixes" },
+	{ message = "^perf", group = "<!-- 2 -->Performance" },
+	{ message = "^docs", group = "<!-- 3 -->Documentation" },
+	{ message = "^refactor", group = "<!-- 4 -->Refactor" },
+	{ message = "^revert", group = "<!-- 5 -->Reverts" },
+	{ message = ".*", skip = true },
 ]
 filter_commits = true
 tag_pattern = "v[0-9]*"

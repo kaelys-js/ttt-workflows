@@ -3,5 +3,8 @@
 		"MD013": false,
 		"MD033": false,
 		"MD041": false,
+		// CHANGELOG.md repeats "### Features" / "### Bug Fixes" under each version (Keep a Changelog +
+		// git-cliff); allow the same heading text under different parents.
+		"MD024": { "siblings_only": true },
 	},
 }
