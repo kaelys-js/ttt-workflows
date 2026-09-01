@@ -22,8 +22,12 @@ import {
 	GitBranch,
 } from "lucide-react";
 
+import { parseVersion } from "@/lib/schemas";
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const REPO = "https://github.com/kaelys-js/ttt-workflows";
+// Shown in the footer, in lockstep with the release tag (build-injected). Empty off a tag.
+const appVersion = parseVersion(import.meta.env.PUBLIC_APP_VERSION);
 const MARKETPLACE_ADD = "/plugin marketplace add kaelys-js/ttt-workflows";
 const PLUGIN_INSTALL = "/plugin install ttt-workflows";
 
@@ -498,7 +502,7 @@ const playbooks = [
 			<div
 				class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row"
 			>
-				<span>© 2026 ttt-workflows · Open source.</span>
+				<span>© 2026 ttt-workflows{appVersion ? ` · v${appVersion}` : ""} · Open source.</span>
 				<span>Runs inside Claude Code. Not affiliated with Anthropic.</span>
 			</div>
 		</div>

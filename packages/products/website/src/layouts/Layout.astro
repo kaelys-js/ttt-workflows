@@ -1,5 +1,7 @@
 ---
 import "@/styles/global.css";
+import { faqItems } from "@/lib/faq";
+import { parseStructuredData, parseVersion } from "@/lib/schemas";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const site = Astro.site?.href.replace(/\/$/, "") ?? "https://kaelys-js.github.io";
@@ -8,23 +10,51 @@ const title = "ttt-workflows — three engineering workflows, one Claude Code pl
 const description =
 	"A Claude Code plugin that bundles three self-contained skills: pr-review reviews a pull request, sec-audit runs a security audit, and trp delivers a ticket end to end. Read-only and approval-gated by design. Any repo, any tenant, open source.";
 const ogImage = `${site}${base}/og.png`;
+const repo = "https://github.com/kaelys-js/ttt-workflows";
+// The plugin version this site ships in lockstep with (build-injected from the release tag /
+// latest git tag; empty off a tag). Validated with the same schema the client uses.
+const appVersion = parseVersion(import.meta.env.PUBLIC_APP_VERSION) ?? undefined;
 
-// Structured data for search engines (SoftwareApplication — a free developer tool).
-const jsonLd = {
+// schema.org structured data (JSON-LD), validated before it reaches the head. No
+// aggregateRating/review — the plugin has no real reviews, and fabricating them is against
+// Google policy. The FAQPage is built from the same validated FAQ data the accordion renders.
+const structuredData = parseStructuredData({
 	"@context": "https://schema.org",
-	"@type": "SoftwareApplication",
-	name: "ttt-workflows",
-	description,
-	url: canonical,
-	applicationCategory: "DeveloperApplication",
-	operatingSystem: "Claude Code",
-	softwareRequirements: "Claude Code",
-	codeRepository: "https://github.com/kaelys-js/ttt-workflows",
-	license: "https://github.com/kaelys-js/ttt-workflows/blob/main/LICENSE",
-	isAccessibleForFree: true,
-	offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-	author: { "@type": "Person", name: "Cole Beuker" },
-};
+	"@graph": [
+		{
+			"@type": "SoftwareApplication",
+			name: "ttt-workflows",
+			description,
+			applicationCategory: "DeveloperApplication",
+			operatingSystem: "Claude Code",
+			softwareVersion: appVersion,
+			url: canonical,
+			codeRepository: repo,
+			softwareHelp: repo,
+			isAccessibleForFree: true,
+			offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+			license: `${repo}/blob/main/LICENSE`,
+			author: { "@type": "Person", name: "Cole Beuker" },
+		},
+		{
+			"@type": "SoftwareSourceCode",
+			name: "ttt-workflows",
+			codeRepository: repo,
+			programmingLanguage: ["JavaScript", "Shell"],
+			runtimePlatform: "Claude Code",
+			license: `${repo}/blob/main/LICENSE`,
+		},
+		{ "@type": "WebSite", name: "ttt-workflows", url: canonical },
+		{
+			"@type": "FAQPage",
+			mainEntity: faqItems.map((f) => ({
+				"@type": "Question",
+				name: f.q,
+				acceptedAnswer: { "@type": "Answer", text: f.a },
+			})),
+		},
+	],
+});
 
 // GitHub Pages can't set real HTTP response headers, so we set what's possible via <meta>.
 const csp = [
@@ -55,7 +85,7 @@ const csp = [
 
 		<title>{title}</title>
 		<meta name="description" content={description} />
-		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+		<script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
 
 		<meta name="author" content="ttt-workflows" />
 		<meta name="robots" content="index, follow" />
