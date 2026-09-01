@@ -3,6 +3,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+	/* Match native UI (scrollbars, form controls, the UA default) to the active theme. The class
+	   below flips it to dark; this is the CSS counterpart to the <meta name="color-scheme">. */
+	color-scheme: light;
 	--radius: 0.65rem;
 	--background: oklch(100% 0 0deg);
 	--foreground: oklch(14.5% 0 0deg);
@@ -25,6 +28,7 @@
 }
 
 .dark {
+	color-scheme: dark;
 	--background: oklch(14.5% 0 0deg);
 	--foreground: oklch(98.5% 0 0deg);
 	--card: oklch(20.5% 0 0deg);
@@ -79,6 +83,16 @@
 		background-color: var(--background);
 		color: var(--foreground);
 		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Windows High Contrast / forced-colors: the palette is replaced by system colors, which
+	   strips our custom focus ring. Guarantee a visible keyboard-focus outline in that mode. */
+	@media (forced-colors: active) {
+		:focus-visible {
+			outline: 2px solid CanvasText;
+			outline-offset: 2px;
+		}
 	}
 }
 
