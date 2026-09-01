@@ -21,10 +21,14 @@ test('the theme toggle flips light and dark', async ({ page }) => {
 });
 
 test('an FAQ answer expands when its question is clicked', async ({ page }) => {
-	const q = page.getByRole('button', { name: /Is my data sent anywhere/i });
+	// The FAQ is a native <details>/<summary> disclosure — the question is the summary.
+	const q = page.locator('#faq summary').filter({ hasText: /Is my data sent anywhere/i });
 	await q.scrollIntoViewIfNeeded();
+	// The phrase also appears in the FAQPage JSON-LD (in <head>); scope to the visible accordion.
+	const answer = page.locator('#faq').getByText(/no telemetry and no phone-home/i);
+	await expect(answer).toBeHidden(); // collapsed until opened
 	await q.click();
-	await expect(page.getByText(/no telemetry and no phone-home/i)).toBeVisible();
+	await expect(answer).toBeVisible();
 });
 
 test('the install commands are shown for copying', async ({ page }) => {

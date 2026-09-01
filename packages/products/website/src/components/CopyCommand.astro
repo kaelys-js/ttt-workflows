@@ -1,0 +1,34 @@
+---
+// A plain server-rendered command row with a copy button — no framework, so it adds no JS to the
+// initial load beyond one tiny shared handler. Both icons ship in the markup; the check swaps in
+// via CSS while the button carries data-copied (set for COPIED_MS by wireCopyButtons on click).
+import Icon from "@/components/ui/Icon.astro";
+
+interface Props {
+	cmd: string;
+}
+const { cmd } = Astro.props;
+---
+
+<div
+	class="flex items-center justify-between gap-3 rounded-lg border bg-muted/50 px-4 py-3 font-mono text-sm"
+>
+	<code class="overflow-x-auto whitespace-nowrap text-foreground/90">{cmd}</code>
+	<button
+		type="button"
+		data-copy={cmd}
+		aria-label="Copy command"
+		class="group shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+	>
+		<Icon name="copy" class="size-4 group-data-[copied]:hidden" />
+		<Icon
+			name="check"
+			class="hidden size-4 text-primary group-data-[copied]:block motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:fade-in motion-safe:duration-300"
+		/>
+	</button>
+</div>
+
+<script>
+	import { wireCopyButtons } from "@/lib/copy";
+	wireCopyButtons();
+</script>

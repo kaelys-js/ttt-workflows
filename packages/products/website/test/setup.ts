@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
-// jsdom under an opaque origin exposes no Storage; ThemeToggle reads localStorage.
+// jsdom under an opaque origin exposes no Storage; the theme lib reads/writes localStorage.
 if (!globalThis.localStorage) {
 	let store: Record<string, string> = {};
 	globalThis.localStorage = {

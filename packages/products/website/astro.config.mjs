@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process';
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { parseVersion } from './src/lib/schemas.ts';
@@ -35,7 +34,6 @@ export default defineConfig({
 	// Emit one canonical URL per page (trailing slash) so the sitemap has no duplicate entries.
 	trailingSlash: 'always',
 	integrations: [
-		react(),
 		sitemap({
 			filter: (page) => page.endsWith('/'),
 			serialize(item) {
@@ -50,12 +48,6 @@ export default defineConfig({
 		// lockstep with the plugin instead of being hard-coded.
 		define: {
 			'import.meta.env.PUBLIC_APP_VERSION': JSON.stringify(APP_VERSION),
-		},
-		// lucide-react 1.x has no `exports` map, so a bare import resolves to its CJS entry and
-		// Astro's SSR can't read the named icon exports. Point the bare specifier at the ESM
-		// barrel (a re-export file, so Vite still tree-shakes to the icons actually used).
-		resolve: {
-			alias: [{ find: /^lucide-react$/, replacement: 'lucide-react/dist/esm/lucide-react.mjs' }],
 		},
 	},
 });

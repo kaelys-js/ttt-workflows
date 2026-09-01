@@ -1,0 +1,24 @@
+---
+// The FAQ accordion, framework-free. Native <details>/<summary> gives the same expand/collapse
+// (and keyboard behaviour) the Radix version did, with zero JS. Classes mirror the old
+// ui/accordion output so the closed rows and the open panel render pixel-for-pixel the same.
+import { faqItems } from "@/lib/faq";
+import Icon from "@/components/ui/Icon.astro";
+---
+
+<div class="w-full">
+	{
+		faqItems.map((it) => (
+			<details class="group border-b last:border-b-0">
+				<summary class="flex flex-1 list-none items-center justify-between gap-4 py-4 text-left text-base font-medium transition-all hover:underline cursor-pointer [&::-webkit-details-marker]:hidden">
+					{it.q}
+					<Icon
+						name="chevron-down"
+						class="text-muted-foreground size-5 shrink-0 transition-transform duration-200 group-open:rotate-180"
+					/>
+				</summary>
+				<div class="text-muted-foreground pb-4 pt-0 text-[0.95rem]">{it.a}</div>
+			</details>
+		))
+	}
+</div>

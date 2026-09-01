@@ -27,3 +27,32 @@ export function writeTheme(theme: unknown): void {
 	const valid = parseTheme(theme);
 	if (valid) localStorage.setItem(THEME_KEY, valid);
 }
+
+// Flip the document theme and persist it. Prefers a whole-viewport crossfade via the View
+// Transitions API, falls back to a brief surface-colour transition, and honours reduced-motion.
+// Lives here rather than in the toggle control so the behaviour is unit-tested directly instead
+// of through a UI framework — the control is now a plain server-rendered button.
+export function toggleTheme(): void {
+	const root = document.documentElement;
+	const next = !root.classList.contains('dark');
+	const apply = (): void => {
+		root.classList.toggle('dark', next);
+		writeTheme(next ? 'dark' : 'light');
+	};
+
+	if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		apply();
+		return;
+	}
+
+	const startVT = (document as unknown as { startViewTransition?: (cb: () => void) => unknown })
+		.startViewTransition;
+	if (typeof startVT === 'function') {
+		startVT.call(document, apply);
+		return;
+	}
+
+	root.classList.add('theme-anim');
+	apply();
+	window.setTimeout(() => root.classList.remove('theme-anim'), 320);
+}

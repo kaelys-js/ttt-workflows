@@ -1,0 +1,21 @@
+---
+// A plain server-rendered GitHub link styled as a button — no framework. The mark is inlined
+// (GithubMark.astro) and sized by the button's own `[&_svg]:size-4`, so it renders exactly as the
+// old React button did.
+import { buttonVariants } from "@/components/ui/button-variants";
+import GithubMark from "@/components/GithubMark.astro";
+
+interface Props {
+	size?: "lg" | "default";
+}
+const { size = "lg" } = Astro.props;
+const REPO = "https://github.com/kaelys-js/ttt-workflows";
+---
+
+<a href={REPO} target="_blank" rel="noopener noreferrer" class="inline-block">
+	<button type="button" class={buttonVariants({ size, className: "gap-2" })}>
+		<GithubMark />
+		View on GitHub
+		<span class="sr-only"> (opens in a new tab)</span>
+	</button>
+</a>

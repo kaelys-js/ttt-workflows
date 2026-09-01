@@ -101,11 +101,11 @@ export function parseBasePath(input: unknown): string {
 // A skill's leading slash-command, e.g. "/pr-review".
 const SlashCommand = v.pipe(v.string(), v.regex(/^\/[a-z][\w-]*$/u, 'expected a /command'));
 
-// A skill card. `icon` is a Lucide component (a function/object), only checked non-null; every
+// A skill card. `icon` is a lucide icon name rendered by Icon.astro (non-empty string); every
 // string field must be non-empty and the boundary must be one of the two known labels the
 // coloured pill renders.
 export const SkillSchema = v.object({
-	icon: v.custom<unknown>((x) => x != null, 'skill icon is required'),
+	icon: NonEmpty,
 	name: NonEmpty,
 	cmd: SlashCommand,
 	does: NonEmpty,

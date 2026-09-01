@@ -1,0 +1,24 @@
+---
+// The theme toggle is a plain server-rendered button — no framework, so it adds no JS to the
+// initial (above-the-fold) load. Both icons ship in the markup and CSS shows the right one for
+// the current theme, so there's no hydration flash the way a client-state swap would have.
+import { buttonVariants } from "@/components/ui/button-variants";
+import Icon from "@/components/ui/Icon.astro";
+---
+
+<button
+	type="button"
+	data-theme-toggle
+	class={buttonVariants({ variant: "ghost", size: "icon" })}
+	aria-label="Toggle dark mode"
+>
+	<Icon name="moon" class="dark:hidden" />
+	<Icon name="sun" class="hidden dark:block" />
+</button>
+
+<script>
+	import { toggleTheme } from "@/lib/theme";
+	for (const el of document.querySelectorAll("[data-theme-toggle]")) {
+		el.addEventListener("click", toggleTheme);
+	}
+</script>

@@ -3,24 +3,16 @@ import Layout from "@/layouts/Layout.astro";
 import PrReviewMockup from "@/components/PrReviewMockup.astro";
 import SecAuditMockup from "@/components/SecAuditMockup.astro";
 import TrpMockup from "@/components/TrpMockup.astro";
-import ThemeToggle from "@/components/ThemeToggle.tsx";
-import GithubButton from "@/components/GithubButton.tsx";
+import ThemeToggle from "@/components/ThemeToggle.astro";
+import GithubButton from "@/components/GithubButton.astro";
 import GithubMark from "@/components/GithubMark.astro";
-import Faq from "@/components/Faq.tsx";
-import CopyCommand from "@/components/CopyCommand.tsx";
-import { Card, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-	GitPullRequest,
-	ShieldCheck,
-	ClipboardCheck,
-	Sparkles,
-	Eye,
-	Terminal,
-	FileText,
-	Blocks,
-	GitBranch,
-} from "lucide-react";
+import Faq from "@/components/Faq.astro";
+import CopyCommand from "@/components/CopyCommand.astro";
+import Card from "@/components/ui/Card.astro";
+import CardTitle from "@/components/ui/CardTitle.astro";
+import CardDescription from "@/components/ui/CardDescription.astro";
+import Badge from "@/components/ui/Badge.astro";
+import Icon from "@/components/ui/Icon.astro";
 
 import * as v from "valibot";
 import { parseVersion, PlaybooksSchema, SkillsSchema, StepsSchema } from "@/lib/schemas";
@@ -34,7 +26,7 @@ const PLUGIN_INSTALL = "/plugin install ttt-workflows";
 
 const skills = v.parse(SkillsSchema, [
 	{
-		icon: GitPullRequest,
+		icon: "git-pull-request",
 		name: "pr-review",
 		cmd: "/pr-review",
 		does: "Reviews a GitHub or Azure DevOps pull request from its URL. Walks the diff in priority order, proves every finding against the real diff before it surfaces one, and labels each with a Conventional-Comment severity — refuting its own hunches so a nitpick never crowds out the real bug.",
@@ -45,7 +37,7 @@ const skills = v.parse(SkillsSchema, [
 		boundaryNote: "Never posts, comments, approves, or merges. You paste the result.",
 	},
 	{
-		icon: ShieldCheck,
+		icon: "shield-check",
 		name: "sec-audit",
 		cmd: "/sec-audit",
 		does: "Audits a repo, a PR, a path, or live Azure, Entra, and ADO — the three places a real vulnerability hides: source and IaC (scanners plus a semantic read), running cloud state, and the identity and CI plane. Four modes take one finding from discovery to a fix.",
@@ -56,7 +48,7 @@ const skills = v.parse(SkillsSchema, [
 		boundaryNote: "Read-only until you approve. A fix is a PR opened, never merged.",
 	},
 	{
-		icon: ClipboardCheck,
+		icon: "clipboard-check",
 		name: "trp",
 		cmd: "/trp",
 		does: "Delivers a ticket end to end through a phase machine. Grounds it in the real repo with file-line evidence, presents a full plan and stops for approval, then implements, runs the real local gates — format, lint, the affected tests, the build — and opens the PR.",
@@ -154,7 +146,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 					class="grid size-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 					aria-label="View on GitHub (opens in a new tab)"><GithubMark class="size-5" /></a
 				>
-				<ThemeToggle client:load />
+				<ThemeToggle />
 				<a
 					href="#install"
 					class="hidden h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:inline-flex"
@@ -171,8 +163,8 @@ const playbooks = v.parse(PlaybooksSchema, [
 			     never opacity:0) so LCP stays fast; the rest fade+rise with a light stagger. -->
 			<div>
 				<span data-hero class="inline-block">
-					<Badge className="border-primary/20 bg-primary/10 text-primary"
-						><Sparkles className="size-3.5" /> Open source · Claude Code plugin</Badge
+					<Badge class="border-primary/20 bg-primary/10 text-primary"
+						><Icon name="sparkles" class="size-3.5" /> Open source · Claude Code plugin</Badge
 					>
 				</span>
 				<h1
@@ -196,8 +188,8 @@ const playbooks = v.parse(PlaybooksSchema, [
 					Code. Read-only and approval-gated by default.
 				</p>
 				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-3">
-					<CopyCommand client:load cmd={MARKETPLACE_ADD} />
-					<CopyCommand client:load cmd={PLUGIN_INSTALL} />
+					<CopyCommand cmd={MARKETPLACE_ADD} />
+					<CopyCommand cmd={PLUGIN_INSTALL} />
 				</div>
 				<div data-hero style="--hd:240ms" class="mt-5 flex flex-wrap items-center gap-3">
 					<a href="#install" class="text-sm font-medium text-primary hover:underline"
@@ -224,13 +216,13 @@ const playbooks = v.parse(PlaybooksSchema, [
 				class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-5 py-6 text-sm text-muted-foreground"
 			>
 				<span class="inline-flex items-center gap-2"
-					><Eye className="size-4 text-primary" /> Read-only by default</span
+					><Icon name="eye" class="size-4 text-primary" /> Read-only by default</span
 				>
 				<span class="inline-flex items-center gap-2"
-					><ShieldCheck className="size-4 text-primary" /> Writes are approval-gated</span
+					><Icon name="shield-check" class="size-4 text-primary" /> Writes are approval-gated</span
 				>
 				<span class="inline-flex items-center gap-2"
-					><GitBranch className="size-4 text-primary" /> Any repo, any tenant</span
+					><Icon name="git-branch" class="size-4 text-primary" /> Any repo, any tenant</span
 				>
 				<span class="inline-flex items-center gap-2"
 					><GithubMark class="size-4 text-primary" /> Open source</span
@@ -249,17 +241,17 @@ const playbooks = v.parse(PlaybooksSchema, [
 			<div class="mt-12 grid gap-5 lg:grid-cols-3" data-stagger>
 				{
 					skills.map((s) => (
-						<Card className="gap-4 transition-shadow hover:shadow-md">
+						<Card class="gap-4 transition-shadow hover:shadow-md">
 							<div class="flex items-center gap-3">
 								<div class="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-									<s.icon className="size-5" />
+									<Icon name={s.icon} class="size-5" />
 								</div>
 								<div class="leading-tight">
-									<CardTitle className="font-mono text-base">{s.name}</CardTitle>
+									<CardTitle class="font-mono text-base">{s.name}</CardTitle>
 									<code class="text-xs text-muted-foreground">{s.cmd}</code>
 								</div>
 							</div>
-							<CardDescription className="leading-relaxed">{s.does}</CardDescription>
+							<CardDescription class="leading-relaxed">{s.does}</CardDescription>
 							<div class="flex flex-wrap gap-1.5">
 								{s.tags.map((t) => (
 									<span class="rounded border border-border/70 bg-muted/40 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
@@ -304,7 +296,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 								</div>
 								<p class="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
 								<div class="mt-auto pt-5">
-									<CopyCommand client:visible cmd={s.cmd} />
+									<CopyCommand cmd={s.cmd} />
 								</div>
 							</div>
 						))
@@ -312,7 +304,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 				</div>
 				<div class="mx-auto mt-12 max-w-3xl rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
 					<div class="flex items-center gap-2 text-sm font-semibold">
-						<Terminal className="size-4 text-primary" /> Then invoke a skill
+						<Icon name="terminal" class="size-4 text-primary" /> Then invoke a skill
 					</div>
 					<ul class="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
 						<li class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 gap-y-1 max-sm:grid-cols-1">
@@ -375,12 +367,12 @@ const playbooks = v.parse(PlaybooksSchema, [
 				<div class="mt-12 grid gap-5 md:grid-cols-3" data-stagger>
 					{
 						playbooks.map((p) => (
-							<Card className="gap-3 transition-shadow hover:shadow-md">
+							<Card class="gap-3 transition-shadow hover:shadow-md">
 								<div class="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-									<FileText className="size-5" />
+									<Icon name="file-text" class="size-5" />
 								</div>
-								<CardTitle className="text-base">{p.name}</CardTitle>
-								<CardDescription className="leading-relaxed">{p.body}</CardDescription>
+								<CardTitle class="text-base">{p.name}</CardTitle>
+								<CardDescription class="leading-relaxed">{p.body}</CardDescription>
 								<a
 									href={`${base}/playbooks/${p.slug}.pdf`}
 									target="_blank"
@@ -402,16 +394,16 @@ const playbooks = v.parse(PlaybooksSchema, [
 			<div class="text-center">
 				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Questions</h2>
 			</div>
-			<div class="mt-10"><Faq client:visible /></div>
+			<div class="mt-10"><Faq /></div>
 			<div
 				class="mt-12 flex flex-col items-center gap-5 rounded-2xl border border-border/60 bg-card p-8 text-center"
 			>
 				<div class="flex items-center gap-2 text-lg font-semibold">
-					<Blocks className="size-5 text-primary" /> Add it to Claude Code
+					<Icon name="blocks" class="size-5 text-primary" /> Add it to Claude Code
 				</div>
 				<div class="w-full max-w-xl space-y-3 text-left">
-					<CopyCommand client:visible cmd={MARKETPLACE_ADD} />
-					<CopyCommand client:visible cmd={PLUGIN_INSTALL} />
+					<CopyCommand cmd={MARKETPLACE_ADD} />
+					<CopyCommand cmd={PLUGIN_INSTALL} />
 				</div>
 			</div>
 		</section>
@@ -442,7 +434,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 						Three engineering skills — review, audit, and deliver — in one Claude Code plugin.
 						Read-only and approval-gated by default. Open source.
 					</p>
-					<div class="mt-6"><GithubButton client:visible size="default" /></div>
+					<div class="mt-6"><GithubButton size="default" /></div>
 				</div>
 
 				<nav aria-label="Product">
