@@ -1,13 +1,11 @@
 # Git hooks for ttt-skills. Install once:  ./bin/mise exec -- lefthook install
 #
-# Every tool runs through ./bin/mise exec so the hook resolves the exact
-# workspace-pinned binary (.mise/installs) regardless of host PATH — a
-# collaborator with only ./bin/mise, no host mise, still passes.
+# Every pre-push stage runs through turbo (`turbo run qa:<name>`) so unchanged inputs are a
+# cache hit locally and in CI (see turbo.json + package.json qa:* scripts). Tools resolve via
+# ./bin/mise exec, so a collaborator with only ./bin/mise (no host mise) still passes.
 #
-# GATES ARE UNSKIPPABLE. Do NOT push with --no-verify and do NOT set
-# LEFTHOOK_EXCLUDE. If a gate fails, fix the failing check — never skip it.
-# (One vector no config can catch: LEFTHOOK=0 disables lefthook in the git
-# wrapper before any command here runs. Don't use it.)
+# GATES ARE UNSKIPPABLE. bin/git refuses `git push --no-verify`; the no-bypass stage refuses
+# the LEFTHOOK=0 / LEFTHOOK_EXCLUDE envs. If a gate fails, fix the check — never skip it.
 
 # ─── Pre-Commit ──────────────────────────────────────────────────────────────
 pre-commit:
@@ -16,8 +14,8 @@ pre-commit:
     no-bypass:
       priority: 1
       run: |
-        if [ -n "${LEFTHOOK_EXCLUDE:-}" ]; then
-          echo "LEFTHOOK_EXCLUDE is set — gates are unskippable. Unset it and re-run."; exit 1
+        if [ -n "${LEFTHOOK_EXCLUDE:-}" ] || [ "${LEFTHOOK:-}" = "0" ]; then
+          echo "BLOCKED: lefthook gates are unskippable (LEFTHOOK/LEFTHOOK_EXCLUDE set)."; exit 1
         fi
     format-js:
       priority: 2
@@ -31,7 +29,7 @@ pre-commit:
       priority: 4
       run: ./bin/mise exec -- node scripts/validate-skills.mjs
 
-# ─── Pre-Push ────────────────────────────────────────────────────────────────
+# ─── Pre-Push: the full format + lint + test gate, each stage cached by turbo ──
 pre-push:
   parallel: false
   commands:
@@ -47,63 +45,60 @@ pre-push:
     preflight:
       priority: 1
       run: ./bin/preflight.sh
-    format-check:
+    format:
       priority: 2
-      run: ./bin/mise exec -- oxfmt --check --ignore-path=.oxfmtignore .
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:format
     lint:
       priority: 3
-      run: ./bin/mise exec -- oxlint
-    shfmt-check:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:lint
+    shell-format:
       priority: 4
-      run: ./bin/mise exec -- shfmt -d $(git ls-files '*.sh') bin/git
-    shellcheck:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:shell-format
+    shell-lint:
       priority: 5
-      run: ./bin/mise exec -- shellcheck $(git ls-files '*.sh') bin/git
-    validate-skills:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:shell-lint
+    toml:
       priority: 6
-      run: ./bin/mise exec -- node scripts/validate-skills.mjs
-    docs-check:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:toml
+    validate-skills:
       priority: 7
-      run: ./bin/mise exec -- node scripts/build-docs.mjs --check
-    # The website stages run mise from the repo root (so ./bin/mise resolves),
-    # then cd into the site so its own configs (.oxlintrc, prettier, stylelint)
-    # and node_modules apply.
-    web-format:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:validate-skills
+    docs-check:
       priority: 8
-      run: ./bin/mise exec -- bash -c 'cd packages/products/website && oxfmt --check src'
-    web-lint:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:docs-check
+    web-format:
       priority: 9
-      run: ./bin/mise exec -- bash -c 'cd packages/products/website && oxlint src'
-    astro-format:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-format
+    web-lint:
       priority: 10
-      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec prettier --check "src/**/*.astro"'
-    css-lint:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-lint
+    astro-format:
       priority: 11
-      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec stylelint "src/**/*.css"'
-    yaml-lint:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:astro-format
+    css-lint:
       priority: 12
-      run: ./bin/mise exec -- yamllint .github/workflows/
-    workflow-lint:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:css-lint
+    yaml-lint:
       priority: 13
-      run: ./bin/mise exec -- actionlint
-    markdown-lint:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:yaml-lint
+    workflow-lint:
       priority: 14
-      run: ./bin/mise exec -- markdownlint-cli2 "*.md"
-    # Website unit + behaviour tests with a 75% coverage floor.
-    web-test:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:workflow-lint
+    markdown-lint:
       priority: 15
-      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec vitest run --coverage'
-    # Website E2E + visual regression in the pinned Playwright container, so rendering is
-    # byte-identical everywhere. Runs locally wherever Docker is available; in CI it defers to
-    # the web-e2e.yml container job (which runs run-web-e2e.sh directly) to avoid a double run.
-    web-e2e:
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:markdown-lint
+    web-test:
       priority: 16
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-test
+    # Website E2E + visual regression in the pinned Playwright container. Runs locally via
+    # Docker; in CI it defers to the web-e2e.yml container job to avoid a double run.
+    web-e2e:
+      priority: 17
       run: |
-        cd packages/products/website
         if [ -n "${CI:-}" ]; then
           echo "web-e2e: deferred to the web-e2e.yml container job."
         elif docker info >/dev/null 2>&1; then
-          ./run-web-e2e.sh
+          ./bin/mise exec -- ./node_modules/.bin/turbo run qa:web-e2e
         else
           echo "web-e2e: Docker unavailable here — this check runs in the web-e2e.yml CI job."
         fi
@@ -123,8 +118,6 @@ commit-msg:
       run: ./bin/mise exec -- commitlint --edit {1}
 
 # ─── Post-Checkout / Post-Merge ──────────────────────────────────────────────
-# Keep pinned tools in sync after branch switches and merges that change
-# mise.toml / mise.lock. Fast no-op when everything is already installed.
 post-merge:
   commands:
     tools:

@@ -1,18 +1,36 @@
 {
-	"name": "ttt-skills",
+	"name": "ttt-workflows",
 	"private": true,
-	"description": "Claude Code skills marketplace — the ttt-workflows plugin (pr-review, sec-audit, trp).",
+	"description": "Three engineering workflows as Claude Code skills — pr-review, sec-audit, trp.",
+	"license": "Proprietary",
 	"type": "module",
 	"scripts": {
-		"format": "oxfmt --write --ignore-path=.oxfmtignore .",
-		"format:check": "oxfmt --check --ignore-path=.oxfmtignore .",
-		"lint": "oxlint",
-		"shfmt": "shfmt -w $(git ls-files '*.sh')",
-		"shfmt:check": "shfmt -d $(git ls-files '*.sh')",
-		"shellcheck": "shellcheck $(git ls-files '*.sh')",
-		"validate": "node scripts/validate-skills.mjs",
+		"prepare": "./bin/mise exec -- lefthook install",
+		"build:web": "cd packages/products/website && pnpm build",
 		"docs": "./bin/mise exec -- node scripts/build-docs.mjs",
-		"docs:check": "./bin/mise exec -- node scripts/build-docs.mjs --check",
-		"check": "npm run format:check && npm run lint && npm run shfmt:check && npm run shellcheck && npm run validate && npm run docs:check"
-	}
+		"qa:format": "oxfmt --check --ignore-path=.oxfmtignore .",
+		"qa:lint": "oxlint",
+		"qa:shell-format": "shfmt -d $(git ls-files '*.sh') bin/git",
+		"qa:shell-lint": "shellcheck $(git ls-files '*.sh') bin/git",
+		"qa:toml": "taplo lint mise.toml",
+		"qa:validate-skills": "node scripts/validate-skills.mjs",
+		"qa:docs-check": "node scripts/build-docs.mjs --check",
+		"qa:yaml-lint": "yamllint .github/workflows/",
+		"qa:workflow-lint": "actionlint",
+		"qa:markdown-lint": "markdownlint-cli2 \"*.md\"",
+		"qa:web-format": "cd packages/products/website && oxfmt --check src",
+		"qa:web-lint": "cd packages/products/website && oxlint src",
+		"qa:astro-format": "cd packages/products/website && pnpm exec prettier --check \"src/**/*.astro\"",
+		"qa:css-lint": "cd packages/products/website && pnpm exec stylelint \"src/**/*.css\"",
+		"qa:web-test": "cd packages/products/website && pnpm exec vitest run --coverage",
+		"qa:web-e2e": "cd packages/products/website && ./run-web-e2e.sh"
+	},
+	"devDependencies": {
+		"turbo": "2.10.12"
+	},
+	"engines": {
+		"node": "26.8.1",
+		"pnpm": "11.24.0"
+	},
+	"packageManager": "pnpm@11.24.0"
 }

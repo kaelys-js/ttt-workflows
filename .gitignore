@@ -24,7 +24,8 @@ out/
 .cache/
 .parcel-cache/
 .vite/
-.turbo/
+.turbo/*
+!.turbo/config.json
 .nx/
 .docusaurus/
 .astro/

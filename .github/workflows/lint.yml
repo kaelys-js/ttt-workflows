@@ -17,6 +17,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Turbo remote cache (Vercel). If the TURBO_TOKEN secret is unset the run still works —
+      # turbo falls back to the local .turbo cache restored below.
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       # Pinned to a full commit SHA (supply-chain hardening); the comment tracks the version.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,8 +35,19 @@ jobs:
           key: mise-${{ runner.os }}-${{ hashFiles('mise.lock') }}
           restore-keys: |
             mise-${{ runner.os }}-
+      # Cross-run turbo cache. Every gate stage runs `turbo run qa:<name>`, so an unchanged
+      # surface restores from here instead of re-running.
+      - name: Cache turbo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
       - name: Install the pinned toolchain
         run: ./bin/mise install
+      - name: Install root deps (turbo)
+        run: ./bin/mise exec -- pnpm install --frozen-lockfile
       - name: Install website deps (for the astro/css/oxlint checks)
         run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm install --frozen-lockfile'
       - name: Format-check + lint (all file types)

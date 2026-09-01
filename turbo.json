@@ -1,0 +1,124 @@
+{
+	"$schema": "./node_modules/turbo/schema.json",
+	"globalDependencies": [
+		"mise.toml",
+		"mise.lock",
+		"lefthook.yml",
+		"package.json",
+		"pnpm-lock.yaml"
+	],
+	"globalPassThroughEnv": ["NODE_ENV", "CI", "TMPDIR", "HOME", "TURBO_*", "ASTRO_BASE"],
+	"ui": "tui",
+	"tasks": {
+		"build:web": {
+			"inputs": [
+				"packages/products/website/src/**",
+				"packages/products/website/public/**",
+				"packages/products/website/astro.config.mjs",
+				"packages/products/website/package.json",
+				"packages/products/website/tsconfig.json",
+				"docs/*.pdf"
+			],
+			"outputs": ["packages/products/website/dist/**"],
+			"env": ["GITHUB_REF_NAME", "ASTRO_BASE"],
+			"outputLogs": "new-only"
+		},
+		"qa:format": {
+			"inputs": ["**/*.{js,mjs,ts,tsx,json,jsonc}", ".oxfmtrc.json", ".oxfmtignore"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:lint": {
+			"inputs": ["**/*.{js,mjs,ts,tsx}", ".oxlintrc.json"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:shell-format": {
+			"inputs": ["**/*.sh", "bin/git"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:shell-lint": {
+			"inputs": ["**/*.sh", "bin/git", ".shellcheckrc"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:toml": {
+			"inputs": ["mise.toml"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:validate-skills": {
+			"inputs": ["plugins/ttt-workflows/skills/**", "scripts/validate-skills.mjs"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:docs-check": {
+			"inputs": ["docs/**", "scripts/build-docs.mjs"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:yaml-lint": {
+			"inputs": [".github/workflows/**", ".yamllint"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:workflow-lint": {
+			"inputs": [".github/workflows/**", ".github/actions/**"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:markdown-lint": {
+			"inputs": ["*.md", ".markdownlint-cli2.jsonc"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:web-format": {
+			"inputs": ["packages/products/website/src/**"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:web-lint": {
+			"inputs": ["packages/products/website/src/**", "packages/products/website/.oxlintrc.json"],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:astro-format": {
+			"inputs": [
+				"packages/products/website/src/**/*.astro",
+				"packages/products/website/.prettierrc*"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:css-lint": {
+			"inputs": [
+				"packages/products/website/src/**/*.css",
+				"packages/products/website/.stylelintrc*"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
+		"qa:web-test": {
+			"inputs": [
+				"packages/products/website/src/**",
+				"packages/products/website/test/**",
+				"packages/products/website/vitest.config.ts",
+				"packages/products/website/package.json"
+			],
+			"outputs": ["packages/products/website/coverage/**"],
+			"outputLogs": "new-only"
+		},
+		"qa:web-e2e": {
+			"inputs": [
+				"packages/products/website/src/**",
+				"packages/products/website/e2e/**",
+				"packages/products/website/playwright.config.ts",
+				"packages/products/website/run-web-e2e.sh",
+				"packages/products/website/serve.mjs"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		}
+	}
+}
