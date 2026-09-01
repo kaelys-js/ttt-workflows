@@ -22,7 +22,8 @@ import {
 	GitBranch,
 } from "lucide-react";
 
-import { parseVersion } from "@/lib/schemas";
+import * as v from "valibot";
+import { parseVersion, PlaybooksSchema, SkillsSchema, StepsSchema } from "@/lib/schemas";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const REPO = "https://github.com/kaelys-js/ttt-workflows";
@@ -31,7 +32,7 @@ const appVersion = parseVersion(import.meta.env.PUBLIC_APP_VERSION);
 const MARKETPLACE_ADD = "/plugin marketplace add kaelys-js/ttt-workflows";
 const PLUGIN_INSTALL = "/plugin install ttt-workflows";
 
-const skills = [
+const skills = v.parse(SkillsSchema, [
 	{
 		icon: GitPullRequest,
 		name: "pr-review",
@@ -66,9 +67,9 @@ const skills = [
 		boundaryNote:
 			"Stops for approval. No branch, no write, nothing hard to undo before you say go.",
 	},
-];
+]);
 
-const steps = [
+const steps = v.parse(StepsSchema, [
 	{
 		n: "1",
 		title: "Add the marketplace",
@@ -81,9 +82,9 @@ const steps = [
 		body: "Install ttt-workflows and all three skills register at once — nothing else to set up.",
 		cmd: PLUGIN_INSTALL,
 	},
-];
+]);
 
-const playbooks = [
+const playbooks = v.parse(PlaybooksSchema, [
 	{
 		slug: "pr-review",
 		name: "PR Review",
@@ -99,7 +100,7 @@ const playbooks = [
 		name: "Task Resolution Protocol",
 		body: "Take a ticket from assigned to merged: ground it in real code, get the plan approved, then build, prove, and close it out.",
 	},
-];
+]);
 ---
 
 <Layout>

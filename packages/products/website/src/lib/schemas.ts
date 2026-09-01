@@ -91,3 +91,40 @@ export const BasePathSchema = v.pipe(
 export function parseBasePath(input: unknown): string {
 	return v.parse(BasePathSchema, input);
 }
+
+// ---------------------------------------------------------------------------
+// Internal content constants (index.astro). Validated at build so a bad edit — a blank title,
+// an unknown boundary label, a mistyped /command, an empty tag list — fails the build instead
+// of shipping broken layout or markup, rather than being trusted because TypeScript said so.
+// ---------------------------------------------------------------------------
+
+// A skill's leading slash-command, e.g. "/pr-review".
+const SlashCommand = v.pipe(v.string(), v.regex(/^\/[a-z][\w-]*$/u, 'expected a /command'));
+
+// A skill card. `icon` is a Lucide component (a function/object), only checked non-null; every
+// string field must be non-empty and the boundary must be one of the two known labels the
+// coloured pill renders.
+export const SkillSchema = v.object({
+	icon: v.custom<unknown>((x) => x != null, 'skill icon is required'),
+	name: NonEmpty,
+	cmd: SlashCommand,
+	does: NonEmpty,
+	tags: v.pipe(v.array(NonEmpty), v.minLength(1, 'a skill needs at least one tag')),
+	produces: NonEmpty,
+	boundary: v.picklist(['Read-only', 'Approval-gated']),
+	boundaryNote: NonEmpty,
+});
+export const SkillsSchema = v.pipe(v.array(SkillSchema), v.minLength(1));
+
+// A numbered install step.
+export const StepSchema = v.object({ n: NonEmpty, title: NonEmpty, body: NonEmpty, cmd: NonEmpty });
+export const StepsSchema = v.pipe(v.array(StepSchema), v.minLength(1));
+
+// An operator-playbook card. `slug` names the PDF served at /playbooks/<slug>.pdf, so it must be
+// one of the three real playbooks — a typo would link a 404.
+export const PlaybookSchema = v.object({
+	slug: v.picklist(['pr-review', 'sec-audit', 'trp']),
+	name: NonEmpty,
+	body: NonEmpty,
+});
+export const PlaybooksSchema = v.pipe(v.array(PlaybookSchema), v.minLength(1));
