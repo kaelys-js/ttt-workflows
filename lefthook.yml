@@ -28,6 +28,11 @@ pre-commit:
     validate-skills:
       priority: 4
       run: ./bin/mise exec -- node scripts/validate-skills.mjs
+    # Propagate plugin.json's version into the marketplace manifest + every SKILL.md so a bump in
+    # one place can never drift; re-stage anything it rewrote so the commit stays in sync.
+    version-sync:
+      priority: 5
+      run: ./bin/mise exec -- node scripts/sync-version.mjs && git add .claude-plugin/marketplace.json plugins/ttt-workflows/skills/*/SKILL.md
 
 # ─── Pre-Push: the full format + lint + test gate, each stage cached by turbo ──
 pre-push:
@@ -63,6 +68,9 @@ pre-push:
     validate-skills:
       priority: 7
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:validate-skills
+    version-sync:
+      priority: 7
+      run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:version-sync
     scripts-test:
       priority: 7
       run: ./bin/mise exec -- ./node_modules/.bin/turbo run qa:scripts-test

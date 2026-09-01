@@ -53,6 +53,16 @@
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
+		"qa:version-sync": {
+			"inputs": [
+				"plugins/ttt-workflows/.claude-plugin/plugin.json",
+				".claude-plugin/marketplace.json",
+				"plugins/ttt-workflows/skills/*/SKILL.md",
+				"scripts/sync-version.mjs"
+			],
+			"outputs": [],
+			"outputLogs": "new-only"
+		},
 		"qa:scripts-test": {
 			"inputs": [
 				"plugins/ttt-workflows/skills/**/scripts/*.mjs",

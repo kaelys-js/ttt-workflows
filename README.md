@@ -124,17 +124,27 @@ plugin.
 
 ## Releasing
 
-Bump `version` in `plugins/ttt-workflows/.claude-plugin/plugin.json`, then push an annotated
-tag:
+`plugins/ttt-workflows/.claude-plugin/plugin.json`'s `version` is the **single source of
+truth**. Bump it, then commit: the pre-commit hook runs `scripts/sync-version.mjs`, which
+propagates that version into `marketplace.json` and every `SKILL.md`, so the three can never
+drift (a `qa:version-sync` gate in pre-push and CI fails the build on any mismatch). Then push
+the matching annotated tag:
 
 ```bash
+git commit -am "…"            # plugin/marketplace/SKILL versions sync automatically
 git tag -a v1.2.0 -m "## Changes…"
-git push origin v1.2.0
+git push origin main --tags
 ```
 
-The `release` workflow cuts a GitHub Release from the tag message and attaches the three
-playbook PDFs; the site rebuilds showing that version. Installed plugins update when you run
-`/plugin marketplace update ttt-workflows` (or enable auto-update for the marketplace).
+Two things are separate, on purpose:
+
+- **The plugin (skills) is served from `main`.** `/plugin marketplace add kaelys-js/ttt-workflows`
+  clones the default branch, and `/plugin marketplace update ttt-workflows` re-pulls it — so a
+  push to `main` (with the `version` bumped) is what reaches installed plugins. No tag needed.
+- **The `v*` tag is the release.** It cuts a GitHub Release from the tag message with the three
+  playbook PDFs (`release.yml`) and is the **only** trigger that deploys the marketing site
+  (`pages.yml`), which injects that tag as its displayed version. Between tags the live site is
+  frozen at the last release, keeping the site in lockstep with the released plugin version.
 
 ## Contributing
 

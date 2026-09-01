@@ -1,13 +1,15 @@
 name: Pages
 # Build the marketing site (packages/products/website) and deploy it to GitHub Pages.
 # Requires Pages to be set to "GitHub Actions" as its source (repo Settings -> Pages).
+#
+# RELEASE-GATED: the site deploys only when a `v*` release tag is cut, so the live site
+# always reflects the last released version. The tag drives the injected version
+# (GITHUB_REF_NAME -> parseVersion), keeping the site in lockstep with the plugin release.
+# Between releases the live site is intentionally frozen; use workflow_dispatch to redeploy
+# HEAD manually (its version then falls back to the latest tag via `git describe`).
 on:
   push:
-    branches: [main]
-    paths:
-      - 'packages/products/website/**'
-      - 'docs/**'
-      - '.github/workflows/pages.yml'
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
