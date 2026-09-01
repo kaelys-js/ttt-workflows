@@ -372,3 +372,6 @@ packages/products/website/public/playbooks/
 
 # The site's own icons/og images are committed (override the global *.png ignore).
 !packages/products/website/public/**/*.png
+
+# Playwright visual-regression baselines are committed test inputs (override *.png).
+!packages/products/website/e2e/**/*.png

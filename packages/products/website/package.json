@@ -10,7 +10,10 @@
 		"format": "prettier --write \"src/**/*.astro\"",
 		"format:check": "prettier --check \"src/**/*.astro\"",
 		"lint:css": "stylelint \"src/**/*.css\"",
-		"prebuild": "node scripts/copy-playbooks.mjs"
+		"prebuild": "node scripts/copy-playbooks.mjs",
+		"test": "vitest run",
+		"test:unit": "vitest run --coverage",
+		"test:e2e": "ASTRO_BASE=/ astro build && playwright test"
 	},
 	"dependencies": {
 		"@astrojs/react": "6.0.5",
@@ -30,14 +33,21 @@
 	},
 	"devDependencies": {
 		"@astrojs/check": "0.9.10",
+		"@playwright/test": "1.62.1",
+		"@testing-library/jest-dom": "7.0.1",
+		"@testing-library/react": "16.3.3",
+		"@testing-library/user-event": "14.6.6",
 		"@types/react": "19.2.18",
 		"@types/react-dom": "19.2.5",
+		"@vitest/coverage-v8": "4.1.11",
+		"jsdom": "30.0.1",
 		"prettier": "3.9.6",
 		"prettier-plugin-astro": "0.14.1",
 		"sharp": "0.35.4",
 		"stylelint": "17.14.1",
 		"stylelint-config-standard": "40.0.0",
-		"typescript": "7.0.2"
+		"typescript": "7.0.2",
+		"vitest": "4.1.11"
 	},
 	"engines": {
 		"node": "26.8.1",

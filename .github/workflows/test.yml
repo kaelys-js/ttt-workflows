@@ -1,0 +1,42 @@
+name: Test
+# Website unit tests (Vitest + coverage) and E2E behaviour (Playwright). Visual
+# regression is added with the containerized suite in web-e2e.yml.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: packages/products/website
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+        with:
+          version: 11.24.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '26.8.1'
+          cache: pnpm
+          cache-dependency-path: packages/products/website/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Unit tests (Vitest + coverage)
+        run: pnpm exec vitest run --coverage
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: E2E behaviour (Playwright)
+        run: pnpm test:e2e

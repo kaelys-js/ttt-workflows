@@ -83,6 +83,11 @@ pre-push:
     markdown-lint:
       priority: 14
       run: ./bin/mise exec -- markdownlint-cli2 "*.md"
+    # Website unit + behaviour tests with a 75% coverage floor. The heavier E2E +
+    # visual-regression suite needs a browser and runs in CI (test.yml).
+    web-test:
+      priority: 15
+      run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm exec vitest run --coverage'
 
 # ─── Commit Message ──────────────────────────────────────────────────────────
 commit-msg:
