@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'packages/products/website/**'
+      - 'docs/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -18,28 +19,42 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-defaults:
-  run:
-    working-directory: packages/products/website
-
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # Turbo remote cache (Vercel); falls back to the local .turbo cache when unset. The site
+      # build is keyed on the website sources plus GITHUB_REF_NAME/ASTRO_BASE (turbo.json
+      # build:web), so a tag deploy rebuilds with its version while an unchanged push is a hit.
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+          fetch-depth: 0 # tags needed for the `git describe` version fallback on main pushes
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          version: 11.24.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+          path: .mise
+          key: mise-${{ runner.os }}-${{ hashFiles('mise.lock') }}
+          restore-keys: |
+            mise-${{ runner.os }}-
+      - name: Cache turbo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          node-version: '26.8.1'
-          cache: pnpm
-          cache-dependency-path: packages/products/website/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+      - name: Install the pinned toolchain
+        run: ./bin/mise install
+      - name: Install root deps (turbo)
+        run: ./bin/mise exec -- pnpm install --frozen-lockfile
+      - name: Install website deps
+        run: ./bin/mise exec -- bash -c 'cd packages/products/website && pnpm install --frozen-lockfile'
+      - name: Build site (turbo-cached on unchanged website sources)
+        run: ./bin/mise exec -- ./node_modules/.bin/turbo run build:web
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
