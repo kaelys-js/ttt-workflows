@@ -6,6 +6,11 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "react",
 		"noEmit": true,
+		"noUncheckedIndexedAccess": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
 		"paths": { "@/*": ["./src/*"] }
 	}
 }
