@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -178,5 +177,26 @@
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation-duration: 0.3s;
+	}
+}
+
+/* Copy button: a brief pop when the check-mark swaps in after a successful copy. The icon is
+   display:none until then, so the animation only runs when it appears. Replaces tw-animate-css's
+   animate-in/zoom/fade for this one micro-interaction, so the site ships no animation library. */
+@media (prefers-reduced-motion: no-preference) {
+	@keyframes copied-pop {
+		from {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.copied-pop {
+		animation: copied-pop 0.3s ease both;
 	}
 }

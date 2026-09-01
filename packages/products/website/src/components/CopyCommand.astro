@@ -21,10 +21,7 @@ const { cmd } = Astro.props;
 		class="group shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
 	>
 		<Icon name="copy" class="size-4 group-data-[copied]:hidden" />
-		<Icon
-			name="check"
-			class="hidden size-4 text-primary group-data-[copied]:block motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:fade-in motion-safe:duration-300"
-		/>
+		<Icon name="check" class="copied-pop hidden size-4 text-primary group-data-[copied]:block" />
 	</button>
 </div>
 
