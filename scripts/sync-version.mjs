@@ -1,13 +1,17 @@
 #!/usr/bin/env node
-// Single source of truth for the release version, to stop the plugin / marketplace / skill
-// versions drifting apart. The canonical value is plugin.json "version"; this propagates it to
-// the marketplace manifest and every SKILL.md.
+// Single source of truth for the release version, to stop the plugin / marketplace / skill /
+// VERSION / CHANGELOG versions drifting apart. The canonical value is plugin.json "version"; this
+// propagates it to the marketplace manifest, every SKILL.md, and the VERSION file, and checks
+// that CHANGELOG.md's topmost released heading matches (the changelog body is curated, so it is
+// verified, never rewritten).
 //
 //   node scripts/sync-version.mjs           write the canonical version into every target
 //   node scripts/sync-version.mjs --check   verify only; exit non-zero on any drift (the gate)
 //
-// To release: bump plugin.json "version", commit (the pre-commit hook runs this to sync the
-// rest), then cut the matching v<version> tag. The --check stage in pre-push + CI blocks drift.
+// To release: bump plugin.json "version" and add the matching "## [x.y.z] - date" section to
+// CHANGELOG.md, commit (the pre-commit hook runs this to sync VERSION + the manifests), then cut
+// the matching v<version> tag. The --check stage in pre-push + CI blocks drift; release.yml
+// re-checks the tag against VERSION + CHANGELOG before publishing.
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +19,8 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const pluginJson = join(root, 'plugins/ttt-workflows/.claude-plugin/plugin.json');
 const marketplaceJson = join(root, '.claude-plugin/marketplace.json');
+const versionFile = join(root, 'VERSION');
+const changelogFile = join(root, 'CHANGELOG.md');
 const skillsDir = join(root, 'plugins/ttt-workflows/skills');
 
 const check = process.argv.includes('--check');
@@ -34,6 +40,14 @@ const targets = [
 		re: /("version":\s*)"[^"]+"/,
 		repl: `$1"${canonical}"`,
 		read: (t) => t.match(/"version":\s*"([^"]+)"/)?.[1],
+	},
+	{
+		// The bare version string, one line. The whole file is the version, so replace it entirely.
+		label: 'VERSION',
+		file: versionFile,
+		re: /^[\s\S]*$/,
+		repl: `${canonical}\n`,
+		read: (t) => t.trim(),
 	},
 ];
 for (const name of readdirSync(skillsDir)) {
@@ -65,6 +79,25 @@ for (const t of targets) {
 	}
 }
 
+// CHANGELOG.md is curated by hand, so it is verified but never rewritten: its topmost RELEASED
+// heading (skipping "## [Unreleased]") must equal the canonical version. This is what keeps the
+// changelog from drifting behind a version bump — you cannot bump without adding the section.
+const changelogText = readFileSync(changelogFile, 'utf8');
+const topReleased = [...changelogText.matchAll(/^## \[([^\]]+)\]/gm)]
+	.map((m) => m[1])
+	.find((v) => v.toLowerCase() !== 'unreleased');
+if (topReleased !== canonical) {
+	console.error(
+		`sync-version: CHANGELOG.md top released heading is "${topReleased ?? 'none'}", expected "${canonical}" — ` +
+			`add a "## [${canonical}] - <date>" section (curated, not auto-written)`,
+	);
+	if (check) {
+		drift++;
+	} else {
+		process.exit(1);
+	}
+}
+
 if (check) {
 	if (drift > 0) {
 		console.error(
@@ -72,7 +105,7 @@ if (check) {
 		);
 		process.exit(1);
 	}
-	console.log(`sync-version: all versions match plugin.json (${canonical})`);
+	console.log(`sync-version: all versions + VERSION + CHANGELOG match plugin.json (${canonical})`);
 } else {
 	console.log(
 		wrote

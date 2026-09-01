@@ -125,14 +125,17 @@ plugin.
 ## Releasing
 
 `plugins/ttt-workflows/.claude-plugin/plugin.json`'s `version` is the **single source of
-truth**. Bump it, then commit: the pre-commit hook runs `scripts/sync-version.mjs`, which
-propagates that version into `marketplace.json` and every `SKILL.md`, so the three can never
-drift (a `qa:version-sync` gate in pre-push and CI fails the build on any mismatch). Then push
+truth**. To release: bump it, add the matching `## [x.y.z] - date` section to
+[`CHANGELOG.md`](CHANGELOG.md) (move what accumulated under `## [Unreleased]` into it), then
+commit. The pre-commit hook runs `scripts/sync-version.mjs`, which propagates that version into
+`marketplace.json`, every `SKILL.md`, and the `VERSION` file, and verifies the CHANGELOG's top
+released heading matches — so nothing can drift (a `qa:version-sync` gate in pre-push and CI
+fails the build on any mismatch, including a version bump with no changelog section). Then push
 the matching annotated tag:
 
 ```bash
-git commit -am "…"            # plugin/marketplace/SKILL versions sync automatically
-git tag -a v1.2.0 -m "## Changes…"
+git commit -am "…"            # marketplace/SKILL/VERSION sync automatically; CHANGELOG is checked
+git tag -a v1.2.1 -m "v1.2.1" # the message is not the notes — the CHANGELOG section is
 git push origin main --tags
 ```
 
@@ -141,10 +144,12 @@ Two things are separate, on purpose:
 - **The plugin (skills) is served from `main`.** `/plugin marketplace add kaelys-js/ttt-workflows`
   clones the default branch, and `/plugin marketplace update ttt-workflows` re-pulls it — so a
   push to `main` (with the `version` bumped) is what reaches installed plugins. No tag needed.
-- **The `v*` tag is the release.** It cuts a GitHub Release from the tag message with the three
-  playbook PDFs (`release.yml`) and is the **only** trigger that deploys the marketing site
-  (`pages.yml`), which injects that tag as its displayed version. Between tags the live site is
-  frozen at the last release, keeping the site in lockstep with the released plugin version.
+- **The `v*` tag is the release.** `release.yml` re-checks the tag against `VERSION` and
+  `CHANGELOG.md` (via `scripts/release-notes.mjs`), refuses to publish on any mismatch, then cuts
+  a GitHub Release whose notes are the matching CHANGELOG section, with the three playbook PDFs
+  attached. The tag is also the **only** trigger that deploys the marketing site (`pages.yml`),
+  which injects that tag as its displayed version. Between tags the live site is frozen at the
+  last release, keeping the site in lockstep with the released plugin version.
 
 ## Contributing
 

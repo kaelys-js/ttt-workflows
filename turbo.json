@@ -58,6 +58,8 @@
 				"plugins/ttt-workflows/.claude-plugin/plugin.json",
 				".claude-plugin/marketplace.json",
 				"plugins/ttt-workflows/skills/*/SKILL.md",
+				"VERSION",
+				"CHANGELOG.md",
 				"scripts/sync-version.mjs"
 			],
 			"outputs": [],

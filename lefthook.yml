@@ -28,11 +28,12 @@ pre-commit:
     validate-skills:
       priority: 4
       run: ./bin/mise exec -- node scripts/validate-skills.mjs
-    # Propagate plugin.json's version into the marketplace manifest + every SKILL.md so a bump in
-    # one place can never drift; re-stage anything it rewrote so the commit stays in sync.
+    # Propagate plugin.json's version into the marketplace manifest, every SKILL.md, and VERSION so
+    # a bump in one place can never drift; re-stage anything it rewrote so the commit stays in sync.
+    # (CHANGELOG.md is curated, so it is verified, not rewritten — a missing section fails here.)
     version-sync:
       priority: 5
-      run: ./bin/mise exec -- node scripts/sync-version.mjs && git add .claude-plugin/marketplace.json plugins/ttt-workflows/skills/*/SKILL.md
+      run: ./bin/mise exec -- node scripts/sync-version.mjs && git add .claude-plugin/marketplace.json plugins/ttt-workflows/skills/*/SKILL.md VERSION
 
 # ─── Pre-Push: the full format + lint + test gate, each stage cached by turbo ──
 pre-push:

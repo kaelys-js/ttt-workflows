@@ -27,20 +27,14 @@ jobs:
       - name: Confirm the shipped PDFs are present
         run: test -f docs/pr-review.pdf && test -f docs/sec-audit.pdf && test -f docs/trp.pdf
 
-      - name: Release notes from the tag message
+      - name: Release notes from CHANGELOG (also gates tag == VERSION == CHANGELOG)
         id: notes
         run: |
-          # actions/checkout fetches the triggering tag as a lightweight ref, so
-          # %(contents) would fall back to the commit message. Re-fetch the annotated
-          # tag object to read its actual message.
-          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}" || true
-          # Read the tag message from the raw object and strip only the header block and the
-          # signature — NOT via %(contents:subject), which folds a message with no blank line
-          # (a plain bullet list) into a single wall-of-text line.
-          NOTES="$(git cat-file tag "$GITHUB_REF_NAME" \
-            | awk 'BEGIN{h=1} h&&/^$/{h=0;next} h{next} /-----BEGIN (PGP|SSH) SIGNATURE-----/{exit} {print}' \
-            | awk '{l[NR]=$0} END{n=NR; while(n>0 && l[n]==""){n--}; for(i=1;i<=n;i++) print l[i]}')"
-          [ -n "$NOTES" ] || NOTES="Release ${GITHUB_REF_NAME#v}"
+          # release-notes.mjs fails the build unless the tag matches VERSION, plugin.json, and a
+          # released CHANGELOG.md section — so a tag can never be published out of lockstep. On
+          # success it prints that section, which becomes the release body. Node builtins only, so
+          # no install step is needed.
+          NOTES="$(node scripts/release-notes.mjs "$GITHUB_REF_NAME")"
           { echo "notes<<TTT_EOF"; echo "$NOTES"; echo "TTT_EOF"; } >> "$GITHUB_OUTPUT"
 
       - name: Create the release

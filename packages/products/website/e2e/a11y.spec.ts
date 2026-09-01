@@ -9,13 +9,19 @@ import { expect, test, type Page } from '@playwright/test';
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
 
 async function scan(page: Page, label: string) {
-	// Force every reveal/stagger element to its settled (fully opaque) state so axe never measures
-	// a mid-fade colour — reducedMotion disables the animation, this guarantees the end state.
-	await page.evaluate(() =>
+	// Force everything to its settled, fully-opaque state before axe reads colours. reducedMotion
+	// already disables the animations, but on a cold first paint axe can still sample a node mid-
+	// composite and report a blended ratio (e.g. #474849 on the primary) — a flake, not a real
+	// failure. Belt this shut deterministically: add the reveal class, jump any in-flight animation
+	// to its end, wait for web fonts, then let two frames paint.
+	await page.evaluate(async () => {
 		document
 			.querySelectorAll('[data-reveal],[data-stagger],[data-hero]')
-			.forEach((el) => el.classList.add('is-visible')),
-	);
+			.forEach((el) => el.classList.add('is-visible'));
+		document.getAnimations().forEach((a) => a.finish());
+		await document.fonts.ready;
+		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+	});
 	// The three mockups are role="img" with descriptive aria-labels — decorative recreations of a
 	// terminal, exposed to AT as a single image. Their inner pixel-text is presentational (like text
 	// inside a screenshot, which WCAG exempts from contrast), so exclude them; every real UI surface
