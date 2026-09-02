@@ -1,4 +1,21 @@
 {
+	// Lint EVERY authored markdown file in the repo — root docs, plugin/skill docs, reference
+	// docs, and templates — not just the top level. Vendored, generated, and toolchain trees are
+	// excluded. (Historically only "*.md" at the root was linted, so the skill reference docs went
+	// unchecked; this closes that gap.)
+	"globs": ["**/*.md"],
+	"ignores": [
+		"**/node_modules/**",
+		"**/.pnpm/**",
+		"**/scripts/grammars/**",
+		"**/dist/**",
+		"**/build/**",
+		"**/coverage/**",
+		"**/.astro/**",
+		"**/.turbo/**",
+		"**/.mise/**",
+		"**/.git/**",
+	],
 	"config": {
 		"MD013": false,
 		"MD033": false,

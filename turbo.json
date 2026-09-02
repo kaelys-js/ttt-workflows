@@ -90,7 +90,14 @@
 			"outputLogs": "new-only"
 		},
 		"qa:markdown-lint": {
-			"inputs": ["*.md", ".markdownlint-cli2.jsonc"],
+			"inputs": [
+				"**/*.md",
+				"!**/node_modules/**",
+				"!**/dist/**",
+				"!**/coverage/**",
+				"!**/.astro/**",
+				".markdownlint-cli2.jsonc"
+			],
 			"outputs": [],
 			"outputLogs": "new-only"
 		},

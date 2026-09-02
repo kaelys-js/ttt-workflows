@@ -19,7 +19,7 @@
 		"qa:docs-check": "node scripts/build-docs.mjs --check",
 		"qa:yaml-lint": "yamllint .github/workflows/",
 		"qa:workflow-lint": "actionlint",
-		"qa:markdown-lint": "markdownlint-cli2 \"*.md\"",
+		"qa:markdown-lint": "markdownlint-cli2",
 		"qa:web-format": "cd packages/products/website && oxfmt --check src",
 		"qa:web-lint": "cd packages/products/website && oxlint src",
 		"qa:web-typecheck": "cd packages/products/website && pnpm exec tsc --noEmit",
