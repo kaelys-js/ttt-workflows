@@ -454,12 +454,58 @@ if (!fm) {
 	} else {
 		fail(`description length ${desc ? desc.length : 'missing'}`);
 	}
-	const triggers = ['copy', 'microcopy', 'markdown'];
-	const missing = triggers.filter((t) => !new RegExp(t, 'i').test(desc || ''));
-	if (missing.length === 0) {
-		ok('description covers trigger phrases');
+	// Trigger eval: every positive prompt in reference/eval-triggers.json must share a
+	// salient word with the description (the same mechanical coverage proxy the sibling
+	// skills use), and there must be >=5 positive + >=2 negative prompts.
+	const ev = JSON.parse(
+		readFileSync(join(scriptDir, '..', 'reference', 'eval-triggers.json'), 'utf8'),
+	);
+	const STOP = new Set([
+		'the',
+		'a',
+		'an',
+		'this',
+		'that',
+		'for',
+		'can',
+		'you',
+		'please',
+		'could',
+		'would',
+		'with',
+		'your',
+		'our',
+		'my',
+		'me',
+		'it',
+		'is',
+		'are',
+		'do',
+		'does',
+		'and',
+		'or',
+		'to',
+		'of',
+		'in',
+		'on',
+		'again',
+		'after',
+	]);
+	const dl = (desc || '').toLowerCase();
+	const salient = (s) =>
+		(s.toLowerCase().match(/[a-z0-9.]{3,}/g) || []).filter((w) => !STOP.has(w));
+	const miss = (ev.positive || []).filter((p) => !salient(p).some((w) => dl.includes(w)));
+	if ((ev.positive || []).length >= 5 && (ev.negative || []).length >= 2) {
+		ok(`eval-triggers: ${ev.positive.length} positive + ${ev.negative.length} negative`);
 	} else {
-		fail(`description missing triggers: ${missing.join(', ')}`);
+		fail(
+			`eval-triggers needs >=5 positive + >=2 negative (got ${(ev.positive || []).length}/${(ev.negative || []).length})`,
+		);
+	}
+	if (miss.length === 0) {
+		ok('description covers every positive trigger prompt');
+	} else {
+		fail(`description misses trigger(s): ${miss.slice(0, 2).join(' | ')}`);
 	}
 }
 const lineCount = md.split('\n').length;
