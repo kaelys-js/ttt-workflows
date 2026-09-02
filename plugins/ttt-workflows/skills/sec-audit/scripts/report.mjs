@@ -52,7 +52,6 @@ const load = (name) => {
 	}
 };
 
-// ---- gather ----
 const azure = load('azure-findings.json');
 const entra = load('entra-findings.json');
 const ado = load('ado-findings.json');
@@ -83,7 +82,6 @@ const osvCount = osv?.results
 	? osv.results.flatMap((r) => (r.packages || []).flatMap((p) => p.vulnerabilities || [])).length
 	: 0;
 
-// ---- severity ordering + palette classes ----
 const SEV = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
 const sevRank = (s) => {
 	const i = SEV.indexOf((s || 'INFO').toUpperCase());
@@ -95,7 +93,6 @@ const sevCount = SEV.reduce(
 	{},
 );
 
-// ---- coverage stats ----
 const cov = coverage?.cov || [];
 const covStat = {
 	found: cov.filter((c) => c.status === 'found').length,
@@ -111,7 +108,6 @@ const esc = (s) =>
 	);
 const now = new Date().toISOString().slice(0, 10);
 
-// ---- finding card ----
 const card = (f) => `
   <article class="finding sev-${(f.severity || 'info').toLowerCase()}">
     <header>
@@ -127,7 +123,6 @@ const card = (f) => `
     ${f.reason ? `<div class="ev muted">verified: ${esc(f.reason)}</div>` : ''}
   </article>`;
 
-// ---- coverage grid cell ----
 const covCell = (c) =>
 	`<a class="cell ${c.status}" title="${esc(c.id)} — ${esc(c.title)} [${esc(c.status)}${c.layers?.length ? ` · ${esc(c.layers.join('+'))}` : ''}]">${esc(c.id.replace(/^[A-Za-z]+-/, ''))}</a>`;
 

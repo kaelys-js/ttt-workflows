@@ -116,7 +116,6 @@ export const SkillSchema = v.object({
 });
 export const SkillsSchema = v.pipe(v.array(SkillSchema), v.minLength(1));
 
-// A numbered install step.
 export const StepSchema = v.object({ n: NonEmpty, title: NonEmpty, body: NonEmpty, cmd: NonEmpty });
 export const StepsSchema = v.pipe(v.array(StepSchema), v.minLength(1));
 

@@ -25,7 +25,6 @@ function appVersion() {
 }
 const APP_VERSION = appVersion();
 
-// GitHub Pages project site: https://kaelys-js.github.io/ttt-workflows/
 export default defineConfig({
 	site: 'https://kaelys-js.github.io',
 	// Production deploys under the Pages project subpath; E2E builds set ASTRO_BASE=/ so the

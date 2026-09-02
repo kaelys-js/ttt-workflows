@@ -24,7 +24,6 @@ if (!tag) {
 }
 const version = tag.replace(/^v/, '');
 
-// VERSION must match the tag.
 const versionFile = readFileSync(join(root, 'VERSION'), 'utf8').trim();
 if (versionFile !== version) {
 	fail(`tag ${tag} (${version}) != VERSION (${versionFile})`);

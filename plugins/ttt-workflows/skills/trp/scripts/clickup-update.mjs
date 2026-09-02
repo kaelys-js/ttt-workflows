@@ -103,7 +103,6 @@ async function main() {
 				`attribution scan FAILED: comment body matches "${m[0]}" — fix the body; nothing was posted`,
 			);
 		}
-		// two-layer shape: a summary layer and a technical layer must both be present
 		const hasTech = /technical detail/i.test(comment);
 		const hasSummary = /summary/i.test(comment);
 		if (!hasTech || !hasSummary) {
@@ -154,8 +153,6 @@ async function main() {
 		console.log('gates passed: attribution ✓ two-layer ✓ (dry-run)');
 		process.exit(0);
 	}
-
-	// ---- live writes -------------------------------------------------------------
 
 	if (status) {
 		await req('PUT', `https://api.clickup.com/api/v2/task/${task.id}`, { status });

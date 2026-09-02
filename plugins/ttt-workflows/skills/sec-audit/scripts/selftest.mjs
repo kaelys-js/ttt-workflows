@@ -25,8 +25,6 @@ const run = (script, args) => {
 	return { code: r.status ?? 1, out: r.stdout || '', err: r.stderr || '' };
 };
 
-// ---- resolve-target: classification + flag hardening ------------------------
-
 let r = run('resolve-target.mjs', ['https://evil.example.com/x/y']);
 check(
 	'resolve refuses unsupported host',
@@ -53,7 +51,6 @@ check(
 );
 r = run('resolve-target.mjs', []);
 check('resolve refuses missing target', r.code !== 0 && /usage:/.test(r.err));
-// a real local folder resolves
 const folderOut = join(tmp, 'f.json');
 r = run('resolve-target.mjs', [tmp, '--out', folderOut]);
 check(
@@ -61,8 +58,6 @@ check(
 	r.code === 0 && /kind=folder/.test(r.out),
 	r.err.trim().slice(0, 80),
 );
-
-// ---- advisory-lint ----------------------------------------------------------
 
 const clean = join(tmp, 'clean.md');
 writeFileSync(
@@ -160,8 +155,6 @@ check(
 	r.err.trim().slice(0, 80),
 );
 
-// ---- coverage-claim ---------------------------------------------------------
-
 r = run('coverage-claim.mjs', [
 	'--json',
 	'{"surfaces":12,"rules":40,"hits":80,"triaged":30,"confirmed":10,"stood_down":20,"untriaged":5,"untriaged_reason":true}',
@@ -212,7 +205,6 @@ check(
 	r.err.trim().slice(0, 90),
 );
 
-// ---- probes: read-only enforcement + flag hardening (network-free) ----------
 r = run('probe-azure.mjs', ['--bogus', 'x']);
 check(
 	'probe-azure refuses unknown flag',
@@ -236,7 +228,6 @@ check(
 	) && /list|show/.test(azSrc),
 );
 
-// ---- probe-ado + report: flag hardening + read-only (network-free) ----------
 r = run('probe-ado.mjs', ['--org', 'x']);
 check(
 	'probe-ado requires --project',
@@ -288,7 +279,6 @@ check(
 	!/-X\s*(POST|PUT|PATCH|DELETE)/.test(adoSrc) && /Authorization: Bearer/.test(adoSrc),
 );
 
-// ---- preflight: produces an actionable auth report ----
 {
 	const r = run('preflight.mjs', []);
 	check(
@@ -298,7 +288,6 @@ check(
 	);
 }
 
-// ---- spec conformance + trigger eval (agentskills.io/specification) ----
 {
 	const cat = (p) => spawnSync('cat', [p], { encoding: 'utf8' }).stdout || '';
 	const skillDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -383,8 +372,7 @@ check(
 	);
 }
 
-// ---- aggregate: reconcile layer findings into a coverage matrix --------------
-// Pure fs transform (no network), driven with fixtures across every mode + error path.
+// aggregate: pure fs transform (no network), driven with fixtures across every mode + error path
 {
 	const dir = join(tmp, 'agg');
 	mkdirSync(dir, { recursive: true });
@@ -486,7 +474,6 @@ check(
 	);
 }
 
-// ---- collect-findings: normalize workflow output into flat findings JSON ------
 {
 	const result = join(tmp, 'result.json');
 	writeFileSync(
@@ -604,9 +591,7 @@ check(
 	);
 }
 
-// ---- report: renders finding cards + the coverage grid from real fixtures ----
-// The prior report test renders an empty dir; drive it against findings + a coverage matrix so the
-// card, coverage-cell, and severity-rank renderers actually run.
+// report: drive against real findings + a coverage matrix so the card, coverage-cell, and severity-rank renderers actually run
 {
 	const rep = join(tmp, 'rep');
 	mkdirSync(rep, { recursive: true });
@@ -658,9 +643,7 @@ check(
 	);
 }
 
-// ---- resolve-target: local repo + file resolution ---------------------------
-// The clone + pr-review-delegation paths need git/network and are c8-ignored; the local-repo and
-// single-file resolution (git sha + provenance stamping) is proven here against a real temp repo.
+// The clone + pr-review-delegation paths need git/network and are c8-ignored; local-repo and single-file resolution (git sha + provenance stamping) is proven here against a real temp repo
 {
 	const repo = join(tmp, 'localrepo');
 	mkdirSync(repo, { recursive: true });
@@ -693,9 +676,7 @@ check(
 	);
 }
 
-// ---- probe-{azure,entra,ado}: arg-parse hardening ----------------------------
-// The live cloud posture I/O is c8-ignored (real sweeps cover it); the argument surface must
-// still refuse a bad invocation before any az/Graph call, and that is proven here.
+// Live cloud posture I/O is c8-ignored; the arg surface must still refuse a bad invocation before any az/Graph call, proven here
 for (const [script, valid] of [
 	['probe-azure.mjs', '--sub'],
 	['probe-entra.mjs', '--filter'],

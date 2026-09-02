@@ -82,7 +82,6 @@ for (const a of scoped) {
 	const webUris = a.web?.redirectUris || [];
 	const spaUris = a.spa?.redirectUris || [];
 	const allUris = [...webUris, ...spaUris, ...(a.publicClient?.redirectUris || [])];
-	// localhost / http / postman reply URLs
 	const risky = allUris.filter((u) =>
 		/localhost|127\.0\.0\.1|^http:\/\/|postman|\.ngrok\./i.test(u),
 	);
@@ -95,7 +94,6 @@ for (const a of scoped) {
 			evidence: `reply URLs include ${risky.slice(0, 3).join(', ')}${risky.length > 3 ? ' …' : ''}`,
 		});
 	}
-	// implicit / hybrid flow
 	if (
 		a.web?.implicitGrantSettings?.enableAccessTokenIssuance ||
 		a.web?.implicitGrantSettings?.enableIdTokenIssuance
@@ -108,7 +106,6 @@ for (const a of scoped) {
 			evidence: `implicit grant enabled (access=${Boolean(a.web.implicitGrantSettings.enableAccessTokenIssuance)}, id=${Boolean(a.web.implicitGrantSettings.enableIdTokenIssuance)}) — token leaks into URL fragment`,
 		});
 	}
-	// long-lived / many client secrets
 	const creds = [...(a.passwordCredentials || []), ...(a.keyCredentials || [])];
 	for (const c of creds) {
 		const end = c.endDateTime ? new Date(c.endDateTime).getTime() : 0;
@@ -122,7 +119,6 @@ for (const a of scoped) {
 			});
 		}
 	}
-	// orphaned / external reply URLs — non-azure, non-msft hosts
 	const external = allUris.filter((u) => {
 		try {
 			const h = new URL(u).hostname;
@@ -140,7 +136,6 @@ for (const a of scoped) {
 			evidence: `reply URLs point at external hosts: ${external.slice(0, 3).join(', ')} — verify each domain is still owned/registered (orphaned URI = takeover)`,
 		});
 	}
-	// SPA redirect URIs — auth-code-in-browser surface
 	if (spaUris.length > 0) {
 		add({
 			id_hint: 'SPA-REDIRECT',
@@ -150,7 +145,6 @@ for (const a of scoped) {
 			evidence: `${spaUris.length} SPA redirect URI(s) (${spaUris.slice(0, 2).join(', ')}) — auth code returned to browser; confirm PKCE + tight origin list`,
 		});
 	}
-	// multiple environment azurewebsites reply URLs on one app-reg — env-collapse / stale
 	const aws = allUris.filter((u) => /azurewebsites\.net/i.test(u));
 	const awsHosts = new Set(
 		aws.map((u) => {

@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { COPIED_MS, copyText, wireCopyButtons } from '@/lib/copy';
 
-// copyText + wireCopyButtons are the framework-free behaviour behind the CopyCommand button.
-
 function mockClipboard(impl?: () => Promise<void>) {
 	Object.defineProperty(navigator, 'clipboard', {
 		configurable: true,

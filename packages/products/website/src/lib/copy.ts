@@ -14,7 +14,6 @@ export async function copyText(text: string): Promise<boolean> {
 	}
 }
 
-// How long the check mark stays shown after a successful copy, in milliseconds.
 export const COPIED_MS = 1600;
 
 // Wire every [data-copy] button on the page: on click, copy its data-copy value and toggle the

@@ -75,8 +75,6 @@ if (!target) {
 const outIdx = args.indexOf('--out');
 const out = outIdx >= 0 ? args[outIdx + 1] : 'target.json';
 
-// ---- classify ----------------------------------------------------------------
-
 function classify(t) {
 	let u = null;
 	try {
@@ -104,8 +102,6 @@ function classify(t) {
 		kind: st.isDirectory() ? (existsSync(join(t, '.git')) ? 'repo' : 'folder') : 'file',
 	};
 }
-
-// ---- resolvers ---------------------------------------------------------------
 
 function gitInfo(dir, subpath) {
 	let remote = null,
@@ -198,8 +194,6 @@ function resolveLocal({ path, kind }) {
 		scope: kind === 'repo' ? null : [path],
 	};
 }
-
-// ---- main --------------------------------------------------------------------
 
 const c = classify(target);
 let resolved;

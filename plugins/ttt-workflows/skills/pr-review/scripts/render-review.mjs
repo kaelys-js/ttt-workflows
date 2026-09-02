@@ -69,8 +69,6 @@ if (prIdx >= 0) {
 const LABELS = ['issue', 'suggestion', 'nitpick', 'question', 'todo', 'note', 'praise'];
 const findings = Array.isArray(doc.findings) ? doc.findings : [];
 
-// ---- validate + derive ------------------------------------------------------
-
 for (const f of findings) {
 	if (!LABELS.includes(f.label)) {
 		die(`invalid label '${f.label}' (allowed: ${LABELS.join(', ')})`);
@@ -254,11 +252,8 @@ if (prMeta) {
 	}
 }
 
-// ---- assemble ---------------------------------------------------------------
-
 const out = [];
 
-// 1. verdict + tally + scope chip (files / ±lines from the fetched PR, when given)
 const tally =
 	[nBlock ? `🔴 ${nBlock} blocking` : '', nNon ? `🟡 ${nNon} non-blocking` : '']
 		.filter(Boolean)
@@ -325,7 +320,6 @@ if (doc.coverage && String(doc.coverage).trim()) {
 	);
 }
 
-// 2c. path to merge — for request-changes, name exactly what stands between this and merge
 if (verdict === 'request-changes') {
 	const blockers = ordered.filter((f) => f.severity === 'blocking');
 	out.push(
@@ -334,7 +328,6 @@ if (verdict === 'request-changes') {
 	);
 }
 
-// 3. scan table — numbered rows, Conventional-Comment type visible at scan level
 if (ordered.length > 0) {
 	out.push('', '| # | | Type | Finding | Where |', '|--:|--|------|---------|-------|');
 	ordered.forEach((f, i) => {
@@ -345,7 +338,6 @@ if (ordered.length > 0) {
 	});
 }
 
-// 4. depth layer
 if (ordered.length > 0) {
 	if (platform === 'github') {
 		out.push('');
@@ -373,7 +365,6 @@ if (ordered.length > 0) {
 	}
 }
 
-// 5. footer
 if (praise.length > 0) {
 	out.push('', '**Praise:**');
 	for (const p of praise) {
@@ -385,8 +376,6 @@ const block = `${out
 	.join('\n')
 	.replaceAll(/\n{3,}/g, '\n\n')
 	.trimEnd()}\n`;
-
-// ---- hard-band gate ---------------------------------------------------------
 
 // Unambiguous AI-attribution tells → refuse. (Bare "Claude"/"Anthropic" only warn —
 // a review of an Anthropic-model PR may cite them legitimately.)

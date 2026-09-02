@@ -71,7 +71,6 @@ console.error(
 	`probe-azure: subscription ${String(sub).slice(0, 8)}… · rg-scope '${rgPrefix || 'all'}' · READ-ONLY`,
 );
 
-// ---- Postgres flexible servers ----------------------
 const pgs = (az(['postgres', 'flexible-server', 'list', '--subscription', sub]) || []).filter((s) =>
 	(s.resourceGroup || '').toLowerCase().includes(rgPrefix),
 );
@@ -194,7 +193,6 @@ for (const s of pgs) {
 	}
 }
 
-// ---- Defender for PostgreSQL ------------------------------------
 const pricing = az([
 	'security',
 	'pricing',
@@ -216,7 +214,6 @@ if (pricing && (pricing.pricingTier || '').toLowerCase() === 'free') {
 	});
 }
 
-// ---- Key Vaults ------------------------------------------
 for (const kv of (az(['keyvault', 'list', '--subscription', sub]) || []).filter((k) =>
 	(k.resourceGroup || '').toLowerCase().includes(rgPrefix),
 )) {
@@ -258,7 +255,6 @@ for (const kv of (az(['keyvault', 'list', '--subscription', sub]) || []).filter(
 	}
 }
 
-// ---- Container registries --------------------------------------
 for (const acr of (az(['acr', 'list', '--subscription', sub]) || []).filter((a) =>
 	(a.resourceGroup || '').toLowerCase().includes(rgPrefix),
 )) {
@@ -274,7 +270,6 @@ for (const acr of (az(['acr', 'list', '--subscription', sub]) || []).filter((a) 
 	}
 }
 
-// ---- Storage accounts ---------------------------------------
 for (const st of (az(['storage', 'account', 'list', '--subscription', sub]) || []).filter((a) =>
 	(a.resourceGroup || '').toLowerCase().includes(rgPrefix),
 )) {
@@ -317,9 +312,6 @@ for (const st of (az(['storage', 'account', 'list', '--subscription', sub]) || [
 		});
 	}
 }
-
-// ---- prod resource diagnostics breadth -------------------------
-// (covered per-resource above for PG; webapp/others could be added the same way)
 
 writeFileSync(
 	out,
