@@ -4,7 +4,8 @@ Everything the skill does, end to end, in depth. Read top-to-bottom or jump in. 
 phase machine see `phases.md`; for every gate and the failure catalogue see `gates.md`; for the
 platform routing see `clients.md`; for the plan/PR/comment templates see `templates.md`.
 
-**Contents**
+## Contents
+
 1. [The shape of a delivery](#1-the-shape-of-a-delivery)
 2. [Preflight — access before anything](#2-preflight--access-before-anything)
 3. [Phase 0 — ground it in the code](#3-phase-0--ground-it-in-the-code)
@@ -16,7 +17,7 @@ platform routing see `clients.md`; for the plan/PR/comment templates see `templa
 9. [Phase 4 — open the PR (the done-bar)](#9-phase-4--open-the-pr-the-done-bar)
 10. [Phase 5 — update the ticket](#10-phase-5--update-the-ticket)
 11. [Response modes](#11-response-modes)
-12. [Client routing, in detail](#12-client-routing-in-detail)
+12. [Platform routing, in detail](#12-platform-routing-in-detail)
 13. [The gates that never bend](#13-the-gates-that-never-bend)
 14. [Keeping claims true](#14-keeping-claims-true)
 15. [Files, data, and where things live](#15-files-data-and-where-things-live)
@@ -26,7 +27,7 @@ platform routing see `clients.md`; for the plan/PR/comment templates see `templa
 
 ## 1. The shape of a delivery
 
-```
+```text
 preflight → fetch → ground → PLAN → [STOP for approval] → build → verify
           → self-review → open PR → update ticket
 ```
@@ -34,9 +35,9 @@ preflight → fetch → ground → PLAN → [STOP for approval] → build → ve
 The approval gate at Phase 1 splits the run in two: everything before it is read-only —
 nothing is built, branched, or written; everything after it happens only once you've said go.
 `fetch-ticket.mjs` and `clickup-update.mjs` are the deterministic bookends; the work between is
-run to the phase machine in `phases.md`. The whole point of the protocol is that you see a real
-plan grounded in real code *before* any change exists, so a mid-implementation course-correction
-is cheap (edit the plan) instead of expensive (throw away code).
+run to the phase machine in `phases.md`. The whole point of the protocol is that you see a
+plan grounded in real code *before* any change exists. A mid-implementation course-correction
+is then cheap (edit the plan) instead of expensive (throw away code).
 
 ## 2. Preflight — access before anything
 
@@ -52,7 +53,7 @@ status. Then the ask is grounded in the actual repo: the real files, functions, 
 touches, each cited `file:line`. The discipline here is **discover, don't punt** — every
 question that the code, config, or telemetry can answer is answered here, not handed back to
 you. Only a decision that genuinely needs your judgment surfaces — a business rule, a priority
-call, an access grant, a stakeholder-facing wording choice — and it surfaces as options with a
+call, an access grant, a stakeholder-facing wording choice. It surfaces as options with a
 recommended default, never as an open-ended question. The output of Phase 0 is a scoping read:
 enough context to plan, with every gap either closed or explicitly flagged.
 
@@ -83,9 +84,8 @@ taste inside someone else's repo.
 
 ## 7. The pre-push gates
 
-Before **any** push, the client's real local gates must be actually green — not "CI went
-green," because these repos often run tests as continue-on-error, so a green CI can hide a
-failing test. The gates: the pinned formatter (`prettier --check`), the linter, and the
+Before **any** push, the client's real local gates must be green — not "CI went green." These
+repos often run tests as continue-on-error, so a green CI can hide a failing test. The gates: the pinned formatter (`prettier --check`), the linter, and the
 affected test suites *passing*, plus the build and typecheck where the client runs them. A
 failing test is a **hard block**; nothing is pushed red. The only exception is a failure proven
 pre-existing on the trunk baseline and unrelated to the change (stash-diff to prove it). And an
@@ -109,7 +109,7 @@ adequately — it's treated as a gate failure to strengthen, never as "the proce
 
 A PR is not done until, confirmed by command output: the assignee is set and reviewers
 requested; `gh pr checks` (or the ADO pipeline) is green with no new failures vs the baseline;
-there are zero unresolved review comments; and the affected tests actually pass locally. For
+there are zero unresolved review comments; and the affected tests pass locally. For
 IaC PRs that means the CI checks pass, not just local `fmt`/`validate`. The PR body follows the
 client's template and carries real detail — endpoint contracts, per-item changes, screenshots
 where relevant.
@@ -136,7 +136,7 @@ Not every ticket is code. The mode is inferred from the ticket, and the package 
 phases apply:
 
 | mode | when | phases |
-|---|---|---|
+| --- | --- | --- |
 | **implement** | a code change (default) | 0 → 5 |
 | **spike-writeup** | options / investigation, no code yet | 0 → 1, then a written recommendation with options + trade-offs + acceptance criteria |
 | **support** | a question or triage | 0, then a grounded answer |
@@ -147,7 +147,7 @@ GitHub and Azure DevOps are different stacks (`clients.md`) — the skill detect
 the repo's remote and routes accordingly:
 
 | | Azure DevOps | GitHub |
-|---|---|---|
+| --- | --- | --- |
 | host | Azure DevOps | GitHub |
 | default branch | `develop` (BE) / `main` (FE) | trunk |
 | PR flow | ADO REST API (bearer) | `gh` |
@@ -166,14 +166,14 @@ safely, so the plan and the breakdown are shaped accordingly.
 - **Evidence first** — every root-cause claim carries `file:line` and a verified failure in the real artifact; "suspected/likely" doesn't ship.
 - **Every approved item ships** — no `defer`, `out of scope`, `for now`, `follow-up`, or quiet drop. When you hit friction on approved work, the response is to investigate until it's done, not to downgrade scope.
 - **No AI attribution** — scanned mechanically before every push and every post; the scripts refuse a contaminated body.
-- **FAIL closes internally** — when verification fails, the fix and re-verification run immediately and repeat until it passes; only a PASS, a genuine external blocker, or a truly-exhausted stop-and-report ever surfaces to you.
+- **FAIL closes internally** — when verification fails, the fix and re-verification run immediately and repeat until it passes. Only a PASS, a genuine external blocker, or a truly-exhausted stop-and-report ever surfaces to you.
 
 Full catalogue and the learned-the-hard-way failure notes are in `gates.md`.
 
 ## 14. Keeping claims true
 
 The PR body, the commit message, and the ClickUp ticket are part of the deliverable, not
-decoration. Every factual claim in them is diffed against the actual code before "done": a
+decoration. Every factual claim in them is diffed against the actual code before "done." A
 dimension described as captured that the code leaves at zero, a test count that moved after an
 amend, a criterion marked "met" after it was quietly narrowed — each is a defect, fixed like a
 code bug. After any amend or force-push, every number is stale until re-measured against the new
@@ -182,7 +182,7 @@ head and re-derived from the real merge-base.
 ## 15. Files, data, and where things live
 
 | file | role |
-|---|---|
+| --- | --- |
 | `scripts/preflight.mjs` | checks the ClickUp token + `gh`/`az`; names what's missing and where |
 | `scripts/fetch-ticket.mjs` | ticket + all comments + status → `ticket.json` (read-only) |
 | `scripts/clickup-update.mjs` | Phase 5 status + two-layer comment; dry-run by default, `--live` to execute; attribution + two-layer + landed gates built in |

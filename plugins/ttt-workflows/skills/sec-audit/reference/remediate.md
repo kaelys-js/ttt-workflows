@@ -4,6 +4,7 @@ Fix a finding on a client repo following coordinated-disclosure discipline — t
 of the find side. This file is the Systematic Remediation Protocol (SRP1–32) for this skill — self-contained.
 
 ## Contents
+
 - The driver
 - The sequence (SRP1–11 core)
 - The auto-repair loop (SRP13–20)
@@ -16,7 +17,7 @@ of the find side. This file is the Systematic Remediation Protocol (SRP1–32) f
 `reference/remediate.md` (via the Workflow tool) + `scripts/fix-finding.sh` /
 the remediation loop (driving standard git/gh). Multi-repo: one
 driver run per repo (SRP30). Multi-app monorepo discovery handled (SRP31). Multi-ecosystem
-discovery via SRP-BB (SRP21). Follow this protocol, driving standard git/gh.
+discovery via SRP-BB (SRP21). Follow this protocol.
 
 ## The sequence (core)
 
@@ -52,10 +53,9 @@ discovery via SRP-BB (SRP21). Follow this protocol, driving standard git/gh.
 
 ## The auto-repair loop (SRP13–20)
 
-When the client CI (Stage F) fails a patch, the driver does NOT accept it: it writes
-`srp-fail-<sec>-a<N>.json` (prior bundle + failing command + stderr tail) and
-exits 66 for main context to re-invoke in REVISE mode with `previous_attempt` context
-(SRP13). Bundle is `full_content`; adversarial reads the BUNDLE (SRP14). REVISE
+When the client CI (Stage F) fails a patch, the driver does NOT accept it. It writes
+`srp-fail-<sec>-a<N>.json` (prior bundle + failing command + stderr tail) and exits 66, so
+main context re-invokes it in REVISE mode with `previous_attempt` context (SRP13). Bundle is `full_content`; adversarial reads the BUNDLE (SRP14). REVISE
 auto-fetches test-runner config on config-shaped failures (SRP15). Attack-outcome
 detection is POC-configurable (SRP19). Adversarial runs both semantic and full-content
 passes over the bundle (SRP-FF + JJ, SRP22). Stage F discovers ALL

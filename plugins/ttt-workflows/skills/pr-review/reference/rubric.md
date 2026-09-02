@@ -4,6 +4,7 @@ The checklist the reviewer works through. Condensed from the PR Review Protocol
 (R1–R11). Read it in full before writing findings.
 
 ## Contents
+
 - Evidence discipline (how sure must you be)
 - Step 0 — intent first
 - Inspection order (what to look at, in priority)
@@ -101,7 +102,7 @@ surface over hidden misalignment. On top of the normal review:
 - Secrets committed: keys, tokens, connection strings, default creds.
 - Injection across every input vector: params, headers, bodies, file uploads.
 - AuthN and object-level authZ on new endpoints. Hunt IDOR and privilege escalation.
-- Server-side input validation. Reject over sanitize. Empty strings that bypass filters.
+- Server-side input validation. Reject invalid input rather than sanitizing it. Empty strings that bypass filters.
 - Supply chain: every NEW or bumped dep gets the existence + provenance check above;
   lockfile and CI / build-script edits; CI trigger safety (`pull_request` vs
   `pull_request_target`).

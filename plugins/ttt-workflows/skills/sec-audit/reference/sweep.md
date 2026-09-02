@@ -4,6 +4,7 @@ Find NEW `SEC-nn` candidates across a target. Hybrid: scripted layer for
 enumeration, agent layer for triage/verification/chain-inference. This file is the Systematic Finding Protocol for this skill — self-contained.
 
 ## Contents
+
 - Two layers (SFP1)
 - The eight categories (SFP2)
 - Tools (SFP3)
@@ -29,16 +30,16 @@ sha256 + re-read the pinned lines + one alternative interpretation), heavier for
 
 ## The eight categories (SFP2) — every full sweep, in order
 
-1. **Secrets** — `gitleaks`, `trufflehog` (tree + history). 2. **Dependencies** —
-`osv-scanner`, `npm audit --json`, `pip-audit` (reachability). 3. **IaC posture** —
-`checkov`, `tfsec`, `trivy config` (declared vs deployed, SR4). 4. **Auth** — `semgrep`
-auth ruleset (algorithm allow-lists, `oid`/`sub` vs `email`, redirect allow-lists, PKCE;
-trace every `sign`+`verify` to the same key). 5. **Transport/headers** — CORS/CSP/HSTS/
-frame/content-type/cookie flags (does an edge gate inject them?). 6. **Storage/data at
-rest** — DB access model, blob CORS, Key Vault posture, PII in logs. 7. **Input
-handling** — upload size/type, injection (SQL/command/path/template), deserialization,
-XXE. 8. **CI/CD gates** — branch protection, required reviews, CODEOWNERS, CI scanning,
-`security_and_analysis`. Skipping a category is allowed ONLY with a stated reason (SFP8).
+1. **Secrets** — `gitleaks`, `trufflehog` (tree + history).
+2. **Dependencies** — `osv-scanner`, `npm audit --json`, `pip-audit` (reachability).
+3. **IaC posture** — `checkov`, `tfsec`, `trivy config` (declared vs deployed, SR4).
+4. **Auth** — `semgrep` auth ruleset (algorithm allow-lists, `oid`/`sub` vs `email`, redirect allow-lists, PKCE; trace every `sign`+`verify` to the same key).
+5. **Transport/headers** — CORS/CSP/HSTS/frame/content-type/cookie flags (does an edge gate inject them?).
+6. **Storage/data at rest** — DB access model, blob CORS, Key Vault posture, PII in logs.
+7. **Input handling** — upload size/type, injection (SQL/command/path/template), deserialization, XXE.
+8. **CI/CD gates** — branch protection, required reviews, CODEOWNERS, CI scanning, `security_and_analysis`.
+
+Skipping a category is allowed ONLY with a stated reason (SFP8).
 
 ## Tools (SFP3, pinned)
 

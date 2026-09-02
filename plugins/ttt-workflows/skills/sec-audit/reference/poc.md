@@ -4,6 +4,7 @@ Build or run a proof-of-concept that demonstrates a finding to a skeptic. This f
 evidence can't be re-derived is a demo, not proof.
 
 ## Contents
+
 - Inputs + the template contract
 - The sequence (SP1–9)
 - Hard safety gates
@@ -17,6 +18,7 @@ A `SEC-nn` with a finding record. Every PoC starts from `reference/poc.md` (SP7)
 reinvent the harness per finding; improve the template and migrate.
 
 The build/verify workflows already exist in the repo — drive them, don't reimplement:
+
 - `reference/poc.md` (and `sfp-build-poc-batch.js`) — stamp + build a PoC.
   Multi-agent; needs the operator's explicit multi-agent opt-in per run.
 - `scripts/materialize-poc.py`, `scripts/fetch-fresh-src.sh` — materialize + fetch

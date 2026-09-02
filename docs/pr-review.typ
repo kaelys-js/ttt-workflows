@@ -4,19 +4,19 @@
   slug: "pr-review",
   tagline: "Read every changed line, prove what you find, hand back one review that lands in a single round.",
   produces: "A paste-ready review comment: a verdict, a scan table of findings, and a concrete fix for each — nothing posted to the PR.",
-  when: "Someone opens a pull request and wants a real read before it merges, or pushes fixes and wants a re-check of only what changed.",
+  when: "Someone opens a pull request and wants a careful read before it merges, or pushes fixes and wants a re-check of only what changed.",
   never: "Touch the PR. No posting, commenting, approving, resolving, or merging — read-only, always.",
 )
 
 = What it is
 
-Reviewing a pull request well is not skimming a diff and typing "LGTM." It is reading every changed line, understanding what the change is supposed to do, then proving to yourself which of your worries are real before any of them reach the author. The output is a written review: a verdict, a short list of findings, and for each one a specific, applyable fix. That review is a teaching document as much as a gate — the reason behind each point is what makes the fix land the first time instead of spawning a back-and-forth thread.
+Reviewing a pull request well is not skimming a diff and typing "LGTM." It is reading every changed line, understanding what the change is supposed to do, then proving to yourself which of your worries are real before any of them reach the author. The output is a written review: a verdict, a short list of findings, and for each one a specific fix the author can apply. That review is a teaching document as much as a gate — the reason behind each point is what makes the fix land the first time instead of spawning a back-and-forth thread.
 
 You reach for this whenever a diff is up for merge and deserves a careful human read: a feature, a bug fix, a security-sensitive change, a dependency bump. You also reach for it on a re-review, after the author pushed changes in response to your first pass and you need to look at only what moved.
 
-The hard boundary is that you never mutate the PR. You read it, you form a view, you write the review, and you hand it to whoever asked. You do not click approve, you do not post a comment, you do not resolve a thread or merge the branch. Read access only. The person who owns the PR posts the review, or doesn't. Keeping your hands off the controls is what protects the author's ownership of their own change, and it keeps the review honest — you are arguing your case in words, not enforcing it with a button.
+The hard boundary is that you never mutate the PR. You read it, you form a view, you write the review, and you hand it to whoever asked. You do not click approve, you do not post a comment, you do not resolve a thread or merge the branch. Read access only. The person who owns the PR posts the review, or doesn't. Keeping your hands off the controls is what protects the author's ownership of their change. It also keeps the review honest — you are arguing your case in words, not enforcing it with a button.
 
-What you produce, concretely: a single block of GitHub-flavored (or Azure DevOps-flavored) markdown, ordered so the reader gets the verdict and the shape of the review in under ten seconds, with the full depth of every finding one glance deeper.
+What you produce, concretely: a single block of GitHub-flavored (or Azure DevOps-flavored) markdown. It is ordered so the reader gets the verdict and the shape of the review in under ten seconds, with the full depth of every finding one glance deeper.
 
 = How you'd do it by hand
 
@@ -39,13 +39,13 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   "https://dev.azure.com/<org>/<project>/_apis/git/pullrequests/<id>?api-version=7.1"
 ```
 
-Two things worth knowing. On GitHub the changed-file list caps at 100, so on a huge PR trust the diff's own paths over the file list. On Azure DevOps there is no unified-diff endpoint at all: you fetch each changed file's blob at the source and target commits and run `git diff --no-index` to reconstruct hunks — line numbers then reflect real file content, so a `file:line` you cite is true. If the PR references a ticket (a ClickUp id or link in the title, body, or branch), pull the ticket's description and acceptance criteria too. You will need them for step zero.
+Two things worth knowing. On GitHub the changed-file list caps at 100, so on a huge PR trust the diff's own paths over the file list. On Azure DevOps there is no unified-diff endpoint at all: you fetch each changed file's blob at the source and target commits and run `git diff --no-index` to reconstruct hunks. Line numbers then reflect real file content, so a `file:line` you cite is true. If the PR references a ticket (a ClickUp id or link in the title, body, or branch), pull the ticket's description and acceptance criteria too. You will need them for step zero.
 
 Pin everything to the head commit you fetched. Every line you cite, every deep link you write, points at that exact SHA so it can't drift under you.
 
 == Decide: first review or re-review
 
-Look at the existing threads. If none of them are yours, this is a first review and you read the whole diff. If your earlier comments are already on the PR, this is a re-review: look at only what changed since your last pass, acknowledge out loud what the author fixed, and do not reopen settled points or bolt on new unrelated asks. Late, unrelated churn is a review failure, not diligence. Keep your prior findings around so a resolved one becomes an acknowledgement rather than a repeat.
+Look at the existing threads. If none of them are yours, this is a first review and you read the whole diff. If your earlier comments are already on the PR, this is a re-review. Look at only what changed since your last pass, acknowledge out loud what the author fixed, and do not reopen settled points or bolt on new unrelated asks. Late, unrelated churn is a review failure, not diligence. Keep your prior findings around so a resolved one becomes an acknowledgement rather than a repeat.
 
 == Review in priority order
 
@@ -67,7 +67,7 @@ Run this on every diff, hard on any new endpoint or input:
 
 - Secrets committed — keys, tokens, connection strings, default credentials.
 - Injection across every input vector: params, headers, bodies, file uploads.
-- Authentication and object-level authorization on new endpoints. Hunt IDOR and privilege escalation — can one user reach another's object by changing an id?
+- Authentication and object-level authorization on new endpoints. Hunt insecure direct object references (IDOR) and privilege escalation — can one user reach another's object by changing an id?
 - Server-side validation that rejects rather than sanitizes. Watch for empty strings that slip past an `if (value)` filter and silently widen a query.
 - Supply chain: every new or bumped dependency gets an existence and provenance check (below); read lockfile and CI/build-script edits; on CI, `pull_request` versus `pull_request_target` is a real distinction.
 - PII in logs or error messages.
@@ -134,15 +134,15 @@ Every rule here exists because a specific failure mode is common and expensive. 
 
 *Verify before you comment, and refute before you keep.* A language model — and a tired human — will produce plausible findings that dissolve on a second read: a null check that's actually three lines up, a race that can't happen because of a lock you skimmed past. If those ship, two things break. The author wastes a round disproving your ghost, and worse, they learn that your review is noise. Once an author starts skimming past your comments, the one real bug in the batch drowns with the nine imagined ones. Anchoring every finding to a line and trying to kill it first is the price of being believed.
 
-*Signal over noise.* This is the same lesson from the other side. A review with five nitpicks and no design comment on a substantive diff hasn't been thorough — it's failed, because it spent the author's attention on things a linter already catches and never looked up at the shape of the change. One well-anchored blocking finding is worth more than ten nits. Volume reads as diligence and isn't. As of 2026 this is the dominant shift in review practice: human attention goes to design, correctness, and security, and low-confidence machine noise is a known failure mode, not a sign of effort.
+*Signal over noise.* This is the same lesson from the other side. A review with five nitpicks and no design comment on a substantive diff hasn't been thorough — it's failed. It spent the author's attention on things a linter already catches and never looked up at the shape of the change. One well-anchored blocking finding is worth more than ten nits. Volume reads as diligence and isn't. As of 2026 this is the dominant shift in review practice: human attention goes to design, correctness, and security, and low-confidence machine noise is a known failure mode, not a sign of effort.
 
 *Evidence tiers.* "Looks like" and "is" are different claims, and collapsing them is how a review loses credibility. When you mark your confidence honestly and downgrade uncertainty to a labeled question, the author knows exactly how much weight to give each point. Selling a hunch as a confirmed bug spends trust you don't get back.
 
-*Read-only, never touch the PR.* The change belongs to its author. A review is an argument for a set of changes, and an argument you win with words is durable; one you enforce by clicking merge or resolving a thread is a power move that erodes the working relationship. Keeping strictly to read access also keeps you honest — you have to make the case well enough that someone chooses to act on it.
+*Read-only, never touch the PR.* The change belongs to its author. A review is an argument for a set of changes, and an argument you win with words is durable. One you enforce by clicking merge or resolving a thread is a power move that erodes the working relationship. Keeping strictly to read access also keeps you honest — you have to make the case well enough that someone chooses to act on it.
 
 *Comment on the code, carry the why.* A finding without its reason is an order, and orders get resented and misapplied. The consequence is what teaches, and what makes the fix correct rather than merely compliant. Naming the code's property instead of the author's choice takes the ego out of the exchange, so the conversation stays about the change.
 
-*Unblock, don't hold hostage.* If the codebase is better after the merge and only minor tweaks remain, the right move is approve-with-comments and trust the author. Review is there to protect code health, not to gate a PR on preference dressed as a defect. Correctness and security still block, and a deferral to a "follow-up ticket" still gets scrutinized before you let it stand — but minor means minor, and a review that holds every PR hostage to taste stops being read as help.
+*Unblock, don't hold hostage.* If the codebase is better after the merge and only minor tweaks remain, the right move is approve-with-comments and trust the author. Review is there to protect code health, not to gate a PR on preference dressed as a defect. Correctness and security still block, and a deferral to a "follow-up ticket" still gets scrutinized before you let it stand. But minor means minor, and a review that holds every PR hostage to taste stops being read as help.
 
 *Judge currency as of now.* Best practice moves. A pattern that was correct in 2022 can be deprecated today, and a "fix" can quietly reintroduce an idiom the vendor has since warned against. Checking the current docs rather than memory is what keeps the review from teaching yesterday's habits. The discipline cuts both ways: don't wave a pattern through because it used to be fine, and don't fault code for missing a best practice you haven't confirmed is current.
 

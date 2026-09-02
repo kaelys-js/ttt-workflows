@@ -35,7 +35,6 @@ MISE_INSTALLS_DIR = "{{config_root}}/.mise/installs"
 # ./bin/mise wrapper, not the host binary.
 _.path = ["{{config_root}}/bin"]
 
-# mise manages the package manager, not corepack.
 COREPACK_ENABLE_STRICT = "0"
 
 [tools]

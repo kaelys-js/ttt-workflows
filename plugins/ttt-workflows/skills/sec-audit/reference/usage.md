@@ -6,9 +6,9 @@ paths. If the user already named a target + intent, skip the picker and proceed.
 **Question:** How can I help with security?  · **header:** Security audit · single-select
 
 | label | description |
-|---|---|
+| --- | --- |
 | **Run a full check-up** | Point me at a project, a pull request, or a folder. I look in three places at once — your code, your live Azure, and your accounts and pipelines — and hand you one report of what's exposed and how to fix it. |
-| **Look into one thing** | You name a specific worry or finding. I dig in, rate how serious it really is, and — on your say-so — prove it's real or write the fix (opened for your review, never merged). |
+| **Look into one thing** | You name a specific worry or finding. I dig in, rate how serious it is, and — on your say-so — prove it's real or write the fix (opened for your review, never merged). |
 | **Show me how this works** | A full walkthrough: the three places I look, how I rate severity, and what you get back. |
 | **Options** | The full reference — every mode and setting, in one screen. |
 
@@ -28,7 +28,7 @@ three places at once:
 
 1. **You point me at what to check** and, if you like, how deep to go.
 2. **I run all three checks, read-only** — I don't change anything.
-3. **I rate each finding** by how serious it really is and how someone could exploit it.
+3. **I rate each finding** by how serious it is and how someone could exploit it.
 4. **Comparing to a past audit?** Hand me your previous list and I'll show you what's fixed, what's still open, and what's new.
 5. **You get one report:** what's exposed, how bad, and how to fix it — plus an honest note on anything I couldn't reach.
 
@@ -47,20 +47,23 @@ topics, present the matching subsection, then offer the picker again so they can
 **Question:** What would you like to see? · **header:** sec-audit · single-select
 
 | topic | show |
-|---|---|
+| --- | --- |
 | **What I can do** | `do` below |
 | **Where I look** | `look` below |
 | **What you get** | `output` below |
 | **What I need** | `need` below |
 
 ### do
+
 - **Full check-up** — look everywhere, report everything.
-- **Look into one finding** — you name a worry, I rate how serious it really is.
+- **Look into one finding** — you name a worry, and I rate how serious it is.
 - **Prove it's real** — a safe demo that cleans up after itself.
 - **Write the fix** — I prepare it and open it for your review; I never merge it myself.
 
 ### look
+
 A full check-up covers three places at once:
+
 - **Your code** — how the app handles logins, input, and files, plus out-of-date parts.
 - **Your live cloud** — public databases, weak encryption, open vaults, missing alerts.
 - **Your accounts & pipelines** — sign-in flaws, long-lived secrets, secrets left in plain sight.
@@ -69,11 +72,13 @@ A full check-up covers three places at once:
 fixed, what's still open, and what's new.
 
 ### output
+
 **One report** — what's exposed, how serious it is, and how to fix it — plus an honest note on
 anything I couldn't reach. I change nothing without your OK, and I only ever *look* at your live
 cloud.
 
 ### need
+
 - **To read code:** point me at a project, a pull request, or a folder.
 - **To check your live cloud:** you signed in to Azure. I'll say on the spot if anything's missing.
 

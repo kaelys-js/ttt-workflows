@@ -4,6 +4,7 @@ These are the gates for TRP delivery — self-contained here. Read this file and
 `phases.md` before Phase 0; `clients.md` carries the per-client specifics.
 
 ## Contents
+
 - The eight operational gates (index)
 - Pre-push gates
 - Subagent prompt rules
@@ -21,13 +22,13 @@ These are the gates for TRP delivery — self-contained here. Read this file and
    the visible reviewer's first pass confirms, never discovers.
 5. The implementer runs the verifier's ENTIRE battery itself, first — real gates,
    real surface, every entrypoint enumerated repo-wide (scripts/tooling/migrations,
-   not just src/), search stated so the scope is reviewable.
+   not just src/). The search is stated so the scope is reviewable.
 6. Claims must match code — PR body, commit message, ticket, all re-measured against
    the current head after ANY amend/push; restated ACs diffed against the original.
 7. A verifier/reviewer discovery = the pre-declare gate FAILED — say so, strengthen
    it; never narrate discover→fix→re-verify as "the process working".
 8. A FAIL verdict is NEVER handed upward as a question — fix and re-verify until
-   PASS; only PASS, a genuine external blocker, or exhausted stop-and-report surface.
+   PASS; only PASS, a genuine external blocker, or an exhausted stop-and-report ever surfaces.
 
 ## Pre-push gates
 
@@ -45,10 +46,16 @@ tests, build), discovered from the repo. Universal, regardless of platform:
 ## Subagent prompt rules
 
 Subagents follow ONLY their prompt. Therefore every implementation-subagent prompt
-carries, verbatim: the pre-push gates, the PR-done bar, the attribution scan, every
-approved requirement (no "optional"), the real access paths (so "access blocked, so
-I verified the rest" is unavailable), and "Do not delegate". A gate left out of the
-prompt gets skipped — that is a prompt defect, not a subagent defect.
+carries, verbatim:
+
+- the pre-push gates;
+- the PR-done bar;
+- the attribution scan;
+- every approved requirement (no "optional");
+- the real access paths (so "access blocked, so I verified the rest" is unavailable);
+- and "Do not delegate".
+
+A gate left out of the prompt gets skipped — that is a prompt defect, not a subagent defect.
 
 ## Forbidden vocabulary (Rule 13 — on approved work)
 

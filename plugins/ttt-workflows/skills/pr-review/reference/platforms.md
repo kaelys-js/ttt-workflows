@@ -4,6 +4,7 @@ How `fetch-pr.mjs` reads each platform, the URL shapes it accepts, the auth it n
 and what to do when a fetch fails. All access is read-only.
 
 ## Contents
+
 - GitHub
 - Azure DevOps
 - ClickUp ticket resolution
@@ -49,13 +50,13 @@ and what to do when a fetch fails. All access is read-only.
 
 If the PR title, body, or branch references a ClickUp ticket — an
 `app.clickup.com/t/...` URL, a custom id like `PROJ-261`, or a raw id like
-`868kwybyx` — `fetch-pr.mjs` resolves it read-only and adds a `ticket` object (plus `tickets[]` with every distinct ticket that resolves, so multi-ticket PRs lose nothing)
+`868kwybyx` — `fetch-pr.mjs` resolves it read-only and adds a `ticket` object
 (`id`, `custom_id`, `name`, `status`, `url`, `description`) to `pr.json`, so Step 0
-can diff the change against the ticket's real description/AC instead of trusting the
-PR body.
+can diff the change against the ticket's description/AC instead of trusting the
+PR body. It also adds a `tickets[]` array with every distinct ticket that resolves, so multi-ticket PRs lose nothing.
 
-- **Token:** `$CLICKUP_TOKEN`, else the file at `$CLICKUP_TOKEN_FILE`, else
-  the file named by `CLICKUP_TOKEN_FILE` (default `~/.config/ttt/clickup.token`; a bare `pk_` value, no `KEY=` prefix). Sent
+- **Token:** `$CLICKUP_TOKEN` if set, else the token file at `$CLICKUP_TOKEN_FILE`
+  (default `~/.config/ttt/clickup.token`; a bare `pk_` value, no `KEY=` prefix). Sent
   in the Authorization header only; never printed, never written to `pr.json`.
 - **Team id** (for custom ids): `$CLICKUP_TEAM_ID`, default `8593845`.
 - All failures are non-fatal: no token, a 404, or a foreign ref just leaves

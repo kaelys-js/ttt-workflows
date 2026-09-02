@@ -137,7 +137,7 @@ function cloneRepo({ url, platform }) {
 			'tsv',
 		]).trim();
 		if (!token) {
-			die('empty ADO token — az login for the right tenant first');
+			die('empty Azure DevOps token — az login for the right tenant first');
 		}
 		sh('git', [
 			'-c',

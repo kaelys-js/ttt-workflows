@@ -424,7 +424,6 @@ spawnSync('node', [
 	'--verdicts',
 	join(root, 'bad.json'),
 ]);
-// mutate the file after extract
 writeFileSync(join(badRepo, 'a.json'), `{ "title": "Old headline here now", "x": 1 }\n`);
 r = spawnSync('node', [engine, '--phase=apply', '--db', badDb, '--repo', badRepo], {
 	encoding: 'utf8',

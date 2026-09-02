@@ -93,7 +93,7 @@ pbpaste | node "$SKILL" --phase=extract --db "$DB" --stdin --as .md
 ```
 
 Then bundle-emit → review → apply-verdicts → `apply --repo <dir>` → `verify --repo <dir>`
-exactly as below, where `<dir>` is the directory the extract output reported (`repo`). Apply
+exactly as above, where `<dir>` is the directory the extract output reported (`repo`). Apply
 is SHA-guarded; verify reconstructs the file from its pre-image plus the applied rewrites and
 asserts a byte-for-byte match, so the copy-only invariant holds without git.
 

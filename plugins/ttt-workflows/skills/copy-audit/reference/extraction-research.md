@@ -6,8 +6,8 @@
 > was uncertain, the tool/doc is named precisely rather than guessed.
 
 Purpose: ground the extraction layer of an **automated copy-quality audit** — how to pull _every_
-user-facing string out of an arbitrary codebase, with a real AST and source-position spans (so we
-can splice rewrites back by char offset), across the frameworks copy-audit targets. This is the
+user-facing string out of an arbitrary codebase, with a real AST and source-position spans, across
+the frameworks copy-audit targets. The spans let us splice rewrites back by char offset. This is the
 "how do we find the copy" companion to `standards.md` (the "what makes copy good").
 
 Design constraints that drive every recommendation:
@@ -273,9 +273,9 @@ both.
 
 ### Why whole-page review is a distinct pass (evidence)
 
-- **NN/g:** users **scan, don't read**; concise, scannable, front-loaded copy raised measured
+- **NN/g:** users **scan, don't read**. Concise, scannable, front-loaded copy raised measured
   usability ~58% in NN/g's classic studies, and unclear interface wording drives a large share of
-  user errors — these are _page-level_ properties (information scent, ordering, scannability), not
+  user errors. These are _page-level_ properties (information scent, ordering, scannability), not
   per-string ones `[R23][R24]`.
 - **Terminology consistency** is inherently cross-string: the same concept must use the same word
   everywhere ("Sign in" vs "Log in" vs "Authenticate" on one flow is a defect only visible across
@@ -307,8 +307,8 @@ both.
   inconsiderate language) and **`retext-simplify`** (wordy phrases → simpler alternatives) `[R28]`
   — useful cross-checks against the inclusive-language and plain-language pillars in `standards.md`.
 
-**Recommendation:** run a **two-tier review** — (1) per-string checks (readability score, inclusive
-language, plain-language rules) during extraction/judging, and (2) a **whole-file/page synthesis
+**Recommendation:** run a **two-tier review**. (1) Per-string checks (readability score, inclusive
+language, plain-language rules) during extraction/judging. (2) A **whole-file/page synthesis
 pass** that receives all extracted strings of a page together and checks terminology consistency,
 repetition, voice, and ordering. For scoring inside a Node skill, prefer `text-readability`(-ts) to
 avoid a Python runtime; reserve `textstat` for a Python context. Report the numeric grade level

@@ -10,8 +10,8 @@ Purpose: extend copy-audit's extraction layer (see `extraction-research.md`, the
 stack) to the **long tail of non-web source languages** — Swift, Rust, Go, Java, Kotlin,
 C/C++/Obj-C, PHP, Python, Ruby, Shell, HCL/Terraform, TOML, KQL, Typst, CSS/SCSS/Sass/Less,
 HTML/XML/SVG, Handlebars/Mustache, Vue, Svelte. The goal is to pull **every user-facing string
-literal** out of an arbitrary polyglot repo with a real parser and exact source spans, so rewrites
-can be spliced back by char offset under a SHA guard.
+literal** out of an arbitrary polyglot repo, using a real parser and exact source spans. Rewrites
+can then be spliced back by char offset under a SHA guard.
 
 Design constraints (unchanged from the web stack, and they drive every call below):
 
@@ -45,7 +45,7 @@ for every grammar `[R1][R2]`.
 | Vendoring risk | Low — one wasm blob is portable across mac/linux/arm/musl/CI     | High — native addon must match the runner's platform/ABI |
 
 **Recommendation: `web-tree-sitter`.** It matches the same reasoning that chose pure-JS Babel over
-native oxc/swc in the web stack: for a skill that "must run for anyone who installs the plugin," a
+native oxc/swc in the web stack. For a skill that "must run for anyone who installs the plugin," a
 self-contained `.wasm` beats a per-platform native addon that can fail on arm/musl/CI or a mismatched
 Node ABI. node-tree-sitter is faster, but extraction is not our bottleneck (subagent judging is), and
 each grammar would be a separate native build to vendor. Note the ecosystems are converging: the
@@ -69,7 +69,7 @@ toolchain we are avoiding). Options, current 2026:
 
 **`tree-sitter-wasms` covers most of the target set but NOT: HCL/Terraform, SCSS/Sass/Less, XML/SVG,
 Svelte, KQL/Kusto, Typst.** Fill those gaps from the canonical `tree-sitter-grammars/*` repos `[R10]`
-(hcl, scss, xml, svelte) or the language's own grammar repo (typst, kusto), and vendor the one-time
+(hcl, scss, xml, svelte) or the language's own grammar repo (typst, kusto). Then vendor the one-time
 built `.wasm` into the skill's assets. The other curated bundles (`@sourcegraph`, `@vscode`,
 `@cursorless`) are worth checking first for a gap lang before building anything yourself.
 
@@ -163,8 +163,8 @@ because we splice by offset.
 nor `@iarna/toml` returns byte offsets for the _values_ — they return a decoded JS object, so you
 cannot map a string back to its span for splicing. tree-sitter-toml gives node ranges natively and
 keeps TOML on the same code path as every other tree-sitter language. Keep `smol-toml` in mind only
-if the skill ever needs a _decoded_ value (dotted-key resolution, typed reads) rather than a span —
-it is the best pure-decoder — but for copy extraction it cannot place the edit.
+if the skill ever needs a _decoded_ value (dotted-key resolution, typed reads) rather than a span;
+it is the best pure-decoder. But for copy extraction it cannot place the edit.
 
 > Note: `tree-sitter-toml` is **not** in the `tree-sitter-wasms` gap list — it IS bundled `[R5]`.
 
@@ -227,7 +227,7 @@ long tail through tree-sitter.**
 
 | Source type                                                                                                    | Parser                                                                    | Rationale                                                                                             |
 | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| JS/TS/JSX/TSX                                                                                                  | `@babel/parser` (existing)                                                | Best-in-class positions, TS+JSX in one, pure JS `[R-web]`                                             |
+| JS/TS/JSX/TSX                                                                                                  | `@babel/parser` (existing)                                                | Most accurate positions, TS+JSX in one, pure JS `[R-web]`                                             |
 | Astro                                                                                                          | `@astrojs/compiler` (existing)                                            | Official; frontmatter + template                                                                      |
 | Markdown                                                                                                       | `remark`/mdast (existing)                                                 | Rich node model, prose-aware                                                                          |
 | YAML                                                                                                           | `yaml` (existing)                                                         | CST with ranges for key/value splicing                                                                |

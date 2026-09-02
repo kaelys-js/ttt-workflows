@@ -141,7 +141,7 @@ not preferences; dark patterns erode trust and increasingly violate regulation. 
   - `[S17-244]` **2.4.4 Link Purpose (In Context)** — link text conveys purpose.
   - `[S17-331]` **3.3.1 Error Identification** — errors identified in text.
   - `[S17-332]` **3.3.3 Error Suggestion** — suggest corrections when known.
-  - `[S17-333]` labels/instructions **3.3.2 Labels or Instructions** — provide labels for inputs.
+  - `[S17-333]` **3.3.2 Labels or Instructions** — provide labels for inputs.
 - `[S18]` **Microsoft Writing Style Guide** — consistent product/feature terminology.
 
 ---

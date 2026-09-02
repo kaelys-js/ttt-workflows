@@ -4,7 +4,7 @@
   slug: "copy-audit",
   tagline: "Read every string a repo ships, judge it against the content standards, and rewrite only the words — never the code around them.",
   produces: "Per-unit verdicts (keep, rewrite, flag, delete) with an exact rewrite for each, plus a cross-cutting holistic report — nothing written to disk until you approve.",
-  when: "A branch or a marketing site has drifted, and the copy, docs, and microcopy need a plain-language, inclusive, and voice pass; or you want a comment-slop and test-name sweep of the code itself.",
+  when: "A branch or a marketing site has drifted, and the copy, docs, and microcopy need a plain-language, inclusive, and voice pass. Or you want a comment-slop and test-name sweep of the code itself.",
   never: "Change code, structure, meaning, product names, numbers, or URLs. Only the human-readable text span ever moves, and nothing writes to disk before you say go.",
 )
 
@@ -12,7 +12,7 @@
 
 Copy drifts. A landing page written in one voice grows a second one; a button says "Click here to get started" where "Get started" would do; a doc picks up "simply" and "just" and "sanity check" over a long branch; an error message explains the system instead of the reader's next move. No single reviewer keeps up, because the strings are scattered across markdown, templates, JSON, YAML, and a dozen source languages, and each one reads fine in isolation. The drift is only visible when someone reads all of it against a standard, in one pass.
 
-That is the work: find every string a repo actually ships to a human, judge each one in the context of the file it lives in, and decide — keep it, rewrite it, flag it for a human call, or delete it. The output is a set of verdicts with a concrete rewrite for each, ordered so the reader sees what changed and why. It is a content review, not a linter run: the judgment is about whether the words serve the reader, not whether they pass a regex.
+That is the work: find every string a repo ships to a human, and judge each one in the context of the file it lives in. Then decide — keep it, rewrite it, flag it for a human call, or delete it. The output is a set of verdicts with a concrete rewrite for each, ordered so the reader sees what changed and why. It is a content review, not a linter run: the judgment is about whether the words serve the reader, not whether they pass a regex.
 
 The hard boundary is that you rewrite words, never code. A copy edit that reflows a JSON structure, drops a quote, or shifts a line number is not a copy edit — it is a bug you introduced while tidying prose. So every change is a surgical splice of the human-readable span alone, and you prove afterwards that not one line of code moved. And because a wrong copy edit is visible harm shipped to users, nothing is written to disk until a person has read the proposed rewrites and approved them.
 
@@ -26,7 +26,7 @@ The tooling wraps two deterministic steps — pull the strings out, splice the a
 
 Walk the tree (or a diff range) and, for each file, separate the words a human reads from the code around them. This is the step that quietly decides everything downstream, because a string you misclassify as copy becomes a rewrite that breaks a build, and a string you miss never gets reviewed.
 
-The rule that keeps it honest: a raw string is copy only when it reads like human language — it has a letter, and either whitespace, sentence punctuation, or a copy-carrier key (`title`, `label`, `description`, `placeholder`, `alt`, `message`, and their kin). URLs, file paths, identifiers, class lists, `CONSTANT_CASE`, hex colours, numbers, and code-shaped strings are dropped. When you are unsure, skip it. A conservative miss costs you one unreviewed string; an aggressive false positive costs you a corrupted file.
+The rule that keeps it honest: a raw string is copy only when it reads like human language. It has a letter, and either whitespace, sentence punctuation, or a copy-carrier key (`title`, `label`, `description`, `placeholder`, `alt`, `message`, and their kin). URLs, file paths, identifiers, class lists, `CONSTANT_CASE`, hex colours, numbers, and code-shaped strings are dropped. When you are unsure, skip it. A conservative miss costs you one unreviewed string; an aggressive false positive costs you a corrupted file.
 
 Different file types carry copy in different places, and you read each on its own terms:
 
@@ -75,7 +75,7 @@ Every rule here exists because a specific failure mode is common and expensive.
 
 *Judge in context, not in a list.* A string ripped out of its file loses the information you need to judge it — who the reader is, what the button sits next to, whether the heading earns its weight. Reviewing each unit with its full file is slower than a flat wordlist and it is the only way the verdicts are any good.
 
-*Rewrite words, never structure.* The reason to splice a character span instead of regenerating a file is that regeneration cannot promise it changed only the copy, and a copy tool that occasionally rewrites code is worse than no tool. The SHA guard, the span check, and the verify pass are three independent proofs of the same one invariant, because that invariant is the entire trust model.
+*Rewrite words, never structure.* The reason to splice a character span instead of regenerating a file is that regeneration cannot promise it changed only the copy. A copy tool that occasionally rewrites code is worse than no tool. The SHA guard, the span check, and the verify pass are three independent proofs of the same one invariant, because that invariant is the entire trust model.
 
 *Nothing writes without approval.* Copy is subjective and high-stakes: a rewrite ships to every reader, and "better" is a judgment a person has to own. Auto-applying even confident rewrites would trade that ownership for speed, so the flow always stops for review, and `flag` exists precisely for the calls a machine should not make alone.
 

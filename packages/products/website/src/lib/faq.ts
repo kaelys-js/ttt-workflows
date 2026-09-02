@@ -6,15 +6,15 @@ import { type FaqItem, parseFaqItems } from '@/lib/schemas';
 export const faqItems: FaqItem[] = parseFaqItems([
 	{
 		q: 'What is ttt-workflows?',
-		a: 'A plugin for Claude Code. It bundles four self-contained skills (pr-review, sec-audit, trp, and copy-audit) that you invoke inside a Claude Code session. It is not an app and there is nothing to download and run: you install it from a marketplace and call a skill by pasting a URL, a ticket, or a repo path.',
+		a: 'A plugin for Claude Code. It bundles four self-contained skills (pr-review, sec-audit, trp, and copy-audit) that you invoke inside a Claude Code session. It is not an app, and there is nothing to download and run. You install it from a marketplace and call a skill by pasting a URL, a ticket, or a repo path.',
 	},
 	{
 		q: 'Do I have to trust it with my repo?',
-		a: 'It reads whatever you point it at (a PR, a repo, a path, or live cloud state) to do its work. Nothing is baked in: no client data, no hardcoded tenants. It runs in your own Claude Code session against the things you name, and the source is open, so you can read exactly what each skill does before you run it.',
+		a: 'It reads whatever you point it at (a PR, a repo, a path, or live cloud state) to do its work. Nothing is baked in: no client data, no hardcoded tenants. It runs in your own Claude Code session against the things you name. The source is open, so you can read exactly what each skill does before you run it.',
 	},
 	{
 		q: 'Is it really read-only?',
-		a: "By default, yes. pr-review only hands you a paste-ready review — it never posts, comments, approves, or merges. sec-audit reads your code and cloud read-only; anything that writes a repo, creates cloud resources, or opens a PR waits for your approval, and a fix is a PR opened, never merged. trp presents a plan and stops. copy-audit proposes rewrites and writes nothing to disk until you approve. Nothing you can't undo happens before you say yes.",
+		a: "By default, yes. pr-review only hands you a paste-ready review — it never posts, comments, approves, or merges. sec-audit reads your code and cloud read-only. Anything that writes a repo, creates cloud resources, or opens a PR waits for your approval, and a fix is a PR opened, never merged. trp presents a plan and stops. copy-audit proposes rewrites and writes nothing to disk until you approve. Nothing you can't undo happens before you say yes.",
 	},
 	{
 		q: 'Does it work on GitHub and Azure DevOps?',
@@ -26,7 +26,7 @@ export const faqItems: FaqItem[] = parseFaqItems([
 	},
 	{
 		q: 'What does copy-audit review, and how does it avoid breaking code?',
-		a: 'It audits the words a repo ships: UI microcopy, markdown docs and prose, and copy values in JSON and YAML, judged against four content pillars — plain language, inclusive language, UX microcopy, and voice and grammar. With --mode=comments it turns the same lens on code-comment slop and test names instead. Each string is judged in its full-file context and gets one verdict: keep, rewrite, flag, or delete. When you apply a rewrite, only the text changes — the code around it stays exactly as it was, and a check confirms it. You review every proposed rewrite before anything is written to disk.',
+		a: 'It audits the words a repo ships: UI microcopy, markdown docs and prose, and copy values in JSON and YAML. Each is judged against four content pillars — plain language, inclusive language, UX microcopy, and voice and grammar. With --mode=comments it turns the same lens on code-comment slop and test names instead. Each string is judged in its full-file context and gets one verdict: keep, rewrite, flag, or delete. When you apply a rewrite, only the text changes — the code around it stays exactly as it was, and a check confirms it. You review every proposed rewrite before anything is written to disk.',
 	},
 	{
 		q: 'Is my data sent anywhere?',

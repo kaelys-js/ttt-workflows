@@ -11,7 +11,7 @@ Invoke any of them and it opens with a short scan-first guide, then asks for the
 
 ## Install
 
-```
+```text
 /plugin marketplace add <your-org>/ttt-skills
 /plugin install ttt-workflows@ttt-skills
 ```
@@ -20,7 +20,7 @@ Invoke any of them and it opens with a short scan-first guide, then asks for the
 
 The author bumps `version` in `.claude-plugin/plugin.json` and pushes. To pull it:
 
-```
+```text
 /plugin marketplace update ttt-skills
 /reload-plugins
 ```
@@ -45,10 +45,10 @@ Put this in a project's `.claude/settings.json` so teammates get it on trust, no
 Portability differs by skill. Be straight with your team about it:
 
 | Skill | Shareable? | What a colleague needs |
-|---|---|---|
-| **pr-review** | ✅ **Fully portable.** Works on any GitHub / Azure DevOps PR. | `node`, and `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional (`CLICKUP_TOKEN_FILE`), only for ticket-linked PRs. |
+| --- | --- | --- |
+| **pr-review** | ✅ **Fully self-contained & agnostic.** Works on any GitHub / Azure DevOps PR. | `node`, and `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional (`CLICKUP_TOKEN_FILE`), only for ticket-linked PRs. |
 | **sec-audit** | ✅ **Fully self-contained & agnostic.** Point it at any repo/PR/tenant. | `node`, `git`, and `az` for the live-cloud probes; the scanners `semgrep`/`gitleaks`/`checkov`/`osv-scanner`/`trivy` for the code layer (a missing one is reported, never silently skipped). No external repo, no client data — coverage against a prior audit is a file *you* pass in (`--known`). |
 | **trp** | ✅ **Self-contained & agnostic.** Works with any GitHub or Azure DevOps repo. | `node`, a ClickUp token (`CLICKUP_TOKEN_FILE`), and `gh` (GitHub) or `az` (Azure DevOps). The platform is detected from the repo's remote; the full delivery protocol is bundled in `reference/`. No external rulebook, no client-specific config baked in. |
 | **copy-audit** | ✅ **Fully self-contained & agnostic.** Runs on any repo or diff, offline. | `node` and `git`. Ships its parsers vendored (tree-sitter grammar wasms plus babel/Astro/remark/better-sqlite3), so there is no install step; the reviewer runs as in-session subagents. No external rulebook, no client data. |
 
-**Bottom line:** all four are self-contained and portable — share them with anyone. pr-review works on any PR, sec-audit on any repo/Azure tenant, trp on any GitHub/Azure DevOps repo, copy-audit on any repo's copy and comments.
+**Bottom line:** all four are self-contained and portable — share them with anyone.

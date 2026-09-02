@@ -4,7 +4,8 @@ Everything the skill does, end to end, in depth. Read top-to-bottom or jump in. 
 rule text see `rubric.md`; for the output schema see `output-format.md`; for platform auth
 quirks see `platforms.md`.
 
-**Contents**
+## Contents
+
 1. [The shape of a run](#1-the-shape-of-a-run)
 2. [Preflight — the auth check](#2-preflight--the-auth-check)
 3. [Fetching the PR (read-only)](#3-fetching-the-pr-read-only)
@@ -28,7 +29,7 @@ quirks see `platforms.md`.
 
 ## 1. The shape of a run
 
-```
+```text
 preflight → fetch → read → review → self-verify → render → hand over
 ```
 
@@ -43,8 +44,8 @@ with that diff. That fencing is what keeps a language model's review trustworthy
 
 `preflight.mjs [--platform github|ado]` runs first. It verifies `node`, then the credential
 for the platform the PR lives on (`gh auth status` for GitHub, an `az` account for Azure
-DevOps), and reports the optional ClickUp token. If anything required is missing it prints the
-exact fix — the login command or the file path + env var — and exits non-zero, and the review
+DevOps), and reports the optional ClickUp token. If anything required is missing, it prints the
+exact fix — the login command or the file path + env var — and exits non-zero. The review
 does not start until it's clean. This is why you never get a cryptic failure three steps in:
 the missing piece is named up front, with where to put it.
 
@@ -68,7 +69,7 @@ Every call is a GET. No label, comment, status, or merge state on the PR is ever
 The normalized record the review reads:
 
 | field | what it is |
-|---|---|
+| --- | --- |
 | `platform` | `github` or `ado` |
 | `owner`/`org`, `repo`, `number` | identity of the PR |
 | `title`, `body` | the PR's own description — a *claim* to be verified, never trusted as fact |
@@ -107,7 +108,7 @@ ticket and code is reported as a finding like any other.
 Every changed line is read (only lockfiles, generated code, and bulk data are skimmed), in
 priority order so the highest-altitude problems surface first:
 
-**design → correctness → security → tests → API → readability → performance → docs**
+design → correctness → security → tests → API → readability → performance → docs
 
 The rules (`rubric.md` has the authoritative text, R1–R15):
 
@@ -241,7 +242,7 @@ block — and you post it.
 ## 17. Files, data, and where things live
 
 | file | role |
-|---|---|
+| --- | --- |
 | `scripts/preflight.mjs` | checks `gh`/`az` (+ optional ClickUp); names what's missing and where |
 | `scripts/fetch-pr.mjs` | URL → `pr.json` (read-only) |
 | `scripts/render-review.mjs` | `findings.json` → paste-ready block; enforces the refusal gate |

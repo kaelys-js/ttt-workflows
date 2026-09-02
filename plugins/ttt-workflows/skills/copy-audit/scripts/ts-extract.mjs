@@ -56,7 +56,6 @@ const LANG_BY_EXT = {
 	'.less': 'css',
 	'.pcss': 'css',
 	'.postcss': 'css',
-	// added-language batch
 	'.sql': 'sql',
 	'.nix': 'nix',
 	'.ml': 'ocaml',

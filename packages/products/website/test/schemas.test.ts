@@ -15,7 +15,7 @@ describe('parseVersion', () => {
 		expect(parseVersion('v1.2.3')).toBe('1.2.3');
 		expect(parseVersion('1.2')).toBe('1.2');
 	});
-	it('rejects junk', () => {
+	it('rejects a non-version string or undefined', () => {
 		expect(parseVersion('latest')).toBeNull();
 		expect(parseVersion(undefined)).toBeNull();
 	});
@@ -25,7 +25,7 @@ describe('parseRelease', () => {
 	it('accepts a version-tagged release, ignoring extra keys', () => {
 		expect(parseRelease({ tag_name: 'v1.1.0', extra: true })?.tag_name).toBe('v1.1.0');
 	});
-	it('rejects a bad shape', () => {
+	it('rejects a non-version tag_name or a null release', () => {
 		expect(parseRelease({ tag_name: 'nope' })).toBeNull();
 		expect(parseRelease(null)).toBeNull();
 	});

@@ -4,7 +4,8 @@ Everything the skill does, end to end, in depth. Read top-to-bottom or jump in. 
 protocols in full see the mode reference files (sweep/review/poc/remediate.md); for methodology framing see
 `methodology.md`; for the six hard gates see `gates.md`.
 
-**Contents**
+## Contents
+
 1. [Why three layers](#1-why-three-layers)
 2. [Preflight — tools & access](#2-preflight--tools--access)
 3. [Resolving the target](#3-resolving-the-target)
@@ -41,11 +42,11 @@ is how each layer works and how they come together.
 
 ## 2. Preflight — tools & access
 
-`preflight.mjs [--layers code,azure,entra,ado]` runs first. It checks `node` and `git` (hard),
-then — for whichever layers you're running — an `az` login for the live probes and the five
-source scanners (`semgrep`, `gitleaks`, `checkov`, `osv-scanner`, `trivy`). A missing scanner is
-reported and that check is later marked *not covered* (SFP8) rather than silently skipped; a
-missing `az` login for a live layer is a hard stop with the exact `az login` command. Nothing
+`preflight.mjs [--layers code,azure,entra,ado]` runs first. It checks `node` and `git` (hard). Then, for whichever layers you're running, it checks an `az`
+login for the live probes and the five source scanners (`semgrep`, `gitleaks`, `checkov`,
+`osv-scanner`, `trivy`). A missing scanner is reported and that check is later marked *not
+covered* (SFP8) rather than silently skipped. A missing `az` login for a live layer is a hard
+stop with the exact `az login` command. Nothing
 runs until the required pieces are present.
 
 ## 3. Resolving the target
@@ -54,7 +55,7 @@ runs until the required pieces are present.
 so every `file:line` in a finding is true at a known SHA:
 
 | input | becomes | how |
-|---|---|---|
+| --- | --- | --- |
 | GitHub / ADO **repo URL** | a read-only shallow clone at HEAD | `gh repo clone` / a bearer-authed `git clone --depth 1` |
 | **PR URL** | the PR diff (scope = changed files) | delegates to pr-review's `fetch-pr.mjs` |
 | **local repo** | read in place at HEAD | reads `git rev-parse HEAD` |
@@ -70,6 +71,7 @@ optional.
 Two passes over the source, because pattern-matching and semantic reading catch different things.
 
 **Scanners (`find-findings.sh`)** — find *shapes*:
+
 - `gitleaks` — committed secrets (keys, tokens, connection strings).
 - `osv-scanner` — known-vulnerable dependencies (CVEs) against the lockfile.
 - `checkov` / `trivy` — IaC and container static issues (open network rules, missing encryption, unpinned base images).
@@ -80,10 +82,13 @@ shape actually *bites*.
 
 **Semantic deep-read (`workflows/expansion-sweep.js`, multi-agent, opt-in)** — decides whether it
 bites. It reads the actual code and traces attacker-controlled input from an entry point to a
-sink. This is what catches the findings a pattern can't: a `PATCH /users/:id` that lets a
-non-admin set their own `role` field (mass-assignment self-elevation); a rate-limiter mounted
-only when `env === 'production'` while the config can only ever be `'prod'` (a dead guard that
-never fires); a sanitiser that HTML-encodes the JSON envelope and corrupts stored data. Each
+sink. This is what catches the findings a pattern can't:
+
+- a `PATCH /users/:id` that lets a non-admin set their own `role` field (mass-assignment self-elevation);
+- a rate-limiter mounted only when `env === 'production'` while the config can only ever be `'prod'` (a dead guard that never fires);
+- a sanitiser that HTML-encodes the JSON envelope and corrupts stored data.
+
+Each
 finding is adversarially self-reviewed (try to prove it's *closed* before reporting it), so a
 "the route is intended" caveat doesn't get laundered into a stand-down.
 
@@ -100,7 +105,7 @@ Everything from this layer is normalized by `collect-findings.mjs` into `source-
 and flags running-state problems that no code read can see:
 
 | resource | what it checks | why it matters |
-|---|---|---|
+| --- | --- | --- |
 | Postgres flexible server | `publicNetworkAccess = Enabled` | the database is reachable from any Azure customer VM |
 | | `0.0.0.0` firewall rule | "AllowAllAzure" — the whole cloud can connect |
 | | single-IP firewall rules | usually a personal/home IP allow-listed into prod |
@@ -126,7 +131,7 @@ resource, and the evidence.
 **`probe-entra.mjs [--filter <substr,substr>]`** — read-only Graph (`az ad app list/show`):
 
 | check | flags |
-|---|---|
+| --- | --- |
 | reply URLs | `localhost` / `http://` / postman / ngrok entries left on a real app-reg |
 | implicit / hybrid grant | access or id tokens issued into the URL fragment (leakable) |
 | client credentials | secrets/certs valid for more than five years |
@@ -151,10 +156,10 @@ GET-only (no `-X POST/PUT/PATCH/DELETE`). You can point them at production with 
 ## 8. Collecting & normalizing findings
 
 `collect-findings.mjs` turns the deep-read/expansion workflow output into the flat JSON the
-report and aggregator read. Two modes: `--merge-results <run>.json…` merges several workflow
-results into one `source-findings.json` (deduping by title, capturing each finding's referenced
-IDs and a bounded evidence corpus for keyword matching); `--result <file>` passes a single
-workflow result through. This is the seam that keeps the semantic layer and the reconciliation
+report and aggregator read. Two modes. `--merge-results <run>.json…` merges several workflow results into one
+`source-findings.json` (deduping by title, capturing each finding's referenced IDs and a
+bounded evidence corpus for keyword matching). `--result <file>` passes a single workflow
+result through. This is the seam that keeps the semantic layer and the reconciliation
 layer decoupled.
 
 ## 9. Reconciling into one report
@@ -188,7 +193,7 @@ scorecard: 62 known findings in, 62 accounted for, or it tells you which ones ar
 Each mode sequences one of the four security protocols end to end:
 
 | mode | protocol | what happens | output |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `sweep` | Systematic Finding (SFP1–12) | scanners → semantic deep-read → live probes → reconcile | findings + coverage + HTML report |
 | `review` | Security Review (SR1–12) | assess one candidate, score it, write it up privately | a GHSA-shaped advisory, CVSS 4.0 + CWE |
 | `poc` | Security POC (SP1–9) | stamp a throwaway PoC that stands up, proves, and tears itself down | a `run-poc.sh` + disclosure-standard README |
@@ -228,7 +233,7 @@ contaminated body), and an honest coverage claim.
 
 ## 14. Honest coverage (never a silent all-clear)
 
-Every sweep states what it did **not** cover, and un-triaged items carry a reason —
+Every sweep states what it did **not** cover, and un-triaged items carry a reason.
 `coverage-claim.mjs` validates the shape and the arithmetic (triaged = confirmed + stood-down;
 triaged + un-triaged ≤ hits). "All clear" is never allowed to hide a scanner that didn't run or
 a surface that wasn't reached. A missing tool downgrades a check to *not covered* and says so;
@@ -237,7 +242,7 @@ it never silently drops it.
 ## 15. Files, data, and where things live
 
 | file | role |
-|---|---|
+| --- | --- |
 | `scripts/preflight.mjs` | checks `node`/`git`/`az` + the five scanners; names what's missing |
 | `scripts/resolve-target.mjs` | any target → a pinned, provenance-stamped record |
 | `scripts/probe-azure.mjs` · `probe-entra.mjs` · `probe-ado.mjs` | the three read-only live probes |
@@ -255,7 +260,7 @@ scratch dir, never in the audited repo. The live probes only ever read.
 ## 16. Failure modes & troubleshooting
 
 - **A live probe warns and returns nothing for a resource** → usually an access boundary (the signed-in identity lacks Reader / Directory app-read). That's reported honestly as not-covered, not a clean result.
-- **`aggregate` shows gaps you expected to be found** → the `--map` regex for those IDs didn't match the evidence text; tighten the map (it's a client file, not skill code), or the deep-read didn't sweep that surface — run an expansion over it.
+- **`aggregate` shows gaps you expected to be found** → either the `--map` regex for those IDs didn't match the evidence text (tighten the map — it's a client file, not skill code), or the deep-read didn't sweep that surface (run an expansion over it).
 - **Entra probe can't list app-regs** → the identity lacks Graph `Application.Read.All`; that's an access boundary to grant, not a clean tenant.
 - **ADO probe returns 0 groups** → the token lacks Library/build read, or the secret lives in a build-definition variable (which the probe also scans) — check both.
 - **A scanner is missing** → preflight said so; install it (`pipx install <tool>` / `brew install <tool>`). Until then that check is marked not-covered.

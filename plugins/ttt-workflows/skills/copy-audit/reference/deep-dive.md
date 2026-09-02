@@ -33,20 +33,24 @@ extract → bundle-emit → REVIEW (Workflow) → apply-verdicts → [inspect] �
 ```
 
 Two things run outside the deterministic scripts: the review (parallel subagents) and your
-inspection of the tables before apply. Everything else is a phase of `extract.mjs`, and every
+inspection of the tables before apply. Everything else is a phase of `extract.mjs`. Each
 phase acts only on rows in a specific verdict state, so the sqlite DB alone tells you where a
-sweep is in its lifecycle and a re-run is always safe. The pipeline is fenced on both ends by
-mechanical checks: extract records exact char offsets and a per-file SHA, and apply refuses to
+sweep is in its lifecycle, and a re-run is always safe. The pipeline is fenced on both ends by
+mechanical checks. Extract records exact char offsets and a per-file SHA, and apply refuses to
 write unless both the file and the span still match — so a language model's judgment in the
 middle can never corrupt structure on disk.
 
 ## 2. The unit, and why it is a char span
 
-The atom of the whole skill is a **copy unit**: a `char_start`/`char_end` offset pair into a
-file marking exactly the human-readable payload, plus its `syntax` (`md-heading`, `json-copy`,
-`jsx-text`, `code-string`, `comment`, `testname`, …), the exact `block_text` those offsets
-span, the file's full text (base64) for reviewer context, and the file's sha256 at extract
-time. The offsets point at the payload *inside* its delimiters — the text between the quotes,
+The atom of the whole skill is a **copy unit**. It bundles:
+
+- a `char_start`/`char_end` offset pair into a file, marking exactly the human-readable payload;
+- its `syntax` (`md-heading`, `json-copy`, `jsx-text`, `code-string`, `comment`, `testname`, …);
+- the exact `block_text` those offsets span;
+- the file's full text (base64) for reviewer context;
+- the file's sha256 at extract time.
+
+The offsets point at the payload *inside* its delimiters — the text between the quotes,
 after the `#` marker, within the `alt=""` — never the delimiters themselves. That is the
 property the entire apply step rests on: rewriting a unit means replacing one exact substring
 with another, and nothing else in the file moves.
@@ -60,8 +64,8 @@ context** (this string is a JSX attribute named `alt`, that one is the first arg
 `NSLocalizedString`), **exact byte spans** for the payload, and **safety signals** (this string
 contains an interpolation node, so skip it). The extraction research in
 `extraction-research.md` and `extraction-multilang-research.md` cites the parser choice for each
-stack. The result is that capture is both far more complete (it reaches copy a heuristic misses)
-and far safer (it never captures a code token as copy, so a rewrite can't mangle logic).
+stack. The result: capture is both far more complete and far safer. It reaches copy a heuristic misses,
+and it never captures a code token as copy, so a rewrite can't mangle logic.
 
 ## 4. Extract — parsers, routing, and the one classifier
 
@@ -109,7 +113,7 @@ Four guards make the recorded spans safe to splice later:
 
 - **Phrase filter** (above) — nothing code-shaped becomes a unit.
 - **Offset masking** — template extraction runs against a copy of the file with `<script>`/
-  `<style>` bodies, comments, and the Astro/Svelte fence blanked to spaces, so structure is
+  `<style>` bodies, comments, and the Astro/Svelte fence blanked to spaces. Structure is
   scanned without ever capturing code, and the recorded offsets still point at the real file.
 - **De-overlap** — per file, units are sorted and any span nested in or overlapping another is
   dropped, so the bottom-up splice at apply time can never corrupt an enclosing unit.
@@ -123,14 +127,14 @@ Every unit lands in one `units` table (`schema.sql`): identity + offsets + `synt
 (default `pending`), `rewrite`, `category`, `severity`, `note`, `applied`. Extract wipes this
 repo's rows first, so a re-run is clean. Because each later phase filters on verdict state
 (`pending` for bundle-emit and apply-verdicts; `rewrite`/`delete` with `applied=0` for apply),
-the table is both the work queue and the audit log — you can inspect, defer, or resume from it
+the table is both the work queue and the audit log. You can inspect, defer, or resume from it
 at any point without re-running the reviewer.
 
 ## 7. bundle-emit — full-file context, no auto-verdict
 
 `bundle-emit` packs all `pending` units by file into token-budgeted bundles (~40,000 chars).
 Each bundle carries every file's **full line-numbered text** plus, per unit, its id, syntax,
-line range, and exact text — so the reviewer judges each unit *with the whole file visible*, not
+line range, and exact text. The reviewer judges each unit *with the whole file visible*, not
 as a naked string. A file larger than the budget goes solo. Each `bundle-NNNN.json` is a ready
 `{system, user}` prompt: the system prompt is the operative rubric (the four pillars, the
 mandatory flags, the fragment-reassembly rule, and the syntax-specific comment/testname rules),
@@ -182,8 +186,8 @@ the whole line. A `delete` on a `testname` is **refused** — it would break the
 ## 11. verify — the copy-only invariant
 
 `verify` is the proof that apply kept its promise. For every currently-modified file that this
-DB knows, it reads `git diff --unified=0` and checks that **every** pre-image hunk line falls
-inside a recorded copy line-range (1-line slack per edge, to absorb a re-wrapped line). Any
+DB knows, it reads `git diff --unified=0`. It then checks that **every** pre-image hunk line falls
+inside a recorded copy line-range, allowing 1-line slack per edge to absorb a re-wrapped line. Any
 uncovered hunk ⇒ **FATAL** — that would mean a non-copy line changed. Files not in the DB are
 skipped with a warning. The report carries `kept` / `rewritten` / `flagged`, a per-file diff
 stat, and `code_line_changes: 0` — the machine-checkable statement that the sweep changed text
@@ -195,7 +199,7 @@ exit is reported, never fatal.
 Per-unit review is blind to problems that live *across* units: terminology drift (`workflows`
 vs `skills`), a claim repeated across sections, sentence-case vs title-case drift, tonal
 inconsistency. `holistic-emit` packs the whole corpus (grouped by file, in reading order) into as
-few bundles as possible so ONE reviewer sees a whole page/route at once, then
+few bundles as possible, so ONE reviewer sees a whole page/route at once. Then
 `workflows/copy-holistic.js` audits it against the full `standards.md` and returns ranked
 findings (`{severity, category, file, quote, problem, fix}`) covering per-line **and**
 cross-cutting issues. This is the primary way to surface bad copy; per-unit `apply` is for safe
@@ -209,9 +213,9 @@ mechanical rewrites. Holistic findings are advisory — a report, never auto-app
   skipped; units are judged against the four content pillars; valid verdicts are
   `keep`/`rewrite`/`flag`.
 - **`comments`** — `extractComments` runs instead (babel for JS/TS, `<!-- -->` + `<script>` JS
-  comments for markup/markdown, tree-sitter comment nodes for the broad language set); test files
-  are **kept** (test-runner names live there); units are `comment` and `testname`, judged against
-  comment-quality rules and Rule 9; the `delete` verdict is added (and refused on a `testname`).
+  comments for markup/markdown, tree-sitter comment nodes for the broad language set). Test files
+  are **kept** (test-runner names live there). Units are `comment` and `testname`, judged against
+  comment-quality rules and Rule 9, and the `delete` verdict is added (refused on a `testname`).
 - **`all`** — both extractors run and both rubrics apply.
 
 Extraction, the skip rules, the rubric in the bundle prompt, and the legal verdict set all pivot

@@ -7,6 +7,7 @@ the full depth of every finding is one glance deeper (R13). The reviewer fills a
 fixed — do not hand-write it, and do not vary the structure.
 
 ## Contents
+
 - Emoji legend
 - The layout (scan layer → depth layer)
 - Platform-aware rendering
@@ -20,7 +21,7 @@ Functional status markers, never decoration. Exactly these four, only where name
 other emoji anywhere (no 🚀 🎉 👍 ✨).
 
 | Emoji | Meaning | Where |
-|---|---|---|
+| --- | --- | --- |
 | ✅ | Approve | verdict line |
 | 💬 | Comment (no blocking issues) | verdict line |
 | 🔴 | Blocking | verdict line, tally, table, finding |
@@ -31,6 +32,7 @@ other emoji anywhere (no 🚀 🎉 👍 ✨).
 Two layers. The scan layer is always visible; the depth layer holds the detail.
 
 **Scan layer (read in <10s):**
+
 1. **Verdict + tally + scope:** `**<emoji> <VERDICT>** · 🔴 <n> blocking · 🟡 <n>` plus,
    when `--pr pr.json` is passed, a scope chip: `` `14 files · +512 −24` ``.
 2. **TL;DR:** a one-sentence blockquote, labeled: `> **TL;DR:** …` — what matters and
@@ -38,20 +40,21 @@ Two layers. The scan layer is always visible; the depth layer holds the detail.
 3. **Does:** the behavioural trace, right after the TL;DR — orientation lives in the
    scan layer, not the footer.
 4. **Ticket line** (when the PR resolves one): `**Ticket:** [PROJ-261](url) · status`,
-   appending ` — "name"` only when the ticket name differs from the PR title.
+   appending `— "name"` only when the ticket name differs from the PR title.
 5. **Mergeable after** (request-changes only): the numbered blocking headlines, so the exact
    path to merge is one line: `**Mergeable after:** #1 … · #2 …`.
 6. **Findings-at-a-glance table:** `| # | <emoji> | <label> | <headline> | <where> |` —
    numbered rows whose numbers repeat in the depth layer, with the Conventional-Comment
    type visible at scan level. Sorted blocking-first, then label weight, then file/line.
-   `where` deep-links to the file at the reviewed head (GitHub `blob/<sha>#L<n>`, ADO
-   `?version=GC<sha>&line=<n>`) when `--pr` was given; — for global findings. The same
+   `where` deep-links to the file at the reviewed head when `--pr` was given — GitHub uses
+   `blob/<sha>#L<n>`, ADO uses `?version=GC<sha>&line=<n>`. Global findings show a literal `—` instead. The same
    links appear in the depth-layer summaries.
 
 **Depth layer (full detail, one per finding):** problem + why + concrete fix +
 optional `suggestion` block. Rendered collapsed or flat depending on platform (below).
 
 **Footer:**
+
 - `**Praise:**` — at most two specific things done well. Skip rather than pad.
 (`Does:` lives in the scan layer, item 3 above — not in the footer.)
 
@@ -108,6 +111,7 @@ Same findings, same depth, both platforms — only the disclosure mechanism diff
 ```
 
 Derivation rules the reviewer must honor:
+
 - `verdict` = `request-changes` if any finding is `blocking`; else `comment` if there
   are non-blocking findings that matter; else `approve`.
 - **Signal over noise (R12):** every finding is `confidence: "high"` and verified. A

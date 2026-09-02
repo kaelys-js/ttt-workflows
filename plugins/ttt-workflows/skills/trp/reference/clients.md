@@ -6,6 +6,7 @@ on. Nothing here is client-specific — the platform, branch, checks, and review
 file is the routing logic; it works for any repo.
 
 ## Contents
+
 - [Figuring out the target](#figuring-out-the-target)
 - [Platform: GitHub](#platform-github)
 - [Platform: Azure DevOps](#platform-azure-devops)
@@ -52,7 +53,7 @@ curl -s -H "Authorization: Bearer $TOKEN" "$BASE/pullrequests/<id>/threads?api-v
 ```
 
 Get `<ORG>/<PROJECT>/<REPO-ID>` from the repo's remote URL + a `git/repositories` list call.
-Some org uses a non-default `az` tenant — select it with `AZURE_CONFIG_DIR=<path>` if the default
+Some orgs use a non-default `az` tenant — select it with `AZURE_CONFIG_DIR=<path>` if the default
 tenant 403s. Description bodies have a **4000-char cap** — `wc -c` and trim before the REST call.
 
 **Merge blocked?** Query the actual policies first
@@ -64,6 +65,7 @@ re-request instead.
 ## Pre-push gates — from the repo, not assumed
 
 Run the project's **own** configured checks, discovered from the repo (don't assume commands):
+
 - formatter (e.g. `prettier --check`, `gofmt`, `black`), linter, the affected tests, the build,
   and typecheck — whatever the repo's `package.json` scripts / Makefile / CI config define.
 - All must be **actually green** before any push — not "CI went green" (CI may run tests as
@@ -78,9 +80,11 @@ and resolves every thread on the head commit before "done"; if it has none, Phas
 the pr-review skill + the adversarial self-read. Detect what the repo uses at run time.
 
 CodeRabbit CLI, when installed (`command -v coderabbit`), runs locally before the first push:
+
 ```bash
 coderabbit review --plain --base <default-branch>
 ```
+
 Fix every actionable finding to zero before pushing; if rate-limited or absent, report it.
 
 ## ClickUp

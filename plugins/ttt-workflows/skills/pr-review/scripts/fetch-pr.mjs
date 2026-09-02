@@ -402,7 +402,6 @@ function findTicketRefs(pr) {
 			refs.push({ id: m[1], custom: true });
 		}
 	}
-	// dedupe, keep order
 	const seen = new Set();
 	return refs.filter((r) => !seen.has(r.id) && seen.add(r.id));
 }

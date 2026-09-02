@@ -36,8 +36,8 @@ readability sweep of docs or a marketing site, tightening wording or CTAs.
 ## `comments` — comment slop & test-runner names
 
 Subsumes the old comment-audit skill, now AST-based: comment nodes come from babel (JS/TS),
-`<!-- -->` + `<script>` blocks (markup/markdown), and every tree-sitter grammar (~40 languages),
-so it is far more robust than a regex parser. Pragma/lint-directive comments and shebangs are
+`<!-- -->` + `<script>` blocks (markup/markdown), and every tree-sitter grammar (~40 languages).
+That makes it far more robust than a regex parser. Pragma/lint-directive comments and shebangs are
 never captured. Test files are **audited** in this mode (skipped in `copy`) because
 `it`/`describe`/`test` names are the point. Judged against comment-quality rules and Rule 9.
 Adds the `delete` verdict for pure-slop comments; a `delete` on a `testname` is refused (it would

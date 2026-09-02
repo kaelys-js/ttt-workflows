@@ -6,6 +6,7 @@ adds the steps they don't (threat modeling, DAST, standard-mapped reporting), an
 currency deltas. Judge every audit against best practice as of the audit's own date.
 
 ## Contents
+
 - Frameworks + our crosswalk
 - PTES 7 phases → our modes
 - Threat modeling (added step)
@@ -25,7 +26,7 @@ NIST 800-115 for compliance documentation.
 ## PTES 7 phases → our modes
 
 | PTES phase | This skill |
-|---|---|
+| --- | --- |
 | 1 Pre-engagement | scope from `target.json`; authorization is implicit in the operator's request |
 | 2 Intelligence gathering | `sweep` scripted layer (`find-findings.sh`) |
 | 3 Threat modeling | the added step below; `sweep` deep-read framing |
@@ -63,8 +64,7 @@ throwaway target exists, DAST is a stated coverage gap (SFP8), not a silent skip
 Every finding carries: a **CWE** id (root-cause class), a **CVSS 4.0** vector (SR2), and
 a mapping to the compliance frameworks the client answers to — **PCI DSS**, **ISO 27001**,
 **SOC 2**, **FedRAMP/NIST** where relevant. The deliverable set: per-finding advisory
-(private GHSA), the GAP-LIST (executive brief + technical + posture summary — the
-an existing audit POC dir is the reference), coverage claim (SFP8), and ADR /
+(private GHSA), the GAP-LIST (executive brief + technical + posture summary — an existing audit POC dir is the reference), coverage claim (SFP8), and ADR /
 risk-acceptance records (SR10). Reports are standard-mapped, not a bag of bullets.
 
 ## Currency deltas (recheck at run time — best practice moves)

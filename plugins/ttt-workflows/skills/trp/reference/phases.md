@@ -5,6 +5,7 @@ Package is presented, NOTHING executes until the operator types approval. Everyt
 before that stop is read-only.
 
 ## Contents
+
 - Phase 0 — Ground & scope
 - Phase 1 — Spike (when needed)
 - Phase 1.5 — Breakdown
@@ -29,7 +30,7 @@ every claim, verify the described behaviour in the deployed artifact where feasi
 Answer every gap yourself (Rule 8 — discover, don't punt). Queryable answers (code,
 config, telemetry, pipelines, registry) are never questions to the operator. Only a
 decision that genuinely lives in the owner's head (priority call, business taxonomy,
-consent for a destructive step) surfaces — and it surfaces as a decision with options
+consent for a destructive step) surfaces. It surfaces as a decision with options
 and a default, stated in the package, not as an open question blocking the work.
 When the ticket's wording conflicts with traced reality, decide and say so:
 "Decision (mine, not yours): …" with the evidence.
@@ -45,8 +46,8 @@ tradeoffs, ACs — still read-only, still evidence-first. Most tickets skip to 1
 
 Single-PR tickets: a commit × file table (see templates.md). Multi-PR tickets: one PR
 per subtask, each independently safe to merge to trunk in dependency order — no
-long-lived stacked branches (this skill's reference files "Branching & integration"). State whether a
-feature flag exists on that client; where the platform has none, the code must be
+long-lived stacked branches (see "Branching & integration" in this skill's reference files). State whether a
+feature flag exists on that client. Where the platform has none, the code must be
 correct on merge, and the package says so.
 
 ## The approval gate
@@ -75,10 +76,14 @@ followed by a verification of that task against the approved changelog item.
 ## Phase 3 — Verify
 
 Run the client's full local gate (clients.md) and require green — actually green,
-not "CI went green". Then the change-specific battery: exercise the REAL surface
-(never a stub of it), prove flag-off inertness where a flag exists, enumerate every
-entrypoint/call-site of the changed behaviour across the WHOLE repo (scripts, tooling,
-migrations — not just src/), and state the search you ran. Anything unprovable is
+not "CI went green". Then the change-specific battery:
+
+- exercise the REAL surface (never a stub of it);
+- prove flag-off inertness where a flag exists;
+- enumerate every entrypoint/call-site of the changed behaviour across the WHOLE repo (scripts, tooling, migrations — not just src/);
+- state the search you ran.
+
+Anything unprovable is
 reported as unproven, never silently passed.
 
 An independent verification pass re-runs the same battery. Its FAIL loops close in

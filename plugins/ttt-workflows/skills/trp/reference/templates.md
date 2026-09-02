@@ -5,6 +5,7 @@ two-layer ClickUp comment. Shapes are from real delivered TRPs (a generic specim
 reference specimen); fill with real evidence, never placeholders.
 
 ## Contents
+
 - The Full TRP Package
 - PR body — Azure DevOps
 - PR body — GitHub

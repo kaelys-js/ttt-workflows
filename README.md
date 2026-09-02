@@ -7,7 +7,7 @@
 /plugin install ttt-workflows
 ```
 
-Then just ask. Paste a pull-request URL and ask for a review, point `/sec-audit` at a repo, hand `/trp` a ticket, or run `/copy-audit` over a repo's copy.
+Then ask. Paste a pull-request URL and ask for a review, point `/sec-audit` at a repo, hand `/trp` a ticket, or run `/copy-audit` over a repo's copy.
 
 [Website](https://kaelys-js.github.io/ttt-workflows/) · [Changelog](CHANGELOG.md) · each skill ships an operator's-playbook PDF, attached to every [release](https://github.com/kaelys-js/ttt-workflows/releases)
 
@@ -21,11 +21,11 @@ Four skills, each self-contained and portable, no client data baked in.
 
 ### `/pr-review` — a review you can paste
 
-Give it a GitHub or Azure DevOps pull-request URL. It reads the diff, the ticket, and the existing threads, reviews against a design / correctness / security / tests rubric, proves every finding against the real lines, and hands you one paste-ready review. It **never** posts, comments, approves, or merges, the review is yours to send.
+Give it a GitHub or Azure DevOps pull-request URL. It reads the diff, the ticket, and the existing threads, reviews against a design / correctness / security / tests rubric, proves every finding against the real lines, and hands you one paste-ready review. It **never** posts, comments, approves, or merges; the review is yours to send.
 
 ### `/sec-audit` — a security audit end to end
 
-Point it at a repo, a PR, a path, or live Azure/Entra/ADO. It works across three layers, source and IaC, running cloud state, identity and CI, in four modes: **sweep** (find new findings), **review** (score one), **poc** (prove it), **remediate** (fix it). Read-only until you approve; a fix is a PR opened, never merged.
+Point it at a repo, a PR, a path, or live Azure/Entra/ADO. It works across three layers — source and IaC, running cloud state, identity and CI — in four modes: **sweep** (find new findings), **review** (score one), **poc** (prove it), **remediate** (fix it). Read-only until you approve; a fix is a PR opened, never merged.
 
 ### `/trp` — a ticket delivered
 
@@ -33,7 +33,7 @@ Hand it a ClickUp ticket. It grounds the ticket in the real repo with evidence, 
 
 ### `/copy-audit` — the copy, reviewed
 
-Point it at a repo or a diff. It parses the actual copy out of 40+ languages with real ASTs, markdown prose and headings, JSON/YAML values, UI microcopy in HTML/Astro/Svelte/Vue/JSX, and judges each phrase against four content pillars (plain language, inclusive, UX microcopy, voice/grammar). With `--mode=comments` it also audits code comments and test-runner names (Rule 9). You approve the rewrites before anything is written, and every change is a **char-offset splice that touches text, never code structure**.
+Point it at a repo or a diff. It parses the copy out of 40+ languages with ASTs — markdown prose and headings, JSON/YAML values, UI microcopy in HTML/Astro/Svelte/Vue/JSX. Then it judges each phrase against four content pillars (plain language, inclusive, UX microcopy, voice/grammar). With `--mode=comments` it also audits code comments and test-runner names (Rule 9). You approve the rewrites before anything is written, and every change is a **char-offset splice that touches text, never code structure**.
 
 ## Safe by default
 
@@ -66,9 +66,9 @@ cd ttt-workflows
 | `packages/products/website/` | The Astro marketing site deployed to GitHub Pages. |
 | `VERSION` · `CHANGELOG.md` | The release version + curated changelog, kept in lockstep with the tag. |
 | `bin/mise` · `bin/git` | The pinned mise wrapper and the unbypassable git wrapper. |
-| `turbo.json` · `lefthook.yml` · `mise.toml` | The task graph, git hooks, and toolchain, one gate, run locally and in CI. |
+| `turbo.json` · `lefthook.yml` · `mise.toml` | The task graph, git hooks, and toolchain — one gate, run locally and in CI. |
 
-Everything is pinned and provisioned by [mise](https://mise.jdx.dev/), you do not install tools by hand. `./bin/mise install` sets up node, pnpm, turbo, the format/lint tools, typst, and lefthook into a workspace-local `.mise/`. Docker is needed only for the website's visual-regression suite; without it, that check defers to CI.
+Everything is pinned and provisioned by [mise](https://mise.jdx.dev/); you do not install tools by hand. `./bin/mise install` sets up node, pnpm, turbo, the format/lint tools, typst, and lefthook into a workspace-local `.mise/`. Docker is needed only for the website's visual-regression suite; without it, that check defers to CI.
 
 ### Testing and gates
 
@@ -79,11 +79,11 @@ One gate runs everywhere: the `pre-push` lefthook hook is exactly what the CI **
 - **Website** — Vitest unit + Playwright E2E and visual regression, byte-identical light/dark baselines for every section.
 - **Docs** — the playbook PDFs must match their typst sources.
 
-The gate is unbypassable: `bin/git` refuses `git push --no-verify` and the `LEFTHOOK=0` / `LEFTHOOK_EXCLUDE` env bypasses. If a check fails, fix it, there is no escape hatch.
+The gate is unbypassable: `bin/git` refuses `git push --no-verify` and the `LEFTHOOK=0` / `LEFTHOOK_EXCLUDE` env bypasses. If a check fails, fix it; there is no escape hatch.
 
 ### Releasing
 
-`plugins/ttt-workflows/.claude-plugin/plugin.json`'s `version` is the **single source of truth**. To release: bump it, add the matching `## [x.y.z] - date` section to [`CHANGELOG.md`](CHANGELOG.md) (move what accumulated under `## [Unreleased]` into it), then commit. The pre-commit hook runs `scripts/sync-version.mjs`, which propagates that version into `marketplace.json`, every `SKILL.md`, and `VERSION`, and verifies the CHANGELOG's top released heading matches, so nothing can drift (a `qa:version-sync` gate in pre-push and CI fails the build on any mismatch). Then push the matching annotated tag:
+`plugins/ttt-workflows/.claude-plugin/plugin.json`'s `version` is the **single source of truth**. To release: bump it, add the matching `## [x.y.z] - date` section to [`CHANGELOG.md`](CHANGELOG.md) (move what accumulated under `## [Unreleased]` into it), then commit. The pre-commit hook runs `scripts/sync-version.mjs`, which propagates that version into `marketplace.json`, every `SKILL.md`, and `VERSION`, and verifies the CHANGELOG's top released heading matches, so nothing can drift. A `qa:version-sync` gate in pre-push and CI fails the build on any mismatch. Then push the matching annotated tag:
 
 ```shell
 git commit -am "…"            # marketplace/SKILL/VERSION sync automatically; CHANGELOG is checked

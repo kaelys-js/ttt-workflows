@@ -30,7 +30,7 @@ const skills = v.parse(SkillsSchema, [
 		icon: "git-pull-request",
 		name: "pr-review",
 		cmd: "/pr-review",
-		does: "Give it a GitHub or Azure DevOps pull-request URL. It reviews the diff — design and correctness first — checks every finding against the code, and labels each by severity. Weak findings are dropped before the review is returned, so what you get is worth acting on.",
+		does: "Give it a GitHub or Azure DevOps pull-request URL. It reviews the diff — design and correctness first — checks every finding against the code, and labels each by severity. It drops weak findings before returning the review, so what you get is worth acting on.",
 		tags: ["design", "correctness", "security", "tests"],
 		produces:
 			"One review you can paste straight into the PR: a verdict up top, a table of findings you can scan in seconds, and a concrete fix for each.",
@@ -63,7 +63,7 @@ const skills = v.parse(SkillsSchema, [
 		icon: "file-text",
 		name: "copy-audit",
 		cmd: "/copy-audit",
-		does: "Point it at a repo or a diff and it audits the words: UI microcopy, docs, markdown prose, JSON and YAML copy. Parallel reviewers judge each string in its full-file context against four content pillars, and in comment mode it turns the same lens on code-comment slop and test names.",
+		does: "Point it at a repo or a diff and it audits the words: UI microcopy, docs, markdown prose, JSON and YAML copy. Parallel reviewers judge each string in its full-file context against four content pillars. In comment mode, it turns the same lens on code-comment slop and test names.",
 		tags: ["plain-language", "inclusive", "microcopy", "voice"],
 		produces:
 			"A reviewed set of verdicts — keep, rewrite, flag, delete — with the exact rewrite for each. Applying one splices only the text, so a verify pass can prove not a single line of code moved.",

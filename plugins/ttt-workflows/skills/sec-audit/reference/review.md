@@ -1,6 +1,6 @@
 # review mode — Security Review Protocol (SR1–12)
 
-Assess a target for vulnerabilities and produce a scored, private finding. This file is the Security Review Protocol for this skill — self-contained.json` (from `resolve-target.mjs`). Findings anchor at the recorded
+Assess a target for vulnerabilities and produce a scored, private finding. This file is the Security Review Protocol for this skill — self-contained. Read the target from `target.json` (from `resolve-target.mjs`). Findings anchor at the recorded
 `sha`; every claim cites `file:line` at that pinned SHA (SR3), never a moving branch.
 
 ## The sequence
@@ -8,7 +8,7 @@ Assess a target for vulnerabilities and produce a scored, private finding. This 
 1. **Trace at a pinned SHA (SR3).** Read the whole path — exports, callers, the
    verifier AND the controller that trusts it. Trace end-to-end before rating.
 2. **State worst-plausible (SR4).** Assume the surface is reachable and nothing in
-   front already neutralizes it; then list the exact deployment questions that would
+   front already neutralizes it. Then list the exact deployment questions that would
    move the rating (edge/WAF, network posture, storage tier, whether a dangerous env
    value can reach a live host). Terraform in the repo is not proof of running infra.
 3. **Refute (SR5).** Try to DISPROVE each finding; re-check against the pinned library
