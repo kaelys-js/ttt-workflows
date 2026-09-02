@@ -44,7 +44,7 @@
 			"outputLogs": "new-only"
 		},
 		"qa:toml": {
-			"inputs": ["mise.toml"],
+			"inputs": ["**/*.toml", "!**/node_modules/**"],
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
@@ -80,7 +80,7 @@
 			"outputLogs": "new-only"
 		},
 		"qa:yaml-lint": {
-			"inputs": [".github/workflows/**", ".yamllint"],
+			"inputs": ["**/*.yml", "**/*.yaml", "!**/node_modules/**", "!**/pnpm-lock.yaml", ".yamllint"],
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
