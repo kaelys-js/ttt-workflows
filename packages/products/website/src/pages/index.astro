@@ -1,9 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import PrReviewMockup from "@/components/PrReviewMockup.astro";
-import SecAuditMockup from "@/components/SecAuditMockup.astro";
-import TrpMockup from "@/components/TrpMockup.astro";
-import CopyAuditMockup from "@/components/CopyAuditMockup.astro";
+import SkillDemo from "@/components/SkillDemo.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
 import GithubButton from "@/components/GithubButton.astro";
 import GithubMark from "@/components/GithubMark.astro";
@@ -16,7 +14,13 @@ import Badge from "@/components/ui/Badge.astro";
 import Icon from "@/components/ui/Icon.astro";
 
 import * as v from "valibot";
-import { parseVersion, PlaybooksSchema, SkillsSchema, StepsSchema } from "@/lib/schemas";
+import {
+	DemosSchema,
+	parseVersion,
+	PlaybooksSchema,
+	SkillsSchema,
+	StepsSchema,
+} from "@/lib/schemas";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const REPO = "https://github.com/kaelys-js/ttt-workflows";
@@ -107,6 +111,126 @@ const playbooks = v.parse(PlaybooksSchema, [
 		slug: "copy-audit",
 		name: "Copy Audit",
 		body: "Read every string a repo ships, judge it against the four content pillars, and rewrite only the words — never the code around them. How to do a copy review by hand.",
+	},
+]);
+
+// A short, synthetic run of each skill, played as an animated terminal transcript (SkillDemo).
+// No real repo, tenant, or ticket — every value is invented, so the demos stay agnostic. Each
+// mirrors its skill card, so the demo and the card read as one system. Validated at build.
+const demos = v.parse(DemosSchema, [
+	{
+		skill: "pr-review",
+		cmd: "/pr-review github.com/acme/api/pull/482",
+		caption:
+			"pr-review reads the diff, proves each finding, and hands back one paste-ready review.",
+		aria: "pr-review returns a request-changes verdict — one blocking and two non-blocking findings, each anchored to a file and line — as a paste-ready comment.",
+		lines: [
+			{ kind: "stream", text: "Reading the diff — 6 files, +214 −38 …" },
+			{ kind: "stream", text: "Checking each finding against the code …" },
+			{
+				kind: "verdict",
+				tone: "danger",
+				label: "Request changes",
+				tail: "· 1 blocking, 2 non-blocking",
+			},
+			{
+				kind: "item",
+				dot: "danger",
+				label: "issue",
+				text: "— PATCH /users/:id has no object-level authz",
+				at: "users.controller.ts:88",
+			},
+			{
+				kind: "item",
+				dot: "warn",
+				label: "suggestion",
+				text: "— Empty string slips past the filter, widening the query",
+				at: "repo.ts:41",
+			},
+			{
+				kind: "item",
+				dot: "muted",
+				label: "nitpick",
+				text: "— Comment restates the code instead of the why",
+				at: "token.ts:12",
+			},
+			{ kind: "footer", text: "Nothing posted — the review is handed back for you to paste." },
+		],
+	},
+	{
+		skill: "sec-audit",
+		cmd: "/sec-audit sweep acme/infra",
+		caption: "sec-audit sweeps all three layers and scores what it finds.",
+		aria: "sec-audit sweeps three layers — code and infrastructure, live Azure, and identity and CI — and drafts one high-severity finding as a private advisory, read-only until disclosure is approved.",
+		lines: [
+			{ kind: "stream", text: "Sweeping source & IaC, live Azure, identity & CI …" },
+			{ kind: "heading", text: "Three layers swept" },
+			{
+				kind: "item",
+				dot: "primary",
+				label: "Source / IaC",
+				text: "— semgrep · gitleaks · osv · checkov",
+			},
+			{
+				kind: "item",
+				dot: "primary",
+				label: "Live Azure",
+				text: "— firewall · TLS floor · Key Vault",
+			},
+			{ kind: "item", dot: "primary", label: "Entra / ADO", text: "— app-regs · pipeline secrets" },
+			{ kind: "verdict", tone: "danger", label: "High", tail: "· SEC-07 · CVSS 8.2" },
+			{ kind: "item", text: "Postgres reachable from 0.0.0.0 — public network access enabled." },
+			{ kind: "footer", text: "Private advisory drafted. Read-only until you approve disclosure." },
+		],
+	},
+	{
+		skill: "trp",
+		cmd: "/trp ClickUp CU-8x9k2 · Add a rate limit to /login",
+		caption: "trp presents the plan and stops. The approval gate is absolute.",
+		aria: "trp stops at the approval gate: the ticket is grounded in the repo and a full plan is shown, but nothing runs until you approve.",
+		lines: [
+			{ kind: "stream", text: "Grounding the ticket in the repo …" },
+			{ kind: "heading", text: "Plan · phases 0–5" },
+			{
+				kind: "item",
+				dot: "check",
+				text: "Found in the repo — auth.middleware.ts:44, no rate limiter mounted",
+			},
+			{ kind: "item", dot: "muted", text: "Change: mount the limiter, add a regression test" },
+			{
+				kind: "item",
+				dot: "muted",
+				text: "Verify: format · lint · affected tests · build — all green",
+			},
+			{ kind: "item", dot: "muted", text: "PR opened on GitHub; ticket updated in both layers" },
+			{ kind: "footer", text: "Waiting for your approval before anything runs." },
+		],
+	},
+	{
+		skill: "copy-audit",
+		cmd: "/copy-audit acme/site --full",
+		caption: "copy-audit weighs every string and rewrites only the words.",
+		aria: "copy-audit reviews 142 strings across four content pillars and shows one proposed rewrite and one flag; nothing is applied until you approve.",
+		lines: [
+			{ kind: "stream", text: "Extracting strings, judging each in full-file context …" },
+			{ kind: "heading", text: "142 strings reviewed · four content pillars" },
+			{ kind: "stream", text: "128 keep · 9 rewrite · 5 flag" },
+			{
+				kind: "item",
+				dot: "warn",
+				label: "rewrite",
+				text: '· microcopy — "Click here to get started" → "Get started"',
+				at: "hero.astro:12",
+			},
+			{
+				kind: "item",
+				dot: "muted",
+				label: "flag",
+				text: '· inclusive — "sanity check" needs a house-style call',
+				at: "docs/setup.md:38",
+			},
+			{ kind: "footer", text: "Rewrites proposed — nothing is written until you approve." },
+		],
 	},
 ]);
 ---
@@ -363,30 +487,18 @@ const playbooks = v.parse(PlaybooksSchema, [
 
 		<section id="in-action" class="mx-auto max-w-6xl px-5 py-20">
 			<div class="mx-auto max-w-2xl text-center">
-				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Skills in action</h2>
+				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>
+					Watch each skill run
+				</h2>
 				<p class="mt-3 text-muted-foreground">
-					What each skill actually returns, rendered inside a Claude Code session.
+					A short, synthetic run of each skill, played inside a Claude Code session — the same
+					transcript, with motion off.
 				</p>
 			</div>
-			<div class="mt-12 grid grid-cols-1 items-start justify-items-center gap-8 md:grid-cols-3">
-				<figure class="w-full" data-reveal>
-					<SecAuditMockup />
-					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
-						sec-audit sweeps all three layers and scores what it finds.
-					</figcaption>
-				</figure>
-				<figure class="w-full" data-reveal>
-					<TrpMockup />
-					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
-						trp presents the plan and stops. The approval gate is absolute.
-					</figcaption>
-				</figure>
-				<figure class="w-full" data-reveal>
-					<CopyAuditMockup />
-					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
-						copy-audit weighs every string and rewrites only the words.
-					</figcaption>
-				</figure>
+			<div
+				class="mx-auto mt-12 grid max-w-4xl grid-cols-1 items-start justify-items-center gap-8 sm:grid-cols-2"
+			>
+				{demos.map((demo) => <SkillDemo demo={demo} />)}
 			</div>
 		</section>
 

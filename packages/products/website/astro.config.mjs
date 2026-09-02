@@ -27,6 +27,10 @@ const APP_VERSION = appVersion();
 
 export default defineConfig({
 	site: 'https://kaelys-js.github.io',
+	// Local `astro dev`/`preview` port. Moved off Astro's default 4321 so this site and the
+	// harvest repo can run side by side. The Playwright suite serves the built dist via serve.mjs
+	// on 4321 (its own harness), so this only affects local development.
+	server: { port: 4322 },
 	// Production deploys under the Pages project subpath; E2E builds set ASTRO_BASE=/ so the
 	// site can be served from a static server root.
 	base: process.env.ASTRO_BASE ?? '/ttt-workflows',

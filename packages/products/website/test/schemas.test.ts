@@ -6,6 +6,7 @@ import {
 	parseRelease,
 	parseStructuredData,
 	parseVersion,
+	DemoSchema,
 	PlaybookSchema,
 	SkillSchema,
 } from '@/lib/schemas';
@@ -82,6 +83,42 @@ describe('SkillSchema', () => {
 	it('rejects a command without a leading slash and an empty tag list', () => {
 		expect(() => v.parse(SkillSchema, { ...base, cmd: 'copy-audit' })).toThrow();
 		expect(() => v.parse(SkillSchema, { ...base, tags: [] })).toThrow();
+	});
+});
+
+describe('DemoSchema', () => {
+	const base = {
+		skill: 'pr-review',
+		cmd: '/pr-review github.com/acme/api/pull/482',
+		caption: 'Reads the diff and hands back a review.',
+		aria: 'A pr-review transcript.',
+		lines: [
+			{ kind: 'stream', text: 'Reading the diff …' },
+			{ kind: 'verdict', tone: 'danger', label: 'Request changes' },
+			{
+				kind: 'item',
+				dot: 'warn',
+				label: 'suggestion',
+				text: '— tighten the filter',
+				at: 'repo.ts:41',
+			},
+			{ kind: 'footer', text: 'Nothing posted.' },
+		],
+	};
+	it('accepts a well-formed demo with each line kind', () => {
+		expect(v.parse(DemoSchema, base).skill).toBe('pr-review');
+	});
+	it('rejects an unknown skill slug', () => {
+		expect(() => v.parse(DemoSchema, { ...base, skill: 'nope' })).toThrow();
+	});
+	it('rejects an unknown line kind or tone, and an empty line list', () => {
+		expect(() =>
+			v.parse(DemoSchema, { ...base, lines: [{ kind: 'banner', text: 'x' }] }),
+		).toThrow();
+		expect(() =>
+			v.parse(DemoSchema, { ...base, lines: [{ kind: 'verdict', tone: 'loud', label: 'x' }] }),
+		).toThrow();
+		expect(() => v.parse(DemoSchema, { ...base, lines: [] })).toThrow();
 	});
 });
 

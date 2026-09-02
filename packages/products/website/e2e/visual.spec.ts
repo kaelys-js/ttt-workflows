@@ -49,7 +49,7 @@ test.describe('visual — page sections', () => {
 		{ name: 'trust', selector: '#trust', ready: 'Read-only by default' },
 		{ name: 'skills', selector: '#skills', ready: 'Four skills' },
 		{ name: 'install', selector: '#install', ready: 'Install once' },
-		{ name: 'in-action', selector: '#in-action', ready: 'Skills in action' },
+		{ name: 'in-action', selector: '#in-action', ready: 'Watch each skill run' },
 		{ name: 'playbooks', selector: '#playbooks', ready: "Operator's playbooks" },
 		{ name: 'faq', selector: '#faq', ready: 'Questions' },
 		{ name: 'footer', selector: 'footer' },

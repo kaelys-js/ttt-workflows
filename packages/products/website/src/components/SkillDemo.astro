@@ -1,0 +1,153 @@
+---
+// An animated recreation of a skill run in Claude Code — a synthetic, agnostic transcript (no
+// real repo, tenant, or ticket) that "plays" once when scrolled into view, then rests on the full
+// transcript. Semantic tokens only, so it renders true light/dark like the rest of the page — no
+// rasterized screenshot.
+//
+// The motion is additive and FINITE by design (see global.css, `[data-demo]`): the settled
+// end-state equals this static markup, so no-JS visitors, prefers-reduced-motion, and the
+// Playwright suite (which fast-forwards finite animations) all see the same complete transcript.
+// role="img" + aria-label exposes the whole terminal to assistive tech as a single labelled image,
+// matching the mockups; its inner pixel-text is presentational.
+import type { Demo } from "@/lib/schemas";
+
+interface Props {
+	demo: Demo;
+}
+const { demo } = Astro.props;
+
+// Palette roles → the same hues the mockups use, so a demo and its skill card read as one system.
+const dotClass: Record<string, string> = {
+	danger: "bg-[#e5484d]",
+	warn: "bg-[#e6a23c]",
+	muted: "bg-muted-foreground/50",
+	primary: "bg-primary",
+};
+const verdictText: Record<string, string> = {
+	danger: "text-[#e5484d]",
+	warn: "text-[#e6a23c]",
+	muted: "text-muted-foreground",
+	primary: "text-primary",
+};
+
+// The prompt row is line 0; each output line streams in after it, staggered by its index.
+let i = 0;
+---
+
+<figure class="w-full" data-reveal data-demo>
+	<div
+		class="w-full max-w-md overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-black/10 ring-1 ring-black/5 dark:shadow-black/40"
+		role="img"
+		aria-label={demo.aria}
+	>
+		<div class="flex items-center gap-2 border-b border-border/60 px-4 py-3">
+			<span class="size-3 rounded-full bg-[#ff5f57]"></span>
+			<span class="size-3 rounded-full bg-[#febc2e]"></span>
+			<span class="size-3 rounded-full bg-[#28c840]"></span>
+			<span class="ml-2 text-xs font-medium text-muted-foreground">
+				Claude Code · {demo.skill}
+			</span>
+		</div>
+
+		<div class="px-5 py-4 font-mono text-[12px] leading-relaxed">
+			<div data-demo-line style={`--i:${i++}`} class="text-muted-foreground">
+				<span class="text-primary">❯</span>{" "}
+				<span class="break-all text-foreground/90">{demo.cmd}</span><span
+					data-demo-caret
+					aria-hidden="true"
+					class="ml-0.5 inline-block h-3.5 w-[7px] translate-y-0.5 bg-primary/80"></span>
+			</div>
+		</div>
+
+		<div class="border-t border-border/60 px-5 py-4">
+			<ul class="space-y-2.5">
+				{
+					demo.lines.map((line) => {
+						const style = `--i:${i++}`;
+						if (line.kind === "stream") {
+							return (
+								<li data-demo-line style={style} class="text-[12px] text-muted-foreground">
+									{line.text}
+								</li>
+							);
+						}
+						if (line.kind === "heading") {
+							return (
+								<li
+									data-demo-line
+									style={style}
+									class="text-xs font-semibold text-muted-foreground"
+								>
+									{line.text}
+								</li>
+							);
+						}
+						if (line.kind === "verdict") {
+							return (
+								<li data-demo-line style={style} class="flex items-center gap-2 text-[13px]">
+									<span
+										class={`size-2 shrink-0 rounded-full ${dotClass[line.tone] ?? dotClass.muted}`}
+									/>
+									<span class={`font-semibold ${verdictText[line.tone] ?? "text-foreground"}`}>
+										{line.label}
+									</span>
+									{line.tail && <span class="text-xs text-muted-foreground">{line.tail}</span>}
+								</li>
+							);
+						}
+						if (line.kind === "footer") {
+							return (
+								<li
+									data-demo-line
+									style={style}
+									class="border-t border-border/60 pt-3 text-xs text-muted-foreground"
+								>
+									{line.text}
+								</li>
+							);
+						}
+						// item: a bullet/finding row. A "check" dot renders a tick (trp's done step); any
+						// other dot is a coloured circle; no dot indents the text to align with the rest.
+						return (
+							<li data-demo-line style={style} class="flex items-start gap-2.5 text-[13px]">
+								{line.dot === "check" ? (
+									<svg
+										viewBox="0 0 24 24"
+										class="mt-0.5 size-4 shrink-0 text-primary"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2.5"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										aria-hidden="true"
+									>
+										<path d="M20 6 9 17l-5-5" />
+									</svg>
+								) : line.dot ? (
+									<span
+										class={`mt-1.5 size-1.5 shrink-0 rounded-full ${dotClass[line.dot] ?? dotClass.muted}`}
+									/>
+								) : (
+									<span class="mt-1.5 size-1.5 shrink-0" aria-hidden="true" />
+								)}
+								<div class="min-w-0 leading-snug">
+									{line.label && <span class="font-medium">{line.label}</span>}
+									{line.label ? (
+										<span class="text-muted-foreground"> {line.text}</span>
+									) : (
+										<span>{line.text}</span>
+									)}
+									{line.at && (
+										<div class="font-mono text-[11px] text-muted-foreground">{line.at}</div>
+									)}
+								</div>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</div>
+	</div>
+
+	<figcaption class="mt-3 text-center text-sm text-muted-foreground">{demo.caption}</figcaption>
+</figure>

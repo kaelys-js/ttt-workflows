@@ -206,6 +206,59 @@
 	}
 }
 
+/* Skill demos. A synthetic terminal transcript that "plays" once when its figure scrolls into
+   view (the figure is [data-reveal], so the same IntersectionObserver adds .is-visible), then
+   rests on the full transcript. Every animation here is FINITE with a forwards fill, so the
+   settled end-state equals the static markup: Playwright fast-forwards finite animations for its
+   screenshots, the a11y suite runs reduced-motion (which disables all of this), and no-JS shows
+   everything. Nothing loops — an infinite animation would throw in the suites' getAnimations().
+   finish() settle step and break every capture. Scoped to html.js + no-preference; only opacity
+   and transform animate, so no reflow and no CLS. */
+@media (prefers-reduced-motion: no-preference) {
+	html.js [data-demo] [data-demo-line] {
+		opacity: 0;
+	}
+
+	html.js [data-demo].is-visible [data-demo-line] {
+		animation: demo-line-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: calc(var(--i, 0) * 560ms);
+	}
+
+	@keyframes demo-line-in {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* The prompt caret blinks a few times, then rests solid. Finite iteration count: the suites'
+	   fast-forward lands on the final (solid) frame, matching the reduced-motion resting caret. */
+	html.js [data-demo].is-visible [data-demo-caret] {
+		animation: demo-caret 0.9s steps(1, end) 3 both;
+	}
+
+	@keyframes demo-caret {
+		0%,
+		49% {
+			opacity: 1;
+		}
+
+		50%,
+		99% {
+			opacity: 0;
+		}
+
+		100% {
+			opacity: 1;
+		}
+	}
+}
+
 /* Theme-toggle animation. The View Transitions API handles the crossfade where supported;
    this is the fallback path (class added only during a manual toggle, never on first paint),
    and it tunes the View Transition timing. Both are inside the no-preference query. */

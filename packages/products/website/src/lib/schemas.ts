@@ -127,3 +127,44 @@ export const PlaybookSchema = v.object({
 	body: NonEmpty,
 });
 export const PlaybooksSchema = v.pipe(v.array(PlaybookSchema), v.minLength(1));
+
+// One line of a skill's animated demo transcript (SkillDemo.astro). The kinds cover every shape
+// the four demos need — a muted "working" stream line, a small section heading, a coloured
+// verdict, a bullet/finding row (optional severity dot, label, text, optional file:line), and the
+// muted boundary footer. A `tone`/`dot` picks one of the known palette roles the component maps to
+// a colour, so a mistyped value fails the build rather than rendering an unstyled or invisible dot.
+const DemoTone = v.picklist(['danger', 'warn', 'muted', 'primary', 'check']);
+export const DemoLineSchema = v.variant('kind', [
+	v.object({ kind: v.literal('stream'), text: NonEmpty }),
+	v.object({ kind: v.literal('heading'), text: NonEmpty }),
+	v.object({
+		kind: v.literal('verdict'),
+		tone: DemoTone,
+		label: NonEmpty,
+		tail: v.optional(NonEmpty),
+	}),
+	v.object({
+		kind: v.literal('item'),
+		dot: v.optional(DemoTone),
+		label: v.optional(NonEmpty),
+		text: NonEmpty,
+		at: v.optional(NonEmpty),
+	}),
+	v.object({ kind: v.literal('footer'), text: NonEmpty }),
+]);
+export type DemoLine = v.InferOutput<typeof DemoLineSchema>;
+
+// A single skill demo: the typed command shown after the prompt, the figcaption, the role="img"
+// label describing the whole transcript as one image (the mockups do the same), and the ordered
+// output lines. `skill` must be one of the four real slugs. Parsed at build so a bad edit — an
+// empty command, an unknown skill, a mistyped line kind — fails the build instead of shipping a
+// broken demo.
+export const DemoSchema = v.object({
+	skill: v.picklist(['pr-review', 'sec-audit', 'trp', 'copy-audit']),
+	cmd: NonEmpty,
+	caption: NonEmpty,
+	aria: NonEmpty,
+	lines: v.pipe(v.array(DemoLineSchema), v.minLength(1, 'a demo needs at least one line')),
+});
+export type Demo = v.InferOutput<typeof DemoSchema>;
+export const DemosSchema = v.pipe(v.array(DemoSchema), v.minLength(1));
