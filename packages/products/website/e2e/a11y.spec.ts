@@ -22,7 +22,7 @@ async function scan(page: Page, label: string) {
 		await document.fonts.ready;
 		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 	});
-	// The three mockups are role="img" with descriptive aria-labels — decorative recreations of a
+	// The four mockups are role="img" with descriptive aria-labels — decorative recreations of a
 	// terminal, exposed to AT as a single image. Their inner pixel-text is presentational (like text
 	// inside a screenshot, which WCAG exempts from contrast), so exclude them; every real UI surface
 	// (nav, buttons, links, copy, FAQ) is still scanned.

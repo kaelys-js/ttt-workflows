@@ -37,7 +37,7 @@ test.describe('visual — page sections', () => {
 	const SECTIONS: { name: string; selector: string; ready?: string }[] = [
 		{ name: 'nav', selector: 'header' },
 		{ name: 'trust', selector: '#trust', ready: 'Read-only by default' },
-		{ name: 'skills', selector: '#skills', ready: 'Three skills' },
+		{ name: 'skills', selector: '#skills', ready: 'Four skills' },
 		{ name: 'install', selector: '#install', ready: 'Install once' },
 		{ name: 'in-action', selector: '#in-action', ready: 'Skills in action' },
 		{ name: 'playbooks', selector: '#playbooks', ready: "Operator's playbooks" },
