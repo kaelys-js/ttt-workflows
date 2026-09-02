@@ -12,6 +12,17 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-09-02
+
+### Fixed
+
+- copy-audit's holistic reviewer now flags two defect classes it had been missing: dead
+  cross-references (a "see X" pointer, a `[..](#anchor)` link, or an "in this skill's reference
+  files" phrase whose target is absent from the corpus) and duplicate or divergent descriptions
+  of the same artifact (a file, script, command, or config key described two ways). It had
+  passed a reference to a section that was never written and a workflow file listed twice with
+  different descriptions.
+
 ## [1.3.1] - 2026-09-02
 
 ### Fixed
