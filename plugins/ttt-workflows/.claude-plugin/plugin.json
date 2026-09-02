@@ -1,6 +1,6 @@
 {
 	"name": "ttt-workflows",
-	"version": "1.3.2",
+	"version": "1.4.0",
 	"description": "Four end-to-end engineering skills: sec-audit (three-layer security audit of a repo/PR/live Azure), trp (deliver a ClickUp ticket end to end with an approval gate), pr-review (paste-ready PR review that never touches the PR), copy-audit (audit product copy, UI microcopy, and code comments across a repo or diff, approval-gated).",
 	"author": {
 		"name": "Cole Beuker"

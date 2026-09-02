@@ -12,6 +12,21 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-02
+
+### Added
+
+- Every skill now has an animated demo on the marketing site. The "Watch each skill run" section
+  plays a short, synthetic Claude Code session for pr-review, sec-audit, trp, and copy-audit — the
+  typed command, the streamed output, and the final verdict — two per row, then settles on the full
+  transcript. The demos are self-contained and theme-aware (no rasterized screenshots), play only
+  under `prefers-reduced-motion: no-preference`, and add no JavaScript; a build-time schema
+  validates every transcript.
+
+### Changed
+
+- Rewrote the four skill descriptions, on the site and in the plugin, to be benefit-led and plain.
+
 ## [1.3.2] - 2026-09-02
 
 ### Fixed
