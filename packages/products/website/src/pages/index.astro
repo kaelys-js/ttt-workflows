@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import PrReviewMockup from "@/components/PrReviewMockup.astro";
 import SecAuditMockup from "@/components/SecAuditMockup.astro";
 import TrpMockup from "@/components/TrpMockup.astro";
+import CopyAuditMockup from "@/components/CopyAuditMockup.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
 import GithubButton from "@/components/GithubButton.astro";
 import GithubMark from "@/components/GithubMark.astro";
@@ -59,6 +60,17 @@ const skills = v.parse(SkillsSchema, [
 		boundaryNote:
 			"Stops for approval. No branch, no write, nothing hard to undo before you say go.",
 	},
+	{
+		icon: "file-text",
+		name: "copy-audit",
+		cmd: "/copy-audit",
+		does: "Point it at a repo or a diff and it audits the words: UI microcopy, docs, markdown prose, JSON and YAML copy. Parallel reviewers judge each string in its full-file context against four content pillars, and in comment mode it turns the same lens on code-comment slop and test names.",
+		tags: ["plain-language", "inclusive", "microcopy", "voice"],
+		produces:
+			"A reviewed set of verdicts — keep, rewrite, flag, delete — with the exact rewrite for each. Applying one splices only the text, so a verify pass can prove not a single line of code moved.",
+		boundary: "Approval-gated",
+		boundaryNote: "Reads and proposes. Nothing is written to disk until you approve the rewrites.",
+	},
 ]);
 
 const steps = v.parse(StepsSchema, [
@@ -71,7 +83,7 @@ const steps = v.parse(StepsSchema, [
 	{
 		n: "2",
 		title: "Install the plugin",
-		body: "Install ttt-workflows and all three skills register at once. Nothing else to set up.",
+		body: "Install ttt-workflows and all four skills register at once. Nothing else to set up.",
 		cmd: PLUGIN_INSTALL,
 	},
 ]);
@@ -91,6 +103,11 @@ const playbooks = v.parse(PlaybooksSchema, [
 		slug: "trp",
 		name: "Task Resolution Protocol",
 		body: "Take a ticket from assigned to merged: ground it in real code, get the plan approved, then build, prove, and close it out.",
+	},
+	{
+		slug: "copy-audit",
+		name: "Copy Audit",
+		body: "Read every string a repo ships, judge it against the four content pillars, and rewrite only the words — never the code around them. The craft the skill automates, done by hand.",
 	},
 ]);
 ---
@@ -172,7 +189,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 					data-hero="lcp"
 					class="mt-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
 				>
-					Three engineering workflows, <span
+					Four engineering workflows, <span
 						class="bg-gradient-to-r from-[#1fb2d4] to-[#0c81b3] bg-clip-text text-transparent"
 						>one plugin.</span
 					>
@@ -184,9 +201,11 @@ const playbooks = v.parse(PlaybooksSchema, [
 				>
 					ttt-workflows bundles <span class="font-mono text-foreground/80">pr-review</span>, <span
 						class="font-mono text-foreground/80">sec-audit</span
-					>, and <span class="font-mono text-foreground/80">trp</span>: three self-contained skills
-					that review a pull request, run a security audit, or deliver a ticket end to end, from
-					inside Claude Code. Read-only and approval-gated by default.
+					>, <span class="font-mono text-foreground/80">trp</span>, and <span
+						class="font-mono text-foreground/80">copy-audit</span
+					>: four self-contained skills that review a pull request, run a security audit, deliver a
+					ticket, or audit the copy end to end, from inside Claude Code. Read-only and
+					approval-gated by default.
 				</p>
 				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-3">
 					<CopyCommand cmd={MARKETPLACE_ADD} />
@@ -232,17 +251,18 @@ const playbooks = v.parse(PlaybooksSchema, [
 
 		<section id="skills" class="mx-auto max-w-6xl px-5 py-20">
 			<div class="mx-auto max-w-2xl text-center">
-				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Three skills</h2>
+				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl" data-reveal>Four skills</h2>
 				<p class="mt-3 text-muted-foreground">
 					Each is self-contained and portable across any repo and any tenant, with no client data
 					baked in.
 				</p>
 			</div>
 			<!-- Each card is a subgrid spanning the 5 shared row tracks (header / description:1fr /
-			     tags / produces / boundary), so those sections line up across all three cards
-			     regardless of copy length; the 1fr description row absorbs the difference. -->
+			     tags / produces / boundary), so those sections line up across all four cards
+			     regardless of copy length; the 1fr description row absorbs the difference. Two-up on
+			     tablet, four-up on desktop. -->
 			<div
-				class="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:grid-rows-[auto_1fr_auto_auto_auto] lg:gap-y-4"
+				class="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_1fr_auto_auto_auto] lg:gap-y-4"
 				data-stagger
 			>
 				{
@@ -329,6 +349,14 @@ const playbooks = v.parse(PlaybooksSchema, [
 								>Hand it a ticket URL; it grounds the work, presents a plan, and stops for approval.</span
 							>
 						</li>
+						<li class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 gap-y-1 max-sm:grid-cols-1">
+							<code class="font-mono text-foreground/90">/copy-audit</code>
+							<span>
+								Point it at a repo or a diff for a copy and microcopy pass; add <code
+									class="font-mono text-foreground/90">--mode=comments</code
+								> to sweep code comments and test names.
+							</span>
+						</li>
 					</ul>
 				</div>
 			</div>
@@ -341,7 +369,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 					What each skill actually returns, rendered inside a Claude Code session.
 				</p>
 			</div>
-			<div class="mt-12 grid grid-cols-1 items-start justify-items-center gap-8 md:grid-cols-2">
+			<div class="mt-12 grid grid-cols-1 items-start justify-items-center gap-8 md:grid-cols-3">
 				<figure class="w-full" data-reveal>
 					<SecAuditMockup />
 					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
@@ -352,6 +380,12 @@ const playbooks = v.parse(PlaybooksSchema, [
 					<TrpMockup />
 					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
 						trp presents the plan and stops. The approval gate is absolute.
+					</figcaption>
+				</figure>
+				<figure class="w-full" data-reveal>
+					<CopyAuditMockup />
+					<figcaption class="mt-3 text-center text-sm text-muted-foreground">
+						copy-audit weighs every string and rewrites only the words.
 					</figcaption>
 				</figure>
 			</div>
@@ -367,7 +401,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 						Each skill ships a companion PDF: the what, how, and why of doing that work by hand.
 					</p>
 				</div>
-				<div class="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3" data-stagger>
+				<div class="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4" data-stagger>
 					{
 						playbooks.map((p) => (
 							<Card class="gap-3 transition-shadow hover:shadow-md">
@@ -433,8 +467,8 @@ const playbooks = v.parse(PlaybooksSchema, [
 						<span class="font-mono">ttt-workflows</span>
 					</div>
 					<p class="mt-4 text-sm leading-relaxed text-muted-foreground">
-						Three engineering skills in one Claude Code plugin: review, audit, and deliver.
-						Read-only and approval-gated by default. Open source.
+						Four engineering skills in one Claude Code plugin: review, audit, deliver, and refine
+						the copy. Read-only and approval-gated by default. Open source.
 					</p>
 					<div class="mt-6"><GithubButton size="default" /></div>
 				</div>
@@ -517,6 +551,15 @@ const playbooks = v.parse(PlaybooksSchema, [
 								rel="noopener noreferrer"
 								class="transition-colors hover:text-foreground"
 								>Task Resolution playbook<span class="sr-only"> (PDF, opens in a new tab)</span></a
+							>
+						</li>
+						<li>
+							<a
+								href={`${base}/playbooks/copy-audit.pdf`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="transition-colors hover:text-foreground"
+								>Copy Audit playbook<span class="sr-only"> (PDF, opens in a new tab)</span></a
 							>
 						</li>
 					</ul>

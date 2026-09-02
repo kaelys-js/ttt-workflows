@@ -120,9 +120,9 @@ export const StepSchema = v.object({ n: NonEmpty, title: NonEmpty, body: NonEmpt
 export const StepsSchema = v.pipe(v.array(StepSchema), v.minLength(1));
 
 // An operator-playbook card. `slug` names the PDF served at /playbooks/<slug>.pdf, so it must be
-// one of the three real playbooks — a typo would link a 404.
+// one of the four real playbooks — a typo would link a 404.
 export const PlaybookSchema = v.object({
-	slug: v.picklist(['pr-review', 'sec-audit', 'trp']),
+	slug: v.picklist(['pr-review', 'sec-audit', 'trp', 'copy-audit']),
 	name: NonEmpty,
 	body: NonEmpty,
 });

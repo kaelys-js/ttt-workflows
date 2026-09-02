@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import {
 	parseBasePath,
@@ -5,6 +6,8 @@ import {
 	parseRelease,
 	parseStructuredData,
 	parseVersion,
+	PlaybookSchema,
+	SkillSchema,
 } from '@/lib/schemas';
 
 describe('parseVersion', () => {
@@ -45,6 +48,40 @@ describe('parseFaqItems', () => {
 	it('rejects a blank answer or an empty list', () => {
 		expect(() => parseFaqItems([{ q: 'Q?', a: '' }])).toThrow();
 		expect(() => parseFaqItems([])).toThrow();
+	});
+});
+
+describe('PlaybookSchema', () => {
+	it('accepts each of the four real playbook slugs', () => {
+		for (const slug of ['pr-review', 'sec-audit', 'trp', 'copy-audit'] as const) {
+			expect(v.parse(PlaybookSchema, { slug, name: 'N', body: 'B' }).slug).toBe(slug);
+		}
+	});
+	it('rejects an unknown slug (would link a 404)', () => {
+		expect(() => v.parse(PlaybookSchema, { slug: 'nope', name: 'N', body: 'B' })).toThrow();
+	});
+});
+
+describe('SkillSchema', () => {
+	const base = {
+		icon: 'file-text',
+		name: 'copy-audit',
+		cmd: '/copy-audit',
+		does: 'Audits the copy.',
+		tags: ['plain-language', 'inclusive'],
+		produces: 'Verdicts with a rewrite for each.',
+		boundary: 'Approval-gated',
+		boundaryNote: 'Nothing is written until you approve.',
+	};
+	it('accepts a well-formed skill card', () => {
+		expect(v.parse(SkillSchema, base).name).toBe('copy-audit');
+	});
+	it('rejects an unknown boundary label', () => {
+		expect(() => v.parse(SkillSchema, { ...base, boundary: 'Whenever' })).toThrow();
+	});
+	it('rejects a command without a leading slash and an empty tag list', () => {
+		expect(() => v.parse(SkillSchema, { ...base, cmd: 'copy-audit' })).toThrow();
+		expect(() => v.parse(SkillSchema, { ...base, tags: [] })).toThrow();
 	});
 });
 

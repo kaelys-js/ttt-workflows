@@ -14,7 +14,7 @@ const repoRoot = join(here, '..', '..', '..', '..');
 const srcDir = join(repoRoot, 'docs');
 const outDir = join(here, '..', 'public', 'playbooks');
 
-const pdfs = ['pr-review.pdf', 'sec-audit.pdf', 'trp.pdf'];
+const pdfs = ['pr-review.pdf', 'sec-audit.pdf', 'trp.pdf', 'copy-audit.pdf'];
 
 // The containerized E2E/visual build mounts only the website dir, so the repo's docs/ is
 // absent there. The playbooks are download links, not needed to render or test the pages, so

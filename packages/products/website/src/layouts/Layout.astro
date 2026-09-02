@@ -6,9 +6,9 @@ import { parseStructuredData, parseVersion } from "@/lib/schemas";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const site = Astro.site?.href.replace(/\/$/, "") ?? "https://kaelys-js.github.io";
 const canonical = `${site}${base}/`;
-const title = "ttt-workflows: three engineering workflows, one Claude Code plugin";
+const title = "ttt-workflows: four engineering workflows, one Claude Code plugin";
 const description =
-	"A Claude Code plugin that bundles three self-contained skills: pr-review reviews a pull request, sec-audit runs a security audit, and trp delivers a ticket end to end. Read-only and approval-gated by design. Any repo, any tenant, open source.";
+	"A Claude Code plugin that bundles four self-contained skills: pr-review reviews a pull request, sec-audit runs a security audit, trp delivers a ticket, and copy-audit reviews the copy end to end. Read-only and approval-gated by design. Any repo, any tenant, open source.";
 const ogImage = `${site}${base}/og.png`;
 const repo = "https://github.com/kaelys-js/ttt-workflows";
 // The plugin version this site ships in lockstep with (build-injected from the release tag /
@@ -107,7 +107,7 @@ const csp = [
 		<meta property="og:image:height" content="630" />
 		<meta
 			property="og:image:alt"
-			content="ttt-workflows: three engineering workflows, one Claude Code plugin"
+			content="ttt-workflows: four engineering workflows, one Claude Code plugin"
 		/>
 		<meta property="og:locale" content="en_US" />
 
@@ -117,7 +117,7 @@ const csp = [
 		<meta name="twitter:image" content={ogImage} />
 		<meta
 			name="twitter:image:alt"
-			content="ttt-workflows: three engineering workflows, one Claude Code plugin"
+			content="ttt-workflows: four engineering workflows, one Claude Code plugin"
 		/>
 
 		<!-- Set theme + mark JS on before paint to avoid a flash -->
