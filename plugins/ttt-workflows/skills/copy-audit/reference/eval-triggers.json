@@ -1,0 +1,19 @@
+{
+	"note": "Trigger scenarios. selftest checks positives are covered by the description (a mechanical proxy: every positive shares a salient word with SKILL.md's description). For a true model eval, run these prompts across your model roster and confirm should-trigger.",
+	"positive": [
+		"run a copy audit on this repo",
+		"review the microcopy in our UI strings",
+		"do a plain-language and inclusive pass on the docs",
+		"clean up the AI comment slop with --mode=comments",
+		"run a Rule 9 sweep on our test names",
+		"tighten the wording and tone of our markdown copy",
+		"audit the CTA and button microcopy for readability",
+		"do a test name audit on the spec files"
+	],
+	"negative": [
+		"write a new feature for the checkout flow",
+		"run the tests and fix the failing build",
+		"review this PR for security bugs",
+		"rename these variables across the codebase"
+	]
+}
