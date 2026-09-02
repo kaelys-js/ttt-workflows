@@ -60,7 +60,7 @@ Never start delivery until preflight is clean and the plan is approved (Phase 1)
 
 Copy this checklist and work through it:
 
-```
+```text
 - [ ] 0. Read reference/gates.md + reference/phases.md (+ clients.md for the client)
 - [ ] 1. Fetch ticket + comments (+ GAP-LIST if named) → ticket.json
 - [ ] 2. Phase 0: ground in the repo — file:line evidence, every gap answered yourself
@@ -114,4 +114,3 @@ node $D/trp/scripts/clickup-update.mjs "<TICKET_URL>" --status "in review" --com
   package states which phases apply (phases.md "Response modes").
 - The pr-review skill is a sibling skill; Phase 3.5 invokes
   it as documented there — read-only against the PR, findings fixed here.
-

@@ -58,7 +58,7 @@ Never run the review until preflight is clean.
 
 Copy this checklist and work through it:
 
-```
+```text
 - [ ] 1. Fetch the PR (read-only) → pr.json
 - [ ] 2. Read pr.json; decide first-review vs re-review
 - [ ] 3. Review the diff against reference/rubric.md, in priority order
@@ -109,6 +109,7 @@ hunks from `pr.json` in turn instead of holding the whole diff at once, and say 
 **5. Self-verify (mandatory validate loop).** The renderer mechanically enforces part
 of this: anchored files must be changed files of the PR, and `anchor_snippet` must
 match the diff line. Before rendering, confirm the rest:
+
 - Every anchor OUTSIDE the diff hunks (context lines of changed files) points at the
   code you describe — the renderer can only warn there; confirm those against head.
 - You tried to refute each finding and it survived. Unsure → downgrade to `question`.
@@ -160,4 +161,3 @@ block so it copies cleanly. Do not post it anywhere.
 - Match the reviewed repo's conventions, not this skill's opinions (Rule 11). Do not
   gate a PR on pre-existing problems; flag them separately, non-blocking.
 - Keep the review compact. Density over length. End when the content ends.
-

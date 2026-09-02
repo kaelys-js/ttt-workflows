@@ -48,7 +48,7 @@ node $D/sec-audit/scripts/resolve-target.mjs "<TARGET>" --out target.json
 ```
 
 | Target | Resolves to |
-|---|---|
+| --- | --- |
 | GitHub / ADO **repo URL** | read-only shallow clone at HEAD (SHA recorded) |
 | GH / ADO **PR URL** | pr-review's `fetch-pr.mjs`; scope = the PR diff |
 | **local repo** path | read in place at HEAD |
@@ -113,7 +113,7 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
 
 ## Workflow
 
-```
+```text
 - [ ] 0. Read reference/gates.md fully + the mode's reference
 - [ ] 1. Resolve the target → target.json (read-only, provenance stamped)
 - [ ] 2. Threat-model the Tier-1 surfaces (methodology.md) before deep analysis
@@ -158,4 +158,3 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
   `candidates.jsonl`) live in a scratch dir, never in the audited repo.
 - Self-contained: the protocol (`reference/`), the scanners (`find-findings.sh`), the semantic
   deep-read (`workflows/expansion-sweep.js`), and the PoC scaffold (`templates/`) all ship here.
-

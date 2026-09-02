@@ -204,7 +204,16 @@ schema live in [reference/usage.md](reference/usage.md) and
 [workflows/copy-review.js](workflows/copy-review.js). Each verdict is
 `{id, verdict: keep|rewrite|flag, rewrite: string|null, category, severity, note}`.
 
-If the workflow return trips the 4,096-item cap, read verdicts from the per-agent journal:
+The workflow VM caps any single returned array at 4,096 items, so `copy-review.js` returns
+verdicts pre-chunked as `result.verdictChunks` (each sub-array < the cap) plus
+`result.verdictCount` — flatten the chunks to rebuild the full list:
+
+```text
+jq '[.result.verdictChunks[][]]' workflow-result.json > verdicts.json
+```
+
+For a very large sweep, or if you ever hit the boundary another way, the per-agent journal
+is the canonical fallback (it always holds every verdict):
 
 ```text
 JOURNAL=<transcriptDir>/journal.jsonl

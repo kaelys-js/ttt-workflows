@@ -57,4 +57,19 @@ const results = await parallel(
 	}),
 );
 const verdicts = results.filter(Boolean).flatMap((r) => r.verdicts || []);
-return { verdicts, bundleCount, successfulBundles: results.filter(Boolean).length };
+// The workflow VM caps any single returned array at 4096 items, so a whole-repo sweep
+// (thousands of units) would throw at the boundary. Chunk the verdicts into sub-arrays that
+// each stay under the cap; the outer array holds only a handful of chunks. Callers flatten
+// verdictChunks. The per-agent journal remains the canonical source either way (see
+// reference/usage.md — jq over journal.jsonl).
+const CHUNK = 2000;
+const verdictChunks = [];
+for (let i = 0; i < verdicts.length; i += CHUNK) {
+	verdictChunks.push(verdicts.slice(i, i + CHUNK));
+}
+return {
+	verdictChunks,
+	verdictCount: verdicts.length,
+	bundleCount,
+	successfulBundles: results.filter(Boolean).length,
+};
