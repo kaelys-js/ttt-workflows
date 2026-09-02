@@ -253,6 +253,3 @@ reviewed repo. The DB persists across runs so verdicts can be re-applied without
   per-agent journal (`usage.md`).
 - **Too much captured as copy in one repo** → append `--skip-path <substr>` (comma-separated /
   repeatable) at extract for repo-specific generated trees.
-</content>
-
-</invoke>

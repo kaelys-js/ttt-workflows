@@ -58,4 +58,3 @@ review.
   re-extract (extract wipes this repo's rows first).
 - Skips beyond the mode's defaults are additive: `--skip-path <substr>` (comma-separated /
   repeatable) drops repo-specific generated trees in any mode.
-</content>

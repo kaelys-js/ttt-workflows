@@ -10,8 +10,9 @@ import { readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import Database from 'better-sqlite3';
-import { extractUnits, extractComments, isCopyAuditTarget } from './ast-extract.mjs';
+import { extractUnits, extractComments, extractPdf, isCopyAuditTarget } from './ast-extract.mjs';
 import { treeSitterSupports } from './ts-extract.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -57,6 +58,9 @@ const JS_EXT = new Set(['.js', '.ts', '.mjs', '.cjs', '.mts', '.cts']);
 const JSON_EXT = new Set(['.json', '.jsonc', '.json5', '.webmanifest']);
 const YAML_EXT = new Set(['.yml', '.yaml']);
 const TEXT_EXT = new Set(['.txt', '.text', '.typ', '.tpl', '.tsv', '.csv', '.pug', '.jade']);
+// PDF is read-only (extracted for review, never spliced back). Kept in its own set so it
+// is picked up by a repo sweep but routed through the binary reader.
+const DOC_EXT = new Set(['.pdf']);
 const INCLUDE_EXT = new Set([
 	...MD_EXT,
 	...TEMPLATE_EXT,
@@ -65,6 +69,7 @@ const INCLUDE_EXT = new Set([
 	...JSON_EXT,
 	...YAML_EXT,
 	...TEXT_EXT,
+	...DOC_EXT,
 ]);
 
 const SKIP_BASENAME = new Set([
@@ -191,6 +196,22 @@ function git(repo, ...gargs) {
 	}
 	return r.stdout;
 }
+// Like git() but returns raw bytes (no utf8 decode) — for binary blobs such as PDFs.
+function gitShowBuffer(repo, spec) {
+	const r = spawnSync('git', ['-C', repo, 'show', spec], { maxBuffer: 256 * 1024 * 1024 });
+	if (r.status !== 0) {
+		throw new Error(`git show ${spec} failed`);
+	}
+	return r.stdout;
+}
+// Is this path inside a git worktree? verify uses git when it can, and an exact
+// reconstruction of the pre-image when it can't (direct --input / --stdin targets).
+function isGitWorktree(dir) {
+	const r = spawnSync('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], {
+		encoding: 'utf8',
+	});
+	return r.status === 0 && r.stdout.trim() === 'true';
+}
 function fatal(msg) {
 	process.stderr.write(`FATAL: ${msg}\n`);
 	process.exit(phase === 'apply' || phase === 'verify' ? 2 : 1);
@@ -232,14 +253,127 @@ function lineOf(starts, offset) {
 // ---------------------------------------------------------------------------
 // PHASE: extract
 // ---------------------------------------------------------------------------
-if (phase === 'extract') {
-	const { repo, head, db: dbPath } = args;
-	const base = args.full ? EMPTY_TREE : args.base;
-	if (!repo || !base || !head || !dbPath) {
-		fatal('extract needs --repo --base --head --db (or --repo --full --head --db)');
+// Turn a file's text (or, for PDF, its bytes) into copy units for the current mode.
+// PDFs are read-only: extractPdf pulls their text with Node's zlib and tags units
+// 'pdf-text', and the "full text" stored for the reviewer is that extracted text.
+async function ingestFile({ routeName, isPdf, readUtf8, readBuffer }) {
+	if (isPdf) {
+		const { text, units } = extractPdf(readBuffer());
+		return { fullText: text, units };
 	}
+	const content = readUtf8();
+	let units;
+	if (AUDIT_MODE === 'comments') {
+		units = await extractComments(content, routeName);
+	} else if (AUDIT_MODE === 'all') {
+		units = [
+			...(await extractUnits(content, routeName)),
+			...(await extractComments(content, routeName)),
+		];
+	} else {
+		units = await extractUnits(content, routeName);
+	}
+	return { fullText: content, units };
+}
+
+if (phase === 'extract') {
+	const { db: dbPath } = args;
+	if (!dbPath) {
+		fatal('extract needs --db');
+	}
+	// Direct mode: audit one pasted string / standalone file instead of a git range.
+	// Either --input <path> or --stdin (piped text); --as <.ext> hints the format.
+	const directMode = typeof args.input === 'string' || args.stdin === true;
+
 	const db = new Database(dbPath);
 	db.exec(SCHEMA);
+
+	const ins = db.prepare(
+		`INSERT INTO units (repo,file,line_start,line_end,char_start,char_end,syntax,block_text,file_full_text_b64,file_sha) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+	);
+	// One reusable transaction (better-sqlite3 pattern) rather than one closure per file.
+	const insertUnits = db.transaction((repo, file, units, starts, b64, fsha) => {
+		for (const u of units) {
+			ins.run(
+				repo,
+				file,
+				lineOf(starts, u.char_start),
+				lineOf(starts, Math.max(u.char_start, u.char_end - 1)),
+				u.char_start,
+				u.char_end,
+				u.syntax,
+				u.block_text,
+				b64,
+				fsha,
+			);
+		}
+	});
+
+	if (directMode) {
+		const normExt = (e) => (e ? (e.startsWith('.') ? e : `.${e}`) : '');
+		const asExt = normExt(typeof args.as === 'string' ? args.as.toLowerCase() : '');
+		let inputPath = typeof args.input === 'string' ? args.input : null;
+		if (args.stdin === true) {
+			// Read the pasted text off stdin and land it in a real file so apply/verify have
+			// something on disk to splice and check. Use --input as the destination if given,
+			// else a temp file named by the format hint.
+			const piped = readFileSync(0);
+			inputPath =
+				inputPath ??
+				path.join(os.tmpdir(), `copy-audit-paste-${process.pid}-${Date.now()}${asExt || '.txt'}`);
+			writeFileSync(inputPath, piped);
+		}
+		if (!inputPath || !existsSync(inputPath)) {
+			fatal('direct extract needs --input <path> (or --stdin), pointing at a readable file');
+		}
+		const abs = path.resolve(inputPath);
+		const repo = path.dirname(abs);
+		const file = path.basename(abs);
+		const routeName = asExt ? `paste${asExt}` : file;
+		const isPdf = path.extname(routeName).toLowerCase() === '.pdf';
+		db.prepare('DELETE FROM units WHERE repo = ? AND file = ?').run(repo, file);
+		const { fullText, units } = await ingestFile({
+			routeName,
+			isPdf,
+			readUtf8: () => readFileSync(abs, 'utf8'),
+			readBuffer: () => readFileSync(abs),
+		});
+		const starts = lineIndex(fullText);
+		insertUnits(
+			repo,
+			file,
+			units,
+			starts,
+			Buffer.from(fullText, 'utf8').toString('base64'),
+			sha256(fullText),
+		);
+		db.close();
+		console.log(
+			JSON.stringify(
+				{
+					phase: 'extract',
+					mode: 'direct',
+					repo,
+					file,
+					input: abs,
+					pdf: isPdf,
+					total_units: units.length,
+				},
+				null,
+				2,
+			),
+		);
+		process.exit(0);
+	}
+
+	// Git mode: audit a diff range (or --full working tree) of a repo.
+	const { repo, head } = args;
+	const base = args.full ? EMPTY_TREE : args.base;
+	if (!repo || !base || !head) {
+		fatal(
+			'extract needs --repo --base --head --db (or --repo --full --head --db, or --input/--stdin)',
+		);
+	}
 	db.prepare('DELETE FROM units WHERE repo = ?').run(repo);
 
 	if (typeof args['skip-path'] === 'string') {
@@ -272,48 +406,34 @@ if (phase === 'extract') {
 		);
 	});
 
-	const ins = db.prepare(
-		`INSERT INTO units (repo,file,line_start,line_end,char_start,char_end,syntax,block_text,file_full_text_b64,file_sha) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-	);
-	// One reusable transaction (better-sqlite3 pattern) rather than one closure per file.
-	const insertUnits = db.transaction((units, f, starts, b64, fsha) => {
-		for (const u of units) {
-			ins.run(
-				repo,
-				f,
-				lineOf(starts, u.char_start),
-				lineOf(starts, Math.max(u.char_start, u.char_end - 1)),
-				u.char_start,
-				u.char_end,
-				u.syntax,
-				u.block_text,
-				b64,
-				fsha,
-			);
-		}
-	});
 	let n = 0;
 	const perFile = {};
 	for (const f of candidates) {
-		let content;
+		const isPdf = path.extname(f).toLowerCase() === '.pdf';
+		let result;
 		try {
-			content = git(repo, 'show', `${head}:${f}`);
+			result = await ingestFile({
+				routeName: f,
+				isPdf,
+				readUtf8: () => git(repo, 'show', `${head}:${f}`),
+				readBuffer: () => gitShowBuffer(repo, `${head}:${f}`),
+			});
 		} catch {
 			continue;
 		}
-		const units =
-			AUDIT_MODE === 'comments'
-				? await extractComments(content, f)
-				: AUDIT_MODE === 'all'
-					? [...(await extractUnits(content, f)), ...(await extractComments(content, f))]
-					: await extractUnits(content, f);
+		const { fullText, units } = result;
 		if (units.length === 0) {
 			continue;
 		}
-		const starts = lineIndex(content);
-		const b64 = Buffer.from(content, 'utf8').toString('base64');
-		const fsha = sha256(content);
-		insertUnits(units, f, starts, b64, fsha);
+		const starts = lineIndex(fullText);
+		insertUnits(
+			repo,
+			f,
+			units,
+			starts,
+			Buffer.from(fullText, 'utf8').toString('base64'),
+			sha256(fullText),
+		);
 		n += units.length;
 		perFile[f] = units.length;
 	}
@@ -592,6 +712,38 @@ function escapeForSyntax(syntax, rewrite, file, charStart) {
 	return rewrite;
 }
 
+// Apply rewrite/delete rows to a file's content by exact char span, bottom-up so earlier
+// offsets stay valid. Pure — no DB, no I/O — so both apply (to write disk) and the git-free
+// verify (to reconstruct the expected post-image) share one splice, and can never diverge.
+// Callers validate the rows first (drift, testname-delete, null rewrite); this only splices.
+function spliceUnits(content, frs) {
+	let out = content;
+	for (const r of frs.toSorted((a, b) => b.char_start - a.char_start)) {
+		if (r.verdict === 'delete') {
+			let s = r.char_start;
+			let e = r.char_end;
+			let ls = s;
+			while (ls > 0 && out[ls - 1] !== '\n') {
+				ls--;
+			}
+			let le = e;
+			while (le < out.length && out[le] !== '\n') {
+				le++;
+			}
+			// if the span is alone on its line(s), remove the whole line
+			if (out.slice(ls, s).trim() === '' && out.slice(e, le).trim() === '') {
+				s = ls;
+				e = Math.min(le + 1, out.length);
+			}
+			out = out.slice(0, s) + out.slice(e);
+		} else {
+			const replacement = escapeForSyntax(r.syntax, r.rewrite, out, r.char_start);
+			out = out.slice(0, r.char_start) + replacement + out.slice(r.char_end);
+		}
+	}
+	return out;
+}
+
 if (phase === 'apply') {
 	const { db: dbPath, repo } = args;
 	if (!dbPath || !repo) {
@@ -599,9 +751,21 @@ if (phase === 'apply') {
 	}
 	const db = new Database(dbPath);
 	db.exec(SCHEMA);
+	// pdf-text units are review-only — a rewrite can't be spliced back into the binary — so
+	// apply never touches them; their verdicts surface in the report instead.
+	const skippedPdf = db
+		.prepare(
+			`SELECT COUNT(*) c FROM units WHERE verdict IN ('rewrite','delete') AND applied=0 AND repo=? AND syntax='pdf-text'`,
+		)
+		.get(repo).c;
+	if (skippedPdf > 0) {
+		process.stderr.write(
+			`note: ${skippedPdf} pdf-text rewrite(s) are review-only and not applied\n`,
+		);
+	}
 	const rows = db
 		.prepare(
-			`SELECT * FROM units WHERE verdict IN ('rewrite','delete') AND applied=0 AND repo=? ORDER BY file, char_start DESC`,
+			`SELECT * FROM units WHERE verdict IN ('rewrite','delete') AND applied=0 AND repo=? AND syntax!='pdf-text' ORDER BY file, char_start DESC`,
 		)
 		.all(repo);
 	const byFile = new Map();
@@ -619,12 +783,12 @@ if (phase === 'apply') {
 			process.stderr.write(`skip missing: ${file}\n`);
 			continue;
 		}
-		let content = readFileSync(diskPath, 'utf8');
+		const content = readFileSync(diskPath, 'utf8');
 		if (sha256(content) !== frs[0].file_sha) {
 			fatal(`file ${file} changed since extract (sha mismatch); refusing to apply`);
 		}
-		// bottom-up by char_start so earlier offsets stay valid
-		frs.sort((a, b) => b.char_start - a.char_start);
+		// Validate every row against the untouched pre-image (drift, testname-delete, null
+		// rewrite) and record it, then splice once via the shared helper.
 		for (const r of frs) {
 			const cur = content.slice(r.char_start, r.char_end);
 			if (cur !== r.block_text) {
@@ -632,40 +796,22 @@ if (phase === 'apply') {
 					`unit ${file}#${r.id} span drifted (expected ${JSON.stringify(r.block_text)}, found ${JSON.stringify(cur)}); refusing to apply`,
 				);
 			}
-			if (r.verdict === 'delete') {
-				if (r.syntax === 'testname') {
-					fatal(`unit ${file}#${r.id} delete on a testname would break the runner call; refusing`);
-				}
-				// remove the span; if the comment is alone on its line(s), remove the whole line
-				let s = r.char_start;
-				let e = r.char_end;
-				let ls = s;
-				while (ls > 0 && content[ls - 1] !== '\n') {
-					ls--;
-				}
-				let le = e;
-				while (le < content.length && content[le] !== '\n') {
-					le++;
-				}
-				if (content.slice(ls, s).trim() === '' && content.slice(e, le).trim() === '') {
-					s = ls;
-					e = Math.min(le + 1, content.length);
-				}
-				content = content.slice(0, s) + content.slice(e);
-				upd.run(r.id);
-				summary.deleted++;
-				continue;
+			if (r.verdict === 'delete' && r.syntax === 'testname') {
+				fatal(`unit ${file}#${r.id} delete on a testname would break the runner call; refusing`);
 			}
-			if (r.rewrite === null || r.rewrite === undefined) {
+			if (r.verdict !== 'delete' && (r.rewrite === null || r.rewrite === undefined)) {
 				fatal(`unit ${file}#${r.id} verdict=rewrite but rewrite text is null`);
 			}
-			const replacement = escapeForSyntax(r.syntax, r.rewrite, content, r.char_start);
-			content = content.slice(0, r.char_start) + replacement + content.slice(r.char_end);
 			upd.run(r.id);
-			summary.rewritten++;
+			if (r.verdict === 'delete') {
+				summary.deleted++;
+			} else {
+				summary.rewritten++;
+			}
 		}
+		const newContent = spliceUnits(content, frs);
 		const tmp = diskPath + '.tmp';
-		writeFileSync(tmp, content);
+		writeFileSync(tmp, newContent);
 		renameSync(tmp, diskPath);
 		summary.files++;
 	}
@@ -683,8 +829,8 @@ if (phase === 'verify') {
 		fatal('verify needs --db --repo');
 	}
 	const db = new Database(dbPath);
-	const files = git(repo, 'diff', '--name-only').split('\n').filter(Boolean);
-	const rows = db.prepare(`SELECT * FROM units WHERE applied = 1`).all();
+	// pdf-text is never applied, so it can never have moved a byte on disk — exclude it.
+	const rows = db.prepare(`SELECT * FROM units WHERE applied = 1 AND syntax != 'pdf-text'`).all();
 	const rangesByFile = new Map();
 	for (const r of rows) {
 		if (!rangesByFile.has(r.file)) {
@@ -692,43 +838,80 @@ if (phase === 'verify') {
 		}
 		rangesByFile.get(r.file).push([r.line_start, r.line_end]);
 	}
-	for (const f of files) {
-		const ranges = rangesByFile.get(f);
-		if (!ranges) {
-			process.stderr.write(`skip verify (not in DB): ${f}\n`);
-			continue;
+	const useGit = isGitWorktree(repo);
+	let files;
+	if (useGit) {
+		// Git target: assert every changed hunk lies within a recorded copy line-range.
+		files = git(repo, 'diff', '--name-only').split('\n').filter(Boolean);
+		for (const f of files) {
+			const ranges = rangesByFile.get(f);
+			if (!ranges) {
+				process.stderr.write(`skip verify (not in DB): ${f}\n`);
+				continue;
+			}
+			const raw = git(repo, 'diff', '--unified=0', '--', f);
+			for (const line of raw.split('\n')) {
+				const m = line.match(/^@@ -(\d+)(?:,(\d+))? \+/);
+				if (!m) {
+					continue;
+				}
+				const oldStart = Number.parseInt(m[1], 10);
+				const oldLen = m[2] ? Number.parseInt(m[2], 10) : 1;
+				if (oldLen === 0) {
+					continue;
+				}
+				const oldEnd = oldStart + oldLen - 1;
+				const coverage = new Uint8Array(oldEnd - oldStart + 3);
+				for (const [s, e] of ranges) {
+					const lo = Math.max(s - 1, oldStart - 1);
+					const hi = Math.min(e + 1, oldEnd + 1);
+					for (let ln = lo; ln <= hi; ln++) {
+						coverage[ln - (oldStart - 1)] = 1;
+					}
+				}
+				let uncovered = null;
+				for (let ln = oldStart; ln <= oldEnd; ln++) {
+					if (!coverage[ln - (oldStart - 1)]) {
+						uncovered = ln;
+						break;
+					}
+				}
+				if (uncovered !== null) {
+					fatal(
+						`hunk ${f}:${oldStart}-${oldEnd} touches non-copy lines (first uncovered: ${uncovered})`,
+					);
+				}
+			}
 		}
-		const raw = git(repo, 'diff', '--unified=0', '--', f);
-		for (const line of raw.split('\n')) {
-			const m = line.match(/^@@ -(\d+)(?:,(\d+))? \+/);
-			if (!m) {
+	} else {
+		// Direct target (no git): reconstruct each file's expected post-image from its stored
+		// pre-image plus the applied rewrites, and assert it matches disk byte-for-byte. Since
+		// the reconstruction only ever splices recorded copy spans, an exact match proves no
+		// code/structure outside those spans changed.
+		const rowsByFile = new Map();
+		const preByFile = new Map();
+		for (const r of rows) {
+			if (!rowsByFile.has(r.file)) {
+				rowsByFile.set(r.file, []);
+				preByFile.set(r.file, Buffer.from(r.file_full_text_b64, 'base64').toString('utf8'));
+			}
+			rowsByFile.get(r.file).push(r);
+		}
+		files = [...rowsByFile.keys()];
+		for (const f of files) {
+			const diskPath = path.join(repo, f);
+			if (!existsSync(diskPath)) {
+				process.stderr.write(`skip verify (missing): ${f}\n`);
 				continue;
 			}
-			const oldStart = Number.parseInt(m[1], 10);
-			const oldLen = m[2] ? Number.parseInt(m[2], 10) : 1;
-			if (oldLen === 0) {
-				continue;
-			}
-			const oldEnd = oldStart + oldLen - 1;
-			const coverage = new Uint8Array(oldEnd - oldStart + 3);
-			for (const [s, e] of ranges) {
-				const lo = Math.max(s - 1, oldStart - 1);
-				const hi = Math.min(e + 1, oldEnd + 1);
-				for (let ln = lo; ln <= hi; ln++) {
-					coverage[ln - (oldStart - 1)] = 1;
+			const disk = readFileSync(diskPath, 'utf8');
+			const expected = spliceUnits(preByFile.get(f), rowsByFile.get(f));
+			if (disk !== expected) {
+				let i = 0;
+				while (i < disk.length && i < expected.length && disk[i] === expected[i]) {
+					i++;
 				}
-			}
-			let uncovered = null;
-			for (let ln = oldStart; ln <= oldEnd; ln++) {
-				if (!coverage[ln - (oldStart - 1)]) {
-					uncovered = ln;
-					break;
-				}
-			}
-			if (uncovered !== null) {
-				fatal(
-					`hunk ${f}:${oldStart}-${oldEnd} touches non-copy lines (first uncovered: ${uncovered})`,
-				);
+				fatal(`file ${f} differs from the copy-only reconstruction at char ${i}; refusing to pass`);
 			}
 		}
 	}
@@ -746,12 +929,13 @@ if (phase === 'verify') {
 	const c = (v) => db.prepare(`SELECT COUNT(*) c FROM units WHERE verdict=?`).get(v).c;
 	const out = {
 		phase: 'verify',
+		mode: useGit ? 'git' : 'direct',
 		files_touched: files.filter((f) => rangesByFile.has(f)).length,
 		kept: c('keep'),
 		rewritten: c('rewrite'),
 		flagged: c('flag'),
 		code_line_changes: 0,
-		stat: git(repo, 'diff', '--stat').trim(),
+		stat: useGit ? git(repo, 'diff', '--stat').trim() : `${files.length} file(s) reconstructed`,
 	};
 	db.close();
 	console.log(JSON.stringify(out, null, 2));

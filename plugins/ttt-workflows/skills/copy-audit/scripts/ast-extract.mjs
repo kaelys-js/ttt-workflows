@@ -20,6 +20,7 @@ import { gfm } from 'micromark-extension-gfm';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
 import YAML from 'yaml';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { extractTreeSitter, extractTreeSitterComments, treeSitterSupports } from './ts-extract.mjs';
 
 // ---------------------------------------------------------------------------
@@ -1335,6 +1336,190 @@ function extractText(src) {
 	}
 	flush();
 	return units;
+}
+
+// ---------------------------------------------------------------------------
+// PDF — best-effort text extraction using only Node builtins (zlib), so the skill
+// stays dependency-free and offline. Copy is read-only for PDFs: a rewrite can't be
+// spliced back into the binary, so units carry syntax 'pdf-text' and apply skips them —
+// the reviewer's verdicts are the deliverable (a report), not an in-place edit.
+// Complex PDFs (Type0/CID fonts, encryption, unusual encodings) may extract partially.
+// ---------------------------------------------------------------------------
+
+// Decode a PDF literal string body (the bytes between the parentheses), handling the
+// backslash escapes the spec defines (\n \r \t \b \f \( \) \\ and up to 3 octal digits).
+function decodePdfLiteral(s) {
+	let out = '';
+	for (let i = 0; i < s.length; i++) {
+		const c = s[i];
+		if (c !== '\\') {
+			out += c;
+			continue;
+		}
+		const n = s[++i];
+		if (n === undefined) {
+			break;
+		}
+		if (n === 'n') {
+			out += '\n';
+		} else if (n === 'r') {
+			out += '\r';
+		} else if (n === 't') {
+			out += '\t';
+		} else if (n === 'b') {
+			out += '\b';
+		} else if (n === 'f') {
+			out += '\f';
+		} else if (n >= '0' && n <= '7') {
+			let oct = n;
+			while (oct.length < 3 && s[i + 1] >= '0' && s[i + 1] <= '7') {
+				oct += s[++i];
+			}
+			out += String.fromCodePoint(Number.parseInt(oct, 8) & 0xff);
+		} else if (n === '\n') {
+			// line continuation — the escaped newline is dropped
+		} else {
+			out += n; // \( \) \\ and any other escaped char is literal
+		}
+	}
+	return out;
+}
+
+function decodePdfHex(h) {
+	let hex = h.replaceAll(/[^0-9a-fA-F]/g, '');
+	if (hex.length % 2 === 1) {
+		hex += '0';
+	}
+	let out = '';
+	for (let i = 0; i < hex.length; i += 2) {
+		out += String.fromCodePoint(Number.parseInt(hex.slice(i, i + 2), 16));
+	}
+	return out;
+}
+
+// Walk one decoded content stream and pull the text-showing operators into readable text.
+// Tj/' /" show one string; TJ shows an array of strings (numbers are kern adjustments we
+// ignore); Td/TD/T* and the quote operators start a new line.
+function textFromContentStream(content) {
+	let out = '';
+	const strings = []; // operands seen since the last operator
+	let i = 0;
+	const n = content.length;
+	const readLiteral = () => {
+		let depth = 1;
+		let body = '';
+		i++; // consume '('
+		while (i < n && depth > 0) {
+			const c = content[i];
+			if (c === '\\') {
+				body += c + (content[i + 1] ?? '');
+				i += 2;
+				continue;
+			}
+			if (c === '(') {
+				depth++;
+			} else if (c === ')') {
+				depth--;
+				if (depth === 0) {
+					i++;
+					break;
+				}
+			}
+			body += c;
+			i++;
+		}
+		return decodePdfLiteral(body);
+	};
+	while (i < n) {
+		const c = content[i];
+		if (c === '(') {
+			strings.push(readLiteral());
+			continue;
+		}
+		if (c === '<' && content[i + 1] !== '<') {
+			const end = content.indexOf('>', i);
+			if (end === -1) {
+				break;
+			}
+			strings.push(decodePdfHex(content.slice(i + 1, end)));
+			i = end + 1;
+			continue;
+		}
+		if (/[A-Za-z'"*]/.test(c)) {
+			let op = '';
+			while (i < n && /[A-Za-z0-9'"*]/.test(content[i])) {
+				op += content[i++];
+			}
+			if (op === 'Tj' || op === "'" || op === '"') {
+				if (op !== 'Tj') {
+					out += '\n';
+				}
+				out += strings.join('');
+				out += ' ';
+			} else if (op === 'TJ') {
+				out += strings.join('') + ' ';
+			} else if (op === 'Td' || op === 'TD' || op === 'T*') {
+				out += '\n';
+			}
+			strings.length = 0;
+			continue;
+		}
+		i++;
+	}
+	return out;
+}
+
+export function extractPdf(buffer) {
+	const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+	const raw = bytes.toString('latin1'); // 1 byte -> 1 char, so string indices are byte offsets
+	let text = '';
+	const streamRe = /stream\r?\n/g;
+	let m;
+	while ((m = streamRe.exec(raw)) !== null) {
+		const dictStart = raw.lastIndexOf('<<', m.index);
+		const dict = dictStart === -1 ? '' : raw.slice(dictStart, m.index);
+		const dataStart = m.index + m[0].length;
+		const end = raw.indexOf('endstream', dataStart);
+		if (end === -1) {
+			break;
+		}
+		let data = bytes.subarray(dataStart, end);
+		// trim a single trailing EOL before endstream (per spec the EOL is not stream data)
+		if (data.length && data.at(-1) === 0x0a) {
+			data = data.subarray(0, -1);
+			if (data.length && data.at(-1) === 0x0d) {
+				data = data.subarray(0, -1);
+			}
+		}
+		let decoded;
+		if (/\/FlateDecode\b/.test(dict)) {
+			try {
+				decoded = zlib.inflateSync(data).toString('latin1');
+			} catch {
+				try {
+					decoded = zlib.inflateRawSync(data).toString('latin1');
+				} catch {
+					decoded = '';
+				}
+			}
+		} else if (/\/(LZW|ASCII85|ASCIIHex|RunLength|DCT|JPX|CCITT|JBIG2)Decode\b/.test(dict)) {
+			decoded = ''; // filters we don't implement — skip rather than emit garbage
+		} else {
+			decoded = data.toString('latin1');
+		}
+		if (decoded && /\b(Tj|TJ)\b|['"]\s*$/m.test(decoded)) {
+			text += textFromContentStream(decoded) + '\n';
+		}
+		streamRe.lastIndex = end + 'endstream'.length;
+	}
+	// collapse runs of blank lines / trailing spaces the operator heuristic can introduce
+	text = text
+		.replaceAll('\r', '')
+		.replaceAll(/[ \t]+\n/g, '\n')
+		.replaceAll(/\n{3,}/g, '\n\n')
+		.trim();
+	const units = extractText(text).map((u) => ({ ...u, syntax: 'pdf-text' }));
+	return { text, units };
 }
 
 // ---------------------------------------------------------------------------

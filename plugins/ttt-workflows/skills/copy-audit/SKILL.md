@@ -97,6 +97,7 @@ safe and the DB alone tells you where a sweep is in its lifecycle.
 ### 1. `extract` — parse copy units
 
 ```text
+# Git mode — a diff range or the whole working tree:
 node scripts/extract.mjs --phase=extract \
   --repo <repo>            # absolute path to a git worktree
   --base <sha>             # baseline ref (exclusive); omit when --full is set
@@ -106,12 +107,24 @@ node scripts/extract.mjs --phase=extract \
                            #   audited, not just those added in a range (two-dot diff)
   [--files-list <path>]    # optional newline-separated file allowlist
   [--skip-path <substr>]   # optional extra path-substring skips (comma-sep / repeatable)
+
+# Direct mode — audit one pasted string / standalone file, no git needed:
+node scripts/extract.mjs --phase=extract --db <path> --input <file> [--as <.ext>]
+printf '%s' "$PASTED" | node scripts/extract.mjs --phase=extract --db <path> --stdin --as <.ext>
 ```
 
 Walks `git diff --name-only ${base}...${head}` (or the whole tree with `--full`), filters
 by extension + skip rules, and for each survivor parses every **copy unit** into the
 `units` table, recording exact `char_start`/`char_end` offsets of the editable payload.
 Wipes rows for this `repo` first so re-runs are clean.
+
+**Direct input (`--input` / `--stdin`).** To audit pasted text or a single file that is not
+in a git repo, pass `--input <file>` (or pipe the text with `--stdin`), and `--as <.ext>` to
+declare the format (`.md`, `.json`, `.html`, …) so the right extractor runs. The rest of the
+pipeline is unchanged — `apply` still splices by SHA-guarded char offset, and `verify` proves
+the copy-only invariant by reconstructing the file from its pre-image + the applied rewrites
+(an exact match means nothing outside a recorded span moved). With `--stdin`, the text is
+written to a real file (use `--input` to choose where) so apply/verify have something on disk.
 
 **File types → unit kinds:**
 
@@ -134,6 +147,7 @@ Wipes rows for this `repo` first so re-runs are clean.
 | `.tsv` (tab/pipe-delimited)                                                                                                                                                                                                                                                                                                                                                                                                      | phrase-shaped cells                                                                                                                                                                                                                                                         | `tsv-cell`                                                                        |
 | `LICENSE` / `NOTICE` / `VERSION` / `AUTHORS` and other extension-less prose                                                                                                                                                                                                                                                                                                                                                      | paragraphs                                                                                                                                                                                                                                                                  | `text-line`                                                                       |
 | `.typ` (Typst)                                                                                                                                                                                                                                                                                                                                                                                                                   | `#show/.with(…)` string metadata, `=` headings, body prose                                                                                                                                                                                                                  | `typ-copy`, `md-heading`, `md-prose`                                              |
+| `.pdf` (**read-only**)                                                                                                                                                                                                                                                                                                                                                                                                           | visible text pulled with Node's built-in `zlib` (FlateDecode + uncompressed streams; `Tj`/`TJ`/hex strings) into prose paragraphs — reviewed and reported, never spliced back into the binary; `apply` skips them                                                           | `pdf-text`                                                                        |
 
 Tree-sitter runs on **web-tree-sitter (WASM)** against modern-ABI grammar wasms vendored
 in `scripts/grammars/` (most collected prebuilt from their npm packages; Swift and Dart
@@ -227,8 +241,10 @@ For every row with `verdict='rewrite' AND applied=0`:
   text. Quotes, tags, `#`/`-` markers, and JSON commas are never touched. Applied
   bottom-up by offset so earlier spans stay valid.
 
-`keep` and `flag` **never write** — `flag` is surfaced in the report only. Sets
-`applied=1` per row; prints `{files, rewritten}`.
+`keep` and `flag` **never write** — `flag` is surfaced in the report only. `pdf-text`
+units are review-only and are **never applied** (a rewrite can't be spliced into a binary
+PDF); a note reports how many were skipped. Sets `applied=1` per applied row; prints
+`{files, rewritten}`.
 
 ### 6. `verify` — assert only copy spans changed
 
@@ -237,10 +253,12 @@ node scripts/extract.mjs --phase=verify --db <path> --repo <path>
   [--post-verify-cmd '<shell>']   # optional repo formatter/linter; non-zero is reported, not fatal
 ```
 
-For every currently-modified file, every pre-image diff hunk must be covered by recorded
-copy line-ranges (1-line slack per edge). Any uncovered hunk ⇒ FATAL. Files not in this
-DB are skipped with a warning. Reports `kept / rewritten / flagged` + a per-file diff
-stat.
+For a git target, every pre-image diff hunk must be covered by recorded copy line-ranges
+(1-line slack per edge); any uncovered hunk ⇒ FATAL. For a direct target (`--input` /
+`--stdin`, no git worktree), verify instead reconstructs each file from its stored
+pre-image plus the applied rewrites and asserts it matches disk byte-for-byte — an exact
+match proves nothing outside a recorded copy span changed. Files not in this DB are skipped
+with a warning. Reports `mode`, `kept / rewritten / flagged`, and a per-file stat.
 
 ### 7. `holistic-emit` — pack the whole corpus for a cross-cutting review
 

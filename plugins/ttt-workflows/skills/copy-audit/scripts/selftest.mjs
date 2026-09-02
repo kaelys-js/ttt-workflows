@@ -16,6 +16,7 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const engine = join(scriptDir, 'extract.mjs');
@@ -613,6 +614,233 @@ if (r.status === 0) {
 	ok('comment mode verify (comment-only invariant holds)');
 } else {
 	fail(`comment mode verify failed: ${r.stderr}`);
+}
+
+// ---- direct input (--input): audit a pasted / standalone file with no git repo ----
+const dDir = join(root, 'direct');
+spawnSync('mkdir', ['-p', dDir]);
+const pastePath = join(dDir, 'paste.md');
+writeFileSync(pastePath, '# Welcome\n\nPlease utilize the below button in order to get started.\n');
+const dDb = join(root, 'direct.db');
+r = spawnSync('node', [engine, '--phase=extract', '--db', dDb, '--input', pastePath], {
+	encoding: 'utf8',
+});
+const dOut = JSON.parse(r.stdout || '{}');
+const dRows = JSON.parse(
+	sql(dDb, 'SELECT id, syntax, block_text FROM units ORDER BY id;', true) || '[]',
+);
+if (
+	r.status === 0 &&
+	dOut.mode === 'direct' &&
+	dRows.length === 2 &&
+	dRows.some((x) => x.syntax === 'md-heading') &&
+	dRows.some((x) => x.syntax === 'md-prose')
+) {
+	ok(`direct --input: ${dRows.length} units (mode=${dOut.mode})`);
+} else {
+	fail(
+		`direct --input off: status=${r.status} ${JSON.stringify(dOut)} rows=${JSON.stringify(dRows)}`,
+	);
+}
+const dHeading = dRows.find((x) => x.syntax === 'md-heading');
+const dProse = dRows.find((x) => x.syntax === 'md-prose');
+writeFileSync(
+	join(root, 'dv.json'),
+	JSON.stringify([
+		{ id: dHeading.id, verdict: 'keep', rewrite: null },
+		{
+			id: dProse.id,
+			verdict: 'rewrite',
+			rewrite: 'Use the button to get started.',
+			category: 'plain-language',
+			severity: 'low',
+			note: 'plain',
+		},
+	]),
+);
+spawnSync('node', [
+	engine,
+	'--phase=apply-verdicts',
+	'--db',
+	dDb,
+	'--verdicts',
+	join(root, 'dv.json'),
+]);
+spawnSync('node', [engine, '--phase=apply', '--db', dDb, '--repo', dDir]);
+const dAfter = readFileSync(pastePath, 'utf8');
+r = spawnSync('node', [engine, '--phase=verify', '--db', dDb, '--repo', dDir], {
+	encoding: 'utf8',
+});
+const dvOut = JSON.parse(r.stdout || '{}');
+if (
+	r.status === 0 &&
+	dvOut.mode === 'direct' &&
+	/^# Welcome/m.test(dAfter) &&
+	/Use the button to get started\./.test(dAfter) &&
+	!/utilize/.test(dAfter)
+) {
+	ok('direct apply + git-free verify (copy-only reconstruction holds, marker preserved)');
+} else {
+	fail(`direct apply/verify off: status=${r.status} ${JSON.stringify(dvOut)}\n${dAfter}`);
+}
+// git-free verify must REJECT a file tampered outside a recorded copy span
+writeFileSync(pastePath, dAfter + '\nUnexpected injected line of prose here.\n');
+r = spawnSync('node', [engine, '--phase=verify', '--db', dDb, '--repo', dDir], {
+	encoding: 'utf8',
+});
+if (r.status !== 0 && /reconstruction/i.test(r.stderr)) {
+	ok('direct verify rejects an out-of-span change (reconstruction mismatch)');
+} else {
+	fail(`direct verify should have failed on tamper: status=${r.status} ${r.stderr}`);
+}
+
+// ---- stdin (--stdin --as): pasted text piped in ----
+const sDb = join(root, 'stdin.db');
+r = spawnSync('node', [engine, '--phase=extract', '--db', sDb, '--stdin', '--as', '.txt'], {
+	input: 'Sign up now to leverage our best-in-class synergy today.\n',
+	encoding: 'utf8',
+});
+const sOut = JSON.parse(r.stdout || '{}');
+const sCount = Number(sql(sDb, 'SELECT COUNT(*) FROM units;').trim());
+if (r.status === 0 && sOut.mode === 'direct' && sCount >= 1) {
+	ok(`stdin --as .txt: ${sCount} unit(s)`);
+} else {
+	fail(`stdin extract off: status=${r.status} ${JSON.stringify(sOut)} count=${sCount}`);
+}
+
+// ---- PDF (read-only): extract text, apply must skip pdf-text units ----
+const pdfPath = join(dDir, 'doc.pdf');
+const pdfBytes = Buffer.from(
+	[
+		'%PDF-1.4',
+		'1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj',
+		'2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj',
+		'3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R>>endobj',
+		'4 0 obj<</Length 130>>',
+		'stream',
+		'BT /F1 24 Tf 72 700 Td (Click here to leverage our platform) Tj 0 -30 Td (Please utilize the form below to get started) Tj ET',
+		'endstream',
+		'endobj',
+		'%%EOF',
+	].join('\n'),
+	'latin1',
+);
+writeFileSync(pdfPath, pdfBytes);
+const pDb = join(root, 'pdf.db');
+r = spawnSync('node', [engine, '--phase=extract', '--db', pDb, '--input', pdfPath], {
+	encoding: 'utf8',
+});
+const pOut = JSON.parse(r.stdout || '{}');
+const pRows = JSON.parse(sql(pDb, 'SELECT id, syntax, block_text FROM units;', true) || '[]');
+if (
+	r.status === 0 &&
+	pOut.pdf === true &&
+	pRows.length >= 1 &&
+	pRows.every((x) => x.syntax === 'pdf-text') &&
+	pRows.some((x) => /get started/i.test(x.block_text))
+) {
+	ok(`pdf extract: ${pRows.length} pdf-text unit(s) with readable copy`);
+} else {
+	fail(`pdf extract off: status=${r.status} ${JSON.stringify(pOut)} rows=${JSON.stringify(pRows)}`);
+}
+writeFileSync(
+	join(root, 'pv.json'),
+	JSON.stringify([
+		{
+			id: pRows[0].id,
+			verdict: 'rewrite',
+			rewrite: 'X',
+			category: 'microcopy',
+			severity: 'low',
+			note: 'n',
+		},
+	]),
+);
+spawnSync('node', [
+	engine,
+	'--phase=apply-verdicts',
+	'--db',
+	pDb,
+	'--verdicts',
+	join(root, 'pv.json'),
+]);
+const pdfBefore = readFileSync(pdfPath);
+r = spawnSync('node', [engine, '--phase=apply', '--db', pDb, '--repo', dDir], { encoding: 'utf8' });
+const pApply = JSON.parse(r.stdout || '{}');
+const pdfAfter = readFileSync(pdfPath);
+if (pApply.rewritten === 0 && Buffer.compare(pdfBefore, pdfAfter) === 0) {
+	ok('pdf apply skipped (review-only; pdf bytes untouched)');
+} else {
+	fail(
+		`pdf apply should be a no-op: ${JSON.stringify(pApply)} bytesEqual=${Buffer.compare(pdfBefore, pdfAfter) === 0}`,
+	);
+}
+// FlateDecode content stream (the common real-world case) also extracts
+const flateStream = 'BT /F1 12 Tf 72 700 Td (Reset your password securely today) Tj ET';
+const comp = zlib.deflateSync(Buffer.from(flateStream, 'latin1'));
+const flatePath = join(dDir, 'flate.pdf');
+writeFileSync(
+	flatePath,
+	Buffer.concat([
+		Buffer.from(
+			`%PDF-1.5\n1 0 obj<</Length ${comp.length}/Filter/FlateDecode>>\nstream\n`,
+			'latin1',
+		),
+		comp,
+		Buffer.from('\nendstream\nendobj\n%%EOF', 'latin1'),
+	]),
+);
+const fDb = join(root, 'flate.db');
+spawnSync('node', [engine, '--phase=extract', '--db', fDb, '--input', flatePath], {
+	encoding: 'utf8',
+});
+const fHit = Number(
+	sql(fDb, "SELECT COUNT(*) FROM units WHERE block_text LIKE '%Reset your password%';").trim(),
+);
+if (fHit >= 1) {
+	ok('pdf FlateDecode stream extracted');
+} else {
+	fail('pdf FlateDecode extraction failed');
+}
+// Mixed operators: a hex-string Tj and a TJ array, plus an unsupported-filter stream and a
+// filler stream with no text operators (both skipped) — exercises those branches.
+const mixedPath = join(dDir, 'mixed.pdf');
+writeFileSync(
+	mixedPath,
+	Buffer.from(
+		[
+			'%PDF-1.4',
+			'1 0 obj<</Length 60>>',
+			'stream',
+			'BT /F1 12 Tf 72 700 Td <53617665207468652064617921> Tj [(Welcome )(back home)] TJ ET',
+			'endstream endobj',
+			'2 0 obj<</Length 8/Filter/LZWDecode>>',
+			'stream',
+			'RAWBYTES',
+			'endstream endobj',
+			'3 0 obj<</Length 5>>',
+			'stream',
+			'q Q h',
+			'endstream endobj',
+			'%%EOF',
+		].join('\n'),
+		'latin1',
+	),
+);
+const mDb = join(root, 'mixed.db');
+spawnSync('node', [engine, '--phase=extract', '--db', mDb, '--input', mixedPath], {
+	encoding: 'utf8',
+});
+const mHex = Number(
+	sql(mDb, "SELECT COUNT(*) FROM units WHERE block_text LIKE '%Save the day%';").trim(),
+);
+const mArr = Number(
+	sql(mDb, "SELECT COUNT(*) FROM units WHERE block_text LIKE '%Welcome back home%';").trim(),
+);
+if (mHex >= 1 && mArr >= 1) {
+	ok('pdf hex-string + TJ-array operators extracted (unsupported/empty streams skipped)');
+} else {
+	fail(`pdf mixed operators off: hex=${mHex} arr=${mArr}`);
 }
 
 rmSync(root, { recursive: true, force: true });

@@ -131,4 +131,3 @@ code string/identifier that slipped through, verdict `keep`.
 `plain-language` | `inclusive` | `microcopy` | `voice-grammar` (copy) · `comment` | `testname`
 (comments). The holistic pass ([deep-dive.md](deep-dive.md) §12) adds `consistency` and
 `repetition` for cross-cutting findings.
-</content>

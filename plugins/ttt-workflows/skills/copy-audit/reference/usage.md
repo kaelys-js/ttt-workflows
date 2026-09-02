@@ -80,6 +80,34 @@ node "$SKILL" --phase=verify --db "$DB" --repo "$REPO"
 `--post-verify-cmd 'npx prettier -w $(git diff --name-only)'` (or the repo's formatter) —
 its non-zero exit is reported, not fatal.
 
+## Pasted text or a single file (direct mode)
+
+No git repo needed — point `extract` at a file, or pipe the text in:
+
+```bash
+# a standalone file (--as overrides the format if the extension is misleading)
+node "$SKILL" --phase=extract --db "$DB" --input /abs/landing-copy.md
+
+# pasted text over stdin
+pbpaste | node "$SKILL" --phase=extract --db "$DB" --stdin --as .md
+```
+
+Then bundle-emit → review → apply-verdicts → `apply --repo <dir>` → `verify --repo <dir>`
+exactly as below, where `<dir>` is the directory the extract output reported (`repo`). Apply
+is SHA-guarded; verify reconstructs the file from its pre-image plus the applied rewrites and
+asserts a byte-for-byte match, so the copy-only invariant holds without git.
+
+## PDF (read-only)
+
+```bash
+node "$SKILL" --phase=extract --db "$DB" --input /abs/brochure.pdf
+```
+
+Text is pulled from the PDF's content streams into `pdf-text` units and reviewed like any
+other copy — but a PDF is **never rewritten in place** (`apply` skips `pdf-text`, reporting how
+many it skipped). The deliverable is the verdict/flag report; use it to fix the copy in the
+source document. Complex PDFs (CID/Type0 fonts, encryption) may extract only partially.
+
 ## Resuming / deferring
 
 - Re-running any phase is safe. `apply-verdicts` only touches `pending` rows; `apply`

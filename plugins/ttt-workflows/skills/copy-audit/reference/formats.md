@@ -6,6 +6,17 @@ extension map in `scripts/ts-extract.mjs`, and the vendored grammars in `scripts
 Every captured string still passes the one `isCopyPhrase` classifier before it becomes a unit
 (see [deep-dive.md](deep-dive.md) §4).
 
+## Input sources
+
+The same extractors run on two kinds of input:
+
+- **Git** — `extract --repo <r> (--full | --base/--head)`: a diff range or the whole working
+  tree, read from git. This is the whole-repo/PR sweep.
+- **Direct** — `extract --input <file>` or `--stdin --as <.ext>`: one pasted string or a
+  standalone file with no git repo. `--as` declares the format so the right extractor runs;
+  `apply` and `verify` work as usual (verify reconstructs the pre-image + applied rewrites and
+  compares to disk, since there is no git diff to check against).
+
 ## Copy mode — extractor matrix
 
 | extensions | extractor | copy units captured | `syntax` |
@@ -21,6 +32,7 @@ Every captured string still passes the one `isCopyPhrase` classifier before it b
 | `.env` `.env.*` | env scanner | `#` comment prose + `KEY=value` values that read like copy (NAME/TITLE/MESSAGE… keys) | `config-comment` `env-value` |
 | `.ini` `.cfg` `.conf` `.properties` `.editorconfig` · rc + ignore files (`.gitignore`, `.npmrc`, `CODEOWNERS`, …) | hash-config scanner | `#`/`;` comment prose + phrase-shaped `key=value` (patterns/paths/rules dropped) | `config-comment` `config-value` |
 | `.txt` `.text` `.tpl` `.pug` `.jade` · extension-less prose (`LICENSE`, `NOTICE`, `AUTHORS`, `VERSION`, …) | paragraph scanner | prose paragraphs | `text-line` |
+| `.pdf` (**read-only**) | built-in `zlib` PDF text extractor | visible text from content streams (FlateDecode + uncompressed; `Tj`/`TJ`/literal + hex strings) as prose paragraphs — reviewed and reported, never spliced back into the binary; `apply` skips these units | `pdf-text` |
 | **tree-sitter languages** (below) | web-tree-sitter (WASM) | string literals (interpolation-skipped, quote-stripped, bare docstrings excluded); a string that is the first arg to a UI/copy marker call is kept even as a terse label | `code-string` |
 
 ### Tree-sitter languages (vendored grammars)
@@ -112,4 +124,3 @@ always treated as non-copy. The full sets live in `ast-extract.mjs`.
 `/vendor/`, snapshots). `README*` and other docs are **kept** — they are prime copy. Test/spec
 paths are skipped in copy mode and kept in comments mode. Append repo-specific skips with
 `--skip-path`.
-</content>

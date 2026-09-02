@@ -25,7 +25,10 @@ section here as the GitHub Release notes.
   mode, comment-quality plus Rule 9. Verdicts are keep/rewrite/flag/delete and every rewrite
   is a SHA-guarded char-offset splice that changes text but never code structure, with a
   verify phase asserting zero code-line changes. Read-only until you approve the rewrites.
-  Subsumes the standalone comment-audit skill.
+  Subsumes the standalone comment-audit skill. Runs against a git repo/diff, against pasted
+  text or a standalone file with no git (`--input` / `--stdin --as`, verified by exact
+  pre-image reconstruction), and against **PDFs** (text pulled with Node's built-in zlib and
+  reviewed read-only — never spliced back into the binary).
 - Marketing site: a fourth skill card, a copy-audit mockup, FAQ entries, and an Operator's
   Playbook PDF for copy-audit.
 
