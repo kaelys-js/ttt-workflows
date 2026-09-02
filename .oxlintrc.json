@@ -1,5 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxlint-config/main/schema.json",
+	"ignorePatterns": ["**/node_modules/**", "**/scripts/grammars/**"],
 	"categories": {
 		"correctness": "error",
 		"suspicious": "error",

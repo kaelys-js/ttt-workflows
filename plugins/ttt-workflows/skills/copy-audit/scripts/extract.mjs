@@ -275,6 +275,23 @@ if (phase === 'extract') {
 	const ins = db.prepare(
 		`INSERT INTO units (repo,file,line_start,line_end,char_start,char_end,syntax,block_text,file_full_text_b64,file_sha) VALUES (?,?,?,?,?,?,?,?,?,?)`,
 	);
+	// One reusable transaction (better-sqlite3 pattern) rather than one closure per file.
+	const insertUnits = db.transaction((units, f, starts, b64, fsha) => {
+		for (const u of units) {
+			ins.run(
+				repo,
+				f,
+				lineOf(starts, u.char_start),
+				lineOf(starts, Math.max(u.char_start, u.char_end - 1)),
+				u.char_start,
+				u.char_end,
+				u.syntax,
+				u.block_text,
+				b64,
+				fsha,
+			);
+		}
+	});
 	let n = 0;
 	const perFile = {};
 	for (const f of candidates) {
@@ -296,24 +313,8 @@ if (phase === 'extract') {
 		const starts = lineIndex(content);
 		const b64 = Buffer.from(content, 'utf8').toString('base64');
 		const fsha = sha256(content);
-		const tx = db.transaction(() => {
-			for (const u of units) {
-				ins.run(
-					repo,
-					f,
-					lineOf(starts, u.char_start),
-					lineOf(starts, Math.max(u.char_start, u.char_end - 1)),
-					u.char_start,
-					u.char_end,
-					u.syntax,
-					u.block_text,
-					b64,
-					fsha,
-				);
-				n++;
-			}
-		});
-		tx();
+		insertUnits(units, f, starts, b64, fsha);
+		n += units.length;
 		perFile[f] = units.length;
 	}
 	db.close();
@@ -401,7 +402,7 @@ if (phase === 'bundle-emit') {
 		}
 		byFile.get(r.file).push(r);
 	}
-	const BUDGET = 40000;
+	const BUDGET = 40_000;
 	const system = reviewerSystemPrompt();
 	const bundles = [];
 	let cur = { files: [], ids: [], chars: 0 };
@@ -527,33 +528,36 @@ function escapeForSyntax(syntax, rewrite, file, charStart) {
 	}
 	if (syntax === 'js-string' || syntax === 'code-string') {
 		const q = prev;
-		let out = rewrite.replace(/\\/g, '\\\\');
+		let out = rewrite.replaceAll('\\', String.raw`\\`);
 		if (q === '`') {
-			out = out.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+			out = out.replaceAll('`', '\\`').replaceAll('${', '\\${');
 		} else if (q === '"' || q === "'") {
-			out = out.replace(new RegExp(q, 'g'), `\\${q}`);
+			out = out.replaceAll(new RegExp(q, 'g'), `\\${q}`);
 		}
 		return out;
 	}
 	if (syntax === 'attr-copy') {
 		const q = prev;
-		let out = rewrite.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-		out = q === '"' ? out.replace(/"/g, '&quot;') : out.replace(/'/g, '&#39;');
+		let out = rewrite.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+		out = q === '"' ? out.replaceAll('"', '&quot;') : out.replaceAll("'", '&#39;');
 		return out;
 	}
 	if (syntax === 'jsx-text') {
-		return rewrite.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		return rewrite.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 	}
 	if ((syntax === 'yaml-copy' || syntax === 'frontmatter') && (prev === '"' || prev === "'")) {
 		const q = prev;
-		return q === '"' ? rewrite.replace(/"/g, '\\"') : rewrite.replace(/'/g, "''");
+		return q === '"' ? rewrite.replaceAll('"', String.raw`\"`) : rewrite.replaceAll("'", "''");
 	}
 	if (syntax === 'testname') {
 		// inner string arg — escape for its quote (like js-string)
 		const q = prev;
-		let out = rewrite.replace(/\\/g, '\\\\');
-		if (q === '`') out = out.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
-		else if (q === '"' || q === "'") out = out.replace(new RegExp(q, 'g'), `\\${q}`);
+		let out = rewrite.replaceAll('\\', String.raw`\\`);
+		if (q === '`') {
+			out = out.replaceAll('`', '\\`').replaceAll('${', '\\${');
+		} else if (q === '"' || q === "'") {
+			out = out.replaceAll(new RegExp(q, 'g'), `\\${q}`);
+		}
 		return out;
 	}
 	if (syntax === 'comment') {
@@ -561,15 +565,27 @@ function escapeForSyntax(syntax, rewrite, file, charStart) {
 		// the ORIGINAL comment's marker style (detected from the source at char_start).
 		const head = file.slice(charStart, charStart + 4);
 		const body = rewrite
-			.replace(/^\/\/+\s?|^#\s?|^--\s?|^;\s?|^\/\*+\s?|\s?\*+\/$|^<!--\s?|\s?-->$/g, '')
-			.replace(/\n/g, ' ')
+			.replaceAll(/^\/\/+\s?|^#\s?|^--\s?|^;\s?|^\/\*+\s?|\s?\*+\/$|^<!--\s?|\s?-->$/g, '')
+			.replaceAll('\n', ' ')
 			.trim();
-		if (head.startsWith('<!--')) return `<!-- ${body} -->`;
-		if (head.startsWith('/*')) return `/* ${body} */`;
-		if (head.startsWith('//')) return `// ${body}`;
-		if (head.startsWith('--')) return `-- ${body}`;
-		if (head[0] === '#') return `# ${body}`;
-		if (head[0] === ';') return `; ${body}`;
+		if (head.startsWith('<!--')) {
+			return `<!-- ${body} -->`;
+		}
+		if (head.startsWith('/*')) {
+			return `/* ${body} */`;
+		}
+		if (head.startsWith('//')) {
+			return `// ${body}`;
+		}
+		if (head.startsWith('--')) {
+			return `-- ${body}`;
+		}
+		if (head[0] === '#') {
+			return `# ${body}`;
+		}
+		if (head[0] === ';') {
+			return `; ${body}`;
+		}
 		return body;
 	}
 	// md-*, text-line, plain yaml scalar — plain text
@@ -624,9 +640,13 @@ if (phase === 'apply') {
 				let s = r.char_start;
 				let e = r.char_end;
 				let ls = s;
-				while (ls > 0 && content[ls - 1] !== '\n') ls--;
+				while (ls > 0 && content[ls - 1] !== '\n') {
+					ls--;
+				}
 				let le = e;
-				while (le < content.length && content[le] !== '\n') le++;
+				while (le < content.length && content[le] !== '\n') {
+					le++;
+				}
 				if (content.slice(ls, s).trim() === '' && content.slice(e, le).trim() === '') {
 					s = ls;
 					e = Math.min(le + 1, content.length);
@@ -770,7 +790,7 @@ if (phase === 'holistic-emit') {
 		.all();
 	const { writeFileSync: wf, mkdirSync } = await import('node:fs');
 	mkdirSync(outDir, { recursive: true });
-	const BUDGET = 60000;
+	const BUDGET = 60_000;
 	const system = holisticSystemPrompt();
 	const bundles = [];
 	let cur = { lines: [], chars: 0, lastFile: null };
@@ -786,11 +806,11 @@ if (phase === 'holistic-emit') {
 			line += `\n=== FILE: ${r.file} ===\n`;
 			cur.lastFile = r.file;
 		}
-		line += `#${r.id} L${r.line_start} [${r.syntax}]  ${r.block_text.replace(/\s+/g, ' ').trim()}\n`;
+		line += `#${r.id} L${r.line_start} [${r.syntax}]  ${r.block_text.replaceAll(/\s+/g, ' ').trim()}\n`;
 		if (cur.chars + line.length > BUDGET && cur.lines.length) {
 			flush();
 			cur.lastFile = null;
-			line = `\n=== FILE: ${r.file} ===\n#${r.id} L${r.line_start} [${r.syntax}]  ${r.block_text.replace(/\s+/g, ' ').trim()}\n`;
+			line = `\n=== FILE: ${r.file} ===\n#${r.id} L${r.line_start} [${r.syntax}]  ${r.block_text.replaceAll(/\s+/g, ' ').trim()}\n`;
 			cur.lastFile = r.file;
 		}
 		cur.lines.push(line);

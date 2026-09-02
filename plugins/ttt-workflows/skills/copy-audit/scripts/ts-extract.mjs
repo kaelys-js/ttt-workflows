@@ -112,13 +112,15 @@ const LANG_BY_BASENAME = {
 };
 function langFor(file) {
 	const b = path.basename(file).toLowerCase();
-	if (LANG_BY_BASENAME[b]) return LANG_BY_BASENAME[b];
+	if (LANG_BY_BASENAME[b]) {
+		return LANG_BY_BASENAME[b];
+	}
 	return LANG_BY_EXT[path.extname(file).toLowerCase()];
 }
 
 export function treeSitterSupports(file) {
 	const lang = langFor(file);
-	return !!lang && existsSync(path.join(WASM_DIR, `tree-sitter-${lang}.wasm`));
+	return Boolean(lang) && existsSync(path.join(WASM_DIR, `tree-sitter-${lang}.wasm`));
 }
 
 let initPromise = null;
@@ -206,12 +208,20 @@ function isStringNode(type) {
 function hasInterpolation(node) {
 	// shallow scan of descendants for an interpolation/substitution node
 	const stack = [];
-	for (let i = 0; i < node.childCount; i++) stack.push(node.child(i));
+	for (let i = 0; i < node.childCount; i++) {
+		stack.push(node.child(i));
+	}
 	while (stack.length) {
 		const n = stack.pop();
-		if (!n) continue;
-		if (INTERP_RE.test(n.type)) return true;
-		for (let i = 0; i < n.childCount; i++) stack.push(n.child(i));
+		if (!n) {
+			continue;
+		}
+		if (INTERP_RE.test(n.type)) {
+			return true;
+		}
+		for (let i = 0; i < n.childCount; i++) {
+			stack.push(n.child(i));
+		}
 	}
 	return false;
 }
@@ -229,8 +239,12 @@ function markerKeyed(node) {
 			if (m && MARKERS.has(m[1])) {
 				let minStart = Infinity;
 				const scan = (x) => {
-					if (isStringNode(x.type)) minStart = Math.min(minStart, x.startIndex);
-					for (let i = 0; i < x.childCount; i++) scan(x.child(i));
+					if (isStringNode(x.type)) {
+						minStart = Math.min(minStart, x.startIndex);
+					}
+					for (let i = 0; i < x.childCount; i++) {
+						scan(x.child(i));
+					}
 				};
 				scan(cur);
 				return node.startIndex === minStart;
@@ -280,7 +294,9 @@ export async function extractTreeSitterComments(src, file) {
 			}
 			return;
 		}
-		for (let i = 0; i < node.childCount; i++) walk(node.child(i));
+		for (let i = 0; i < node.childCount; i++) {
+			walk(node.child(i));
+		}
 	}
 	walk(tree.rootNode);
 	return units;
@@ -312,9 +328,13 @@ export async function extractTreeSitter(src, file, filters) {
 		const q = src[s];
 		if (q === '"' || q === "'" || q === '`') {
 			let ls = s;
-			while (ls < e && src[ls] === q) ls++;
+			while (ls < e && src[ls] === q) {
+				ls++;
+			}
 			let le = e;
-			while (le > ls && src[le - 1] === q) le--;
+			while (le > ls && src[le - 1] === q) {
+				le--;
+			}
 			return [ls, le];
 		}
 		return [s, e];

@@ -167,12 +167,12 @@ const DOM_EVENTS = new Set([
 
 function decodeMinimal(raw) {
 	return raw
-		.replace(/\\n/g, ' ')
-		.replace(/\\t/g, ' ')
-		.replace(/\\"/g, '"')
-		.replace(/\\'/g, "'")
-		.replace(/\\`/g, '`')
-		.replace(/\\\\/g, '\\');
+		.replaceAll(String.raw`\n`, ' ')
+		.replaceAll(String.raw`\t`, ' ')
+		.replaceAll(String.raw`\"`, '"')
+		.replaceAll(String.raw`\'`, "'")
+		.replaceAll('\\`', '`')
+		.replaceAll(String.raw`\\`, '\\');
 }
 
 // Decide whether a raw string is human-facing copy. `keyed` relaxes the single-word rule
@@ -304,12 +304,13 @@ export function extractJs(src, file, base = 0) {
 		switch (node.type) {
 			case 'ImportDeclaration':
 			case 'ExportNamedDeclaration':
-			case 'ExportAllDeclaration':
+			case 'ExportAllDeclaration': {
 				// don't descend into module specifiers / source strings
 				if (node.source) {
 					// still walk any inline stuff besides the source
 				}
 				break;
+			}
 			case 'JSXText': {
 				const raw = node.value;
 				const trimmedStart = node.start + (raw.length - raw.trimStart().length);
@@ -320,11 +321,9 @@ export function extractJs(src, file, base = 0) {
 			case 'JSXAttribute': {
 				const attr = String(node.name?.name || '').toLowerCase();
 				const v = node.value;
-				if (v && v.type === 'StringLiteral') {
-					if (!isNonCopyKey(attr)) {
-						const { start, end, raw } = strInner(v);
-						add('attr-copy', start, end, raw, COPY_ATTRS.has(attr));
-					}
+				if (v && v.type === 'StringLiteral' && !isNonCopyKey(attr)) {
+					const { start, end, raw } = strInner(v);
+					add('attr-copy', start, end, raw, COPY_ATTRS.has(attr));
 				}
 				// don't fall through to generic string handling for the attr value
 				walk(node.name, node);
@@ -397,8 +396,9 @@ export function extractJs(src, file, base = 0) {
 				add('js-string', start, end, raw, keyed);
 				break;
 			}
-			default:
+			default: {
 				break;
+			}
 		}
 		for (const k in node) {
 			if (
@@ -473,9 +473,13 @@ export function extractJsComments(src, file, base = 0) {
 		return n && n.type === 'Identifier' ? n.name : null;
 	}
 	function walk(node) {
-		if (!node || typeof node !== 'object') return;
+		if (!node || typeof node !== 'object') {
+			return;
+		}
 		if (Array.isArray(node)) {
-			for (const c of node) walk(c);
+			for (const c of node) {
+				walk(c);
+			}
 			return;
 		}
 		if (node.type === 'CallExpression') {
@@ -498,10 +502,13 @@ export function extractJsComments(src, file, base = 0) {
 				k === 'range' ||
 				k === 'leadingComments' ||
 				k === 'trailingComments'
-			)
+			) {
 				continue;
+			}
 			const c = node[k];
-			if (c && typeof c === 'object') walk(c);
+			if (c && typeof c === 'object') {
+				walk(c);
+			}
 		}
 	}
 	walk(ast.program);
@@ -517,15 +524,18 @@ export async function extractComments(text, file) {
 			units = extractJsComments(text, file, 0);
 		} else if (ext === '.astro') {
 			const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
-			if (fm) units.push(...extractJsComments(fm[1], file, fm.index + fm[0].indexOf(fm[1])));
+			if (fm) {
+				units.push(...extractJsComments(fm[1], file, fm.index + fm[0].indexOf(fm[1])));
+			}
 			for (const m of text.matchAll(/<!--([\s\S]*?)-->/g)) {
-				if (/[A-Za-z]/.test(m[1]))
+				if (/[A-Za-z]/.test(m[1])) {
 					units.push({
 						syntax: 'comment',
 						char_start: m.index,
 						char_end: m.index + m[0].length,
 						block_text: m[0],
 					});
+				}
 			}
 		} else if (
 			[
@@ -542,13 +552,14 @@ export async function extractComments(text, file) {
 			].includes(ext)
 		) {
 			for (const m of text.matchAll(/<!--([\s\S]*?)-->/g)) {
-				if (/[A-Za-z]/.test(m[1]))
+				if (/[A-Za-z]/.test(m[1])) {
 					units.push({
 						syntax: 'comment',
 						char_start: m.index,
 						char_end: m.index + m[0].length,
 						block_text: m[0],
 					});
+				}
 			}
 			// script blocks (svelte/vue/html) also carry JS comments + testnames
 			for (const m of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
@@ -564,7 +575,9 @@ export async function extractComments(text, file) {
 	const out = [];
 	let lastEnd = -1;
 	for (const u of units) {
-		if (u.char_start < lastEnd || u.char_end <= u.char_start) continue;
+		if (u.char_start < lastEnd || u.char_end <= u.char_start) {
+			continue;
+		}
 		out.push(u);
 		lastEnd = u.char_end;
 	}
@@ -601,7 +614,7 @@ export async function extractAstro(src, file) {
 				const raw = node.value || '';
 				const v = raw.trim();
 				const off = node.position?.start?.offset;
-				if (v && off != null && isCopyPhrase(v, { keyed: true })) {
+				if (v && off !== undefined && isCopyPhrase(v, { keyed: true })) {
 					const cs = off + (raw.length - raw.trimStart().length);
 					units.push({
 						syntax: 'jsx-text',
@@ -661,15 +674,19 @@ function extractMarkup(src, file) {
 		}
 	}
 	let masked = src;
-	masked = masked.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (m) => m.replace(/[^\n]/g, ' '));
-	masked = masked.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (m) => m.replace(/[^\n]/g, ' '));
-	masked = masked.replace(/<!--[\s\S]*?-->/g, (m) => m.replace(/[^\n]/g, ' '));
+	masked = masked.replaceAll(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (m) =>
+		m.replaceAll(/[^\n]/g, ' '),
+	);
+	masked = masked.replaceAll(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (m) =>
+		m.replaceAll(/[^\n]/g, ' '),
+	);
+	masked = masked.replaceAll(/<!--[\s\S]*?-->/g, (m) => m.replaceAll(/[^\n]/g, ' '));
 	// Template-directive blocks (ERB/EJS <% %>, Jinja/Liquid/Twig {% %} and {{ }}, {# #},
 	// Handlebars {{! }}, Blade @if/@endif and {{ }}) — mask so their code isn't read as text.
-	masked = masked.replace(/<%[\s\S]*?%>/g, (m) => m.replace(/[^\n]/g, ' '));
-	masked = masked.replace(/\{%[\s\S]*?%\}/g, (m) => m.replace(/[^\n]/g, ' '));
-	masked = masked.replace(/\{\{[\s\S]*?\}\}/g, (m) => m.replace(/[^\n]/g, ' '));
-	masked = masked.replace(/\{#[\s\S]*?#\}/g, (m) => m.replace(/[^\n]/g, ' '));
+	masked = masked.replaceAll(/<%[\s\S]*?%>/g, (m) => m.replaceAll(/[^\n]/g, ' '));
+	masked = masked.replaceAll(/\{%[\s\S]*?%\}/g, (m) => m.replaceAll(/[^\n]/g, ' '));
+	masked = masked.replaceAll(/\{\{[\s\S]*?\}\}/g, (m) => m.replaceAll(/[^\n]/g, ' '));
+	masked = masked.replaceAll(/\{#[\s\S]*?#\}/g, (m) => m.replaceAll(/[^\n]/g, ' '));
 	// text nodes
 	const textRe = />([^<>{}]+)</g;
 	let tm;
@@ -680,8 +697,12 @@ function extractMarkup(src, file) {
 		}
 		let cs = tm.index + 1;
 		let ce = cs + seg.length;
-		while (cs < ce && /\s/.test(masked[cs])) cs++;
-		while (ce > cs && /\s/.test(masked[ce - 1])) ce--;
+		while (cs < ce && /\s/.test(masked[cs])) {
+			cs++;
+		}
+		while (ce > cs && /\s/.test(masked[ce - 1])) {
+			ce--;
+		}
 		const raw = src.slice(cs, ce);
 		if (isCopyPhrase(raw, { keyed: true })) {
 			units.push({ syntax: 'jsx-text', char_start: cs, char_end: ce, block_text: raw });
@@ -692,9 +713,13 @@ function extractMarkup(src, file) {
 	let am;
 	while ((am = attrRe.exec(masked)) !== null) {
 		const attr = am[1].toLowerCase();
-		if (isNonCopyKey(attr)) continue;
+		if (isNonCopyKey(attr)) {
+			continue;
+		}
 		const val = am[2];
-		if (!isCopyPhrase(val, { keyed: COPY_ATTRS.has(attr) })) continue;
+		if (!isCopyPhrase(val, { keyed: COPY_ATTRS.has(attr) })) {
+			continue;
+		}
 		const cs = am.index + am[0].length - val.length - 1;
 		units.push({ syntax: 'attr-copy', char_start: cs, char_end: cs + val.length, block_text: val });
 	}
@@ -716,7 +741,7 @@ export function extractMarkdown(src) {
 			units.push({ ...u, char_start: u.char_start + base, char_end: u.char_end + base });
 		}
 		masked =
-			src.slice(0, fm.index) + fm[0].replace(/[^\n]/g, ' ') + src.slice(fm.index + fm[0].length);
+			src.slice(0, fm.index) + fm[0].replaceAll(/[^\n]/g, ' ') + src.slice(fm.index + fm[0].length);
 	}
 	let tree;
 	try {
@@ -724,8 +749,11 @@ export function extractMarkdown(src) {
 	} catch {
 		return units;
 	}
-	const pushSpan = (syntax, cs, ce) => {
-		while (ce > cs && /\s/.test(src[ce - 1])) ce--;
+	const pushSpan = (syntax, cs, ceEnd) => {
+		let ce = ceEnd;
+		while (ce > cs && /\s/.test(src[ce - 1])) {
+			ce--;
+		}
 		const raw = src.slice(cs, ce);
 		if (/[A-Za-z]/.test(raw) && raw.length >= 2) {
 			units.push({ syntax, char_start: cs, char_end: ce, block_text: raw });
@@ -733,30 +761,44 @@ export function extractMarkdown(src) {
 	};
 	const childrenSpan = (node) => {
 		const ks = (node.children || []).filter((c) => c.position);
-		return ks.length ? [ks[0].position.start.offset, ks[ks.length - 1].position.end.offset] : null;
+		return ks.length ? [ks[0].position.start.offset, ks.at(-1).position.end.offset] : null;
 	};
 	const imagesIn = (node, acc) => {
-		if (!node) return;
+		if (!node) {
+			return;
+		}
 		if (node.type === 'image') {
 			acc.push(node);
 			return;
 		}
-		for (const c of node.children || []) imagesIn(c, acc);
+		for (const c of node.children || []) {
+			imagesIn(c, acc);
+		}
 	};
 	function walk(node, ctx) {
-		if (!node) return;
-		if (['code', 'inlineCode', 'html', 'yaml'].includes(node.type)) return;
+		if (!node) {
+			return;
+		}
+		if (['code', 'inlineCode', 'html', 'yaml'].includes(node.type)) {
+			return;
+		}
 		if (node.type === 'heading') {
 			const sp = childrenSpan(node);
-			if (sp) pushSpan('md-heading', sp[0], sp[1]);
+			if (sp) {
+				pushSpan('md-heading', sp[0], sp[1]);
+			}
 			return;
 		}
 		if (node.type === 'blockquote') {
-			for (const c of node.children || []) walk(c, 'blockquote');
+			for (const c of node.children || []) {
+				walk(c, 'blockquote');
+			}
 			return;
 		}
 		if (node.type === 'listItem') {
-			for (const c of node.children || []) walk(c, 'listitem');
+			for (const c of node.children || []) {
+				walk(c, 'listitem');
+			}
 			return;
 		}
 		if (node.type === 'paragraph') {
@@ -792,7 +834,9 @@ export function extractMarkdown(src) {
 			pushSpan('md-prose', node.position.start.offset, node.position.end.offset);
 			return;
 		}
-		for (const c of node.children || []) walk(c, ctx);
+		for (const c of node.children || []) {
+			walk(c, ctx);
+		}
 	}
 	walk(tree, null);
 	return units;
@@ -810,7 +854,9 @@ export function extractYaml(src, syntax = 'yaml-copy') {
 		return units;
 	}
 	const visit = (node, keyName) => {
-		if (!node || typeof node !== 'object') return;
+		if (!node || typeof node !== 'object') {
+			return;
+		}
 		if (node.items) {
 			// map or seq
 			for (const it of node.items) {
@@ -823,7 +869,7 @@ export function extractYaml(src, syntax = 'yaml-copy') {
 			return;
 		}
 		if (typeof node.value === 'string' && node.range) {
-			const isKeyedCopy = keyName != null && isCopyKey(keyName);
+			const isKeyedCopy = keyName !== undefined && isCopyKey(keyName);
 			if (
 				isCopyPhrase(node.value, { keyed: isKeyedCopy }) &&
 				(isKeyedCopy || /\s/.test(node.value))
@@ -854,14 +900,20 @@ export function extractJson(src) {
 	const n = src.length;
 	const ws = () => {
 		for (;;) {
-			while (i < n && /\s/.test(src[i])) i++;
+			while (i < n && /\s/.test(src[i])) {
+				i++;
+			}
 			if (src[i] === '/' && src[i + 1] === '/') {
-				while (i < n && src[i] !== '\n') i++;
+				while (i < n && src[i] !== '\n') {
+					i++;
+				}
 				continue;
 			}
 			if (src[i] === '/' && src[i + 1] === '*') {
 				i += 2;
-				while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++;
+				while (i < n && !(src[i] === '*' && src[i + 1] === '/')) {
+					i++;
+				}
 				i += 2;
 				continue;
 			}
@@ -887,24 +939,32 @@ export function extractJson(src) {
 		return { s, e: i, raw: src.slice(s, i) };
 	};
 	const maybe = (key, o) => {
-		const keyed = key != null && isCopyKey(key);
-		if (isCopyPhrase(o.raw, { keyed: keyed || key != null })) {
+		const keyed = key !== undefined && isCopyKey(key);
+		if (isCopyPhrase(o.raw, { keyed: keyed || key !== undefined })) {
 			units.push({ syntax: 'json-copy', char_start: o.s, char_end: o.e, block_text: o.raw });
 		}
 	};
 	const val = (key) => {
 		ws();
-		if (i >= n) return;
+		if (i >= n) {
+			return;
+		}
 		const c = src[i];
 		if (c === '"') {
-			if (key != null && isNonCopyKey(key)) {
+			if (key !== undefined && isNonCopyKey(key)) {
 				str();
 			} else {
 				maybe(key, str());
 			}
-		} else if (c === '{') obj();
-		else if (c === '[') arr(key);
-		else while (i < n && !/[,\]}\s]/.test(src[i])) i++;
+		} else if (c === '{') {
+			obj();
+		} else if (c === '[') {
+			arr(key);
+		} else {
+			while (i < n && !/[,\]}\s]/.test(src[i])) {
+				i++;
+			}
+		}
 	};
 	const obj = () => {
 		i++;
@@ -915,10 +975,14 @@ export function extractJson(src) {
 		}
 		for (;;) {
 			ws();
-			if (src[i] !== '"') break;
+			if (src[i] !== '"') {
+				break;
+			}
 			const k = str();
 			ws();
-			if (src[i] === ':') i++;
+			if (src[i] === ':') {
+				i++;
+			}
 			val(k.raw);
 			ws();
 			if (src[i] === ',') {
@@ -982,18 +1046,29 @@ function extractTypst(src) {
 	// 2. headings + prose (line-based)
 	const lines = src.split('\n');
 	const starts = [0];
-	for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
+	for (let i = 0; i < src.length; i++) {
+		if (src[i] === '\n') {
+			starts.push(i + 1);
+		}
+	}
 	let inFence = false;
 	let para = null;
 	const flush = () => {
-		if (!para) return;
+		if (!para) {
+			return;
+		}
 		let cs = starts[para.s];
 		let ce = starts[para.e] + lines[para.e].length;
-		while (cs < ce && /\s/.test(src[cs])) cs++;
-		while (ce > cs && /\s/.test(src[ce - 1])) ce--;
+		while (cs < ce && /\s/.test(src[cs])) {
+			cs++;
+		}
+		while (ce > cs && /\s/.test(src[ce - 1])) {
+			ce--;
+		}
 		const raw = src.slice(cs, ce);
-		if (/[A-Za-z]/.test(raw) && /\s/.test(raw))
+		if (/[A-Za-z]/.test(raw) && /\s/.test(raw)) {
 			units.push({ syntax: 'md-prose', char_start: cs, char_end: ce, block_text: raw });
+		}
 		para = null;
 	};
 	for (let i = 0; i < lines.length; i++) {
@@ -1003,7 +1078,9 @@ function extractTypst(src) {
 			inFence = !inFence;
 			continue;
 		}
-		if (inFence) continue;
+		if (inFence) {
+			continue;
+		}
 		if (ln.trim() === '') {
 			flush();
 			continue;
@@ -1024,8 +1101,11 @@ function extractTypst(src) {
 			flush();
 			continue;
 		}
-		if (!para) para = { s: i, e: i };
-		else para.e = i;
+		if (para) {
+			para.e = i;
+		} else {
+			para = { s: i, e: i };
+		}
 	}
 	flush();
 	return units;
@@ -1043,7 +1123,11 @@ function extractEnv(src) {
 	const units = [];
 	const lines = src.split('\n');
 	const starts = [0];
-	for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
+	for (let i = 0; i < src.length; i++) {
+		if (src[i] === '\n') {
+			starts.push(i + 1);
+		}
+	}
 	for (let i = 0; i < lines.length; i++) {
 		const ln = lines[i];
 		const cm = ln.match(/^(\s*#\s?)(\S.*)$/);
@@ -1051,15 +1135,20 @@ function extractEnv(src) {
 			const cs = starts[i] + cm[1].length;
 			const ce = starts[i] + ln.replace(/\s+$/, '').length;
 			const raw = src.slice(cs, ce);
-			if (isCopyPhrase(raw, { keyed: false }))
+			if (isCopyPhrase(raw, { keyed: false })) {
 				units.push({ syntax: 'config-comment', char_start: cs, char_end: ce, block_text: raw });
+			}
 			continue;
 		}
 		const m = ln.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/);
-		if (!m) continue;
+		if (!m) {
+			continue;
+		}
 		const key = m[1];
 		let vs = ln.indexOf('=') + 1;
-		while (vs < ln.length && /\s/.test(ln[vs])) vs++;
+		while (vs < ln.length && /\s/.test(ln[vs])) {
+			vs++;
+		}
 		let raw = ln.slice(vs).replace(/\s+$/, '');
 		let cs = starts[i] + vs;
 		let ce = starts[i] + ln.replace(/\s+$/, '').length;
@@ -1134,7 +1223,11 @@ function extractHashConfig(src) {
 	const units = [];
 	const lines = src.split('\n');
 	const starts = [0];
-	for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
+	for (let i = 0; i < src.length; i++) {
+		if (src[i] === '\n') {
+			starts.push(i + 1);
+		}
+	}
 	for (let i = 0; i < lines.length; i++) {
 		const ln = lines[i];
 		const cm = ln.match(/^(\s*[#;!]\s?)(\S.*)$/);
@@ -1142,14 +1235,17 @@ function extractHashConfig(src) {
 			const cs = starts[i] + cm[1].length;
 			const ce = starts[i] + ln.replace(/\s+$/, '').length;
 			const raw = src.slice(cs, ce);
-			if (isCopyPhrase(raw, { keyed: false }))
+			if (isCopyPhrase(raw, { keyed: false })) {
 				units.push({ syntax: 'config-comment', char_start: cs, char_end: ce, block_text: raw });
+			}
 			continue;
 		}
 		const kv = ln.match(/^\s*([\w.-]+)\s*=\s*(\S.*)$/);
 		if (kv) {
 			let vs = ln.indexOf('=') + 1;
-			while (vs < ln.length && /\s/.test(ln[vs])) vs++;
+			while (vs < ln.length && /\s/.test(ln[vs])) {
+				vs++;
+			}
 			let cs = starts[i] + vs;
 			let ce = starts[i] + ln.replace(/\s+$/, '').length;
 			let raw = src.slice(cs, ce);
@@ -1162,8 +1258,9 @@ function extractHashConfig(src) {
 					raw = raw.slice(1, c);
 				}
 			}
-			if (isCopyPhrase(raw, { keyed: false }))
+			if (isCopyPhrase(raw, { keyed: false })) {
 				units.push({ syntax: 'config-value', char_start: cs, char_end: ce, block_text: raw });
+			}
 		}
 	}
 	return units;
@@ -1174,7 +1271,11 @@ function extractTsv(src, sep = /(\t|\|)/) {
 	const units = [];
 	const lines = src.split('\n');
 	const starts = [0];
-	for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
+	for (let i = 0; i < src.length; i++) {
+		if (src[i] === '\n') {
+			starts.push(i + 1);
+		}
+	}
 	for (let i = 0; i < lines.length; i++) {
 		let pos = starts[i];
 		for (const part of lines[i].split(sep)) {
@@ -1197,25 +1298,40 @@ function extractText(src) {
 	const units = [];
 	const lines = src.split('\n');
 	const starts = [0];
-	for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
+	for (let i = 0; i < src.length; i++) {
+		if (src[i] === '\n') {
+			starts.push(i + 1);
+		}
+	}
 	let para = null;
 	const flush = () => {
-		if (!para) return;
+		if (!para) {
+			return;
+		}
 		const from = starts[para.s];
 		const to = starts[para.e] + lines[para.e].length;
 		let cs = from,
 			ce = to;
-		while (cs < ce && /\s/.test(src[cs])) cs++;
-		while (ce > cs && /\s/.test(src[ce - 1])) ce--;
+		while (cs < ce && /\s/.test(src[cs])) {
+			cs++;
+		}
+		while (ce > cs && /\s/.test(src[ce - 1])) {
+			ce--;
+		}
 		const raw = src.slice(cs, ce);
-		if (/[A-Za-z]/.test(raw) && /\s/.test(raw))
+		if (/[A-Za-z]/.test(raw) && /\s/.test(raw)) {
 			units.push({ syntax: 'text-line', char_start: cs, char_end: ce, block_text: raw });
+		}
 		para = null;
 	};
 	for (let i = 0; i < lines.length; i++) {
-		if (lines[i].trim() === '') flush();
-		else if (!para) para = { s: i, e: i };
-		else para.e = i;
+		if (lines[i].trim() === '') {
+			flush();
+		} else if (para) {
+			para.e = i;
+		} else {
+			para = { s: i, e: i };
+		}
 	}
 	flush();
 	return units;
@@ -1299,7 +1415,9 @@ export async function extractUnits(text, file) {
 	const out = [];
 	let lastEnd = -1;
 	for (const u of units) {
-		if (u.char_start < lastEnd || u.char_end <= u.char_start) continue;
+		if (u.char_start < lastEnd || u.char_end <= u.char_start) {
+			continue;
+		}
 		out.push(u);
 		lastEnd = u.char_end;
 	}

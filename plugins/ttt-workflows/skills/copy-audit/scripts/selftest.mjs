@@ -339,8 +339,8 @@ try {
 	} else {
 		fail(`json splice wrong: title=${parsed.title} cta=${parsed.cta}`);
 	}
-} catch (e) {
-	fail(`data.json no longer valid JSON: ${e.message}`);
+} catch (error) {
+	fail(`data.json no longer valid JSON: ${error.message}`);
 }
 const mdAfter = readFileSync(join(repo, 'README.md'), 'utf8');
 if (/^# Welcome$/m.test(mdAfter) && !/# Welcome to the product/.test(mdAfter)) {
@@ -430,18 +430,16 @@ r = spawnSync('node', [engine, '--phase=apply', '--db', badDb, '--repo', badRepo
 });
 if (r.status === 0) {
 	fail('apply should have refused a drifted file');
-} else if (!/sha mismatch/i.test(r.stderr)) {
-	fail(`apply failed but not for sha mismatch: ${r.stderr}`);
-} else {
+} else if (/sha mismatch/i.test(r.stderr)) {
 	ok('apply refused drifted file (SHA guard FATAL)');
+} else {
+	fail(`apply failed but not for sha mismatch: ${r.stderr}`);
 }
 
 // ---- 8. spec conformance + trigger eval ----
 const md = readFileSync(skillMd, 'utf8');
 const fm = md.match(/^---\n([\s\S]*?)\n---/);
-if (!fm) {
-	fail('SKILL.md missing frontmatter');
-} else {
+if (fm) {
 	const name = (fm[1].match(/^name:\s*(.+)$/m) || [])[1]?.trim();
 	const desc = (fm[1].match(/^description:\s*([\s\S]+?)(?:\n[a-z_]+:|$)/m) || [])[1]?.trim();
 	if (name === 'copy-audit' && /^[a-z0-9-]{1,64}$/.test(name)) {
@@ -507,6 +505,8 @@ if (!fm) {
 	} else {
 		fail(`description misses trigger(s): ${miss.slice(0, 2).join(' | ')}`);
 	}
+} else {
+	fail('SKILL.md missing frontmatter');
 }
 const lineCount = md.split('\n').length;
 if (lineCount <= 500) {
