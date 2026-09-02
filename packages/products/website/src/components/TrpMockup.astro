@@ -3,7 +3,7 @@
 // (no real ticket, no real repo). Semantic tokens only, so it renders true
 // light/dark — no rasterized screenshot, no placeholder artifacts.
 const plan = [
-	{ done: true, text: "Grounded in the repo — auth.middleware.ts:44, no limiter mounted" },
+	{ done: true, text: "Found in the repo — auth.middleware.ts:44, no rate limiter mounted" },
 	{ done: false, text: "Change: mount the limiter, add a regression test" },
 	{ done: false, text: "Verify: format · lint · affected tests · build — all green" },
 	{ done: false, text: "PR opened on GitHub; ticket updated in both layers" },
@@ -13,7 +13,7 @@ const plan = [
 <div
 	class="w-full max-w-md overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-black/10 ring-1 ring-black/5 dark:shadow-black/40"
 	role="img"
-	aria-label="A trp run in Claude Code, stopped at the approval gate: the ticket is grounded in the repo and a full plan is presented, but nothing runs until a human approves."
+	aria-label="trp stops at the approval gate: the ticket is grounded in the repo and a full plan is shown, but nothing runs until you approve."
 >
 	<div class="flex items-center gap-2 border-b border-border/60 px-4 py-3">
 		<span class="size-3 rounded-full bg-[#ff5f57]"></span>
@@ -24,7 +24,7 @@ const plan = [
 
 	<div class="px-5 py-4 font-mono text-[12px] leading-relaxed">
 		<div class="text-muted-foreground">
-			<span class="text-primary">❯</span> trp CU-8x9k2 · Add a rate limit to /login
+			<span class="text-primary">❯</span> trp ClickUp CU-8x9k2 · Add a rate limit to /login
 		</div>
 	</div>
 
@@ -58,7 +58,9 @@ const plan = [
 	</div>
 
 	<div class="flex items-center justify-between border-t border-border/60 px-5 py-4">
-		<span class="text-xs text-muted-foreground">Waiting — nothing runs until you say go.</span>
+		<span class="text-xs text-muted-foreground"
+			>Waiting for your approval before anything runs.</span
+		>
 		<div class="flex items-center gap-2" aria-hidden="true">
 			<span class="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground"
 				>Revise</span

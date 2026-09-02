@@ -1,6 +1,6 @@
 # ttt-workflows
 
-Four end-to-end engineering workflows, each a Claude Code skill:
+Four end-to-end Claude Code skills:
 
 - **`/ttt-workflows:sec-audit`** — three-layer security audit (code + live Azure + identity/CI) of a repo, PR, or tenant. Read-only.
 - **`/ttt-workflows:trp`** — deliver a ClickUp ticket end to end, with an absolute approval gate before anything is built.

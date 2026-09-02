@@ -1,6 +1,6 @@
 # ttt-workflows
 
-**Four senior-engineer workflows for [Claude Code](https://claude.com/claude-code): review a pull request, run a security audit, deliver a ticket, audit the copy.** One plugin, installed from a git-backed marketplace. Read-only and approval-gated by default, so you can point it at any repo or tenant without worrying what it will touch.
+**Four senior-engineer skills for [Claude Code](https://claude.com/claude-code): review a pull request, run a security audit, deliver a ticket, audit the copy.** One plugin, installed from a git-backed marketplace. Read-only and approval-gated by default, so you can point it at any repo or tenant without worrying what it will touch.
 
 ```text
 /plugin marketplace add kaelys-js/ttt-workflows

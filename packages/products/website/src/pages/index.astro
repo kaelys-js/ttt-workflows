@@ -30,7 +30,7 @@ const skills = v.parse(SkillsSchema, [
 		icon: "git-pull-request",
 		name: "pr-review",
 		cmd: "/pr-review",
-		does: "Give it a GitHub or Azure DevOps pull-request URL and it reviews the diff the way a senior engineer would: design and correctness first, every finding checked against the real code before it is raised, and each one labelled by severity. It argues itself out of weak findings, so the review is signal, not noise.",
+		does: "Give it a GitHub or Azure DevOps pull-request URL. It reviews the diff — design and correctness first — checks every finding against the code, and labels each by severity. Weak findings are dropped before the review is returned, so what you get is worth acting on.",
 		tags: ["design", "correctness", "security", "tests"],
 		produces:
 			"One review you can paste straight into the PR: a verdict up top, a table of findings you can scan in seconds, and a concrete fix for each.",
@@ -41,10 +41,10 @@ const skills = v.parse(SkillsSchema, [
 		icon: "shield-check",
 		name: "sec-audit",
 		cmd: "/sec-audit",
-		does: "Audits a repo, a PR, a path, or your live Azure, Entra, and Azure DevOps. It looks in the three places a real vulnerability hides: the code and its infrastructure, the running cloud, and who can reach it. Four modes carry one finding from discovery to a fix.",
+		does: "Audits a repo, a PR, a path, or your live Azure, Entra, and Azure DevOps. It looks where vulnerabilities hide — the code and its infrastructure, the running cloud, and who can reach it. Four modes take a finding from discovery to a fix.",
 		tags: ["sweep", "review", "poc", "remediate"],
 		produces:
-			"Scored findings (CVSS 4.0 and CWE), a private advisory for each, a proof-of-concept you can reproduce and throw away, and a report that is honest about what it did and did not cover.",
+			"Scored findings (CVSS 4.0 and CWE), a private advisory for each, a proof-of-concept you can reproduce and throw away, and a report that lists what was and was not covered.",
 		boundary: "Approval-gated",
 		boundaryNote: "Read-only until you approve. A fix is a PR opened, never merged.",
 	},
@@ -52,13 +52,12 @@ const skills = v.parse(SkillsSchema, [
 		icon: "clipboard-check",
 		name: "trp",
 		cmd: "/trp",
-		does: "Takes a ticket from assigned to merged. It grounds the work in your actual code, presents a full plan, and stops for your approval. Once you say go, it implements, runs the real gates (format, lint, the affected tests, the build), and opens the PR.",
+		does: "Takes a ticket from assigned to merged. It grounds the work in your code, presents a full plan, and stops for your approval. Once you approve, it implements, runs the gates (format, lint, affected tests, build), and opens the PR.",
 		tags: ["ground", "plan", "build", "verify", "ship"],
 		produces:
 			"A merge-ready PR that meets the acceptance criteria, plus a two-layer ticket update for the business and for engineers.",
 		boundary: "Approval-gated",
-		boundaryNote:
-			"Stops for approval. No branch, no write, nothing hard to undo before you say go.",
+		boundaryNote: "Waits for your approval. No branch and no write happen before you approve.",
 	},
 	{
 		icon: "file-text",
@@ -92,22 +91,22 @@ const playbooks = v.parse(PlaybooksSchema, [
 	{
 		slug: "pr-review",
 		name: "PR Review",
-		body: "Read every changed line, prove what you find, and hand back one review that lands in a single round. The craft the skill automates, done by hand.",
+		body: "Read every changed line, prove what you find, and hand back one review that lands in a single round. How to do a senior PR review by hand.",
 	},
 	{
 		slug: "sec-audit",
 		name: "Security Audit",
-		body: "Look in all three places a vulnerability hides, prove what you find, and never touch a live system until someone says go. The full manual method.",
+		body: "Look in all three places a vulnerability hides, prove what you find, and never touch a live system until it is approved. The full manual method.",
 	},
 	{
 		slug: "trp",
 		name: "Task Resolution Protocol",
-		body: "Take a ticket from assigned to merged: ground it in real code, get the plan approved, then build, prove, and close it out.",
+		body: "Take a ticket from assigned to merged: ground it in the code, get the plan approved, then build, prove, and close it out.",
 	},
 	{
 		slug: "copy-audit",
 		name: "Copy Audit",
-		body: "Read every string a repo ships, judge it against the four content pillars, and rewrite only the words — never the code around them. The craft the skill automates, done by hand.",
+		body: "Read every string a repo ships, judge it against the four content pillars, and rewrite only the words — never the code around them. How to do a copy review by hand.",
 	},
 ]);
 ---
@@ -189,7 +188,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 					data-hero="lcp"
 					class="mt-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
 				>
-					Four engineering workflows, <span
+					Four engineering skills, <span
 						class="bg-gradient-to-r from-[#1fb2d4] to-[#0c81b3] bg-clip-text text-transparent"
 						>one plugin.</span
 					>
@@ -204,8 +203,8 @@ const playbooks = v.parse(PlaybooksSchema, [
 					>, <span class="font-mono text-foreground/80">trp</span>, and <span
 						class="font-mono text-foreground/80">copy-audit</span
 					>: four self-contained skills that review a pull request, run a security audit, deliver a
-					ticket, or audit the copy end to end, from inside Claude Code. Read-only and
-					approval-gated by default.
+					ticket, or audit the copy end to end, from inside Claude Code. Read-only by default;
+					anything that writes waits for your approval.
 				</p>
 				<div data-hero style="--hd:200ms" class="mt-8 max-w-xl space-y-3">
 					<CopyCommand cmd={MARKETPLACE_ADD} />
@@ -213,7 +212,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 				</div>
 				<div data-hero style="--hd:240ms" class="mt-5 flex flex-wrap items-center gap-3">
 					<a href="#install" class="text-sm font-medium text-primary hover:underline"
-						>How it works ↓</a
+						>How it works <span aria-hidden="true">↓</span></a
 					>
 					<span class="text-sm text-muted-foreground">·</span>
 					<a
@@ -286,7 +285,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 								))}
 							</div>
 							<div class="text-[13px] leading-relaxed">
-								<span class="font-medium text-foreground">Produces </span>
+								<span class="font-medium text-foreground">What it produces </span>
 								<span class="text-muted-foreground">{s.produces}</span>
 							</div>
 							<div class="flex items-start gap-2 border-t border-border/60 pt-4">
@@ -414,9 +413,10 @@ const playbooks = v.parse(PlaybooksSchema, [
 									href={`${base}/playbooks/${p.slug}.pdf`}
 									target="_blank"
 									rel="noopener noreferrer"
+									aria-label={`Open the ${p.name} playbook (PDF, opens in a new tab)`}
 									class="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
 								>
-									Open the PDF<span class="sr-only"> for {p.name} (opens in a new tab)</span>
+									Open the PDF
 									<span aria-hidden="true">→</span>
 								</a>
 							</Card>
@@ -467,8 +467,8 @@ const playbooks = v.parse(PlaybooksSchema, [
 						<span class="font-mono">ttt-workflows</span>
 					</div>
 					<p class="mt-4 text-sm leading-relaxed text-muted-foreground">
-						Four engineering skills in one Claude Code plugin: review, audit, deliver, and refine
-						the copy. Read-only and approval-gated by default. Open source.
+						Four Claude Code skills for review, audit, delivery, and copy. Open source, and safe to
+						point at any repo or tenant.
 					</p>
 					<div class="mt-6"><GithubButton size="default" /></div>
 				</div>
@@ -569,7 +569,7 @@ const playbooks = v.parse(PlaybooksSchema, [
 			<div
 				class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row"
 			>
-				<span>© 2026 TTT Studios{appVersion ? ` · v${appVersion}` : ""} · Open Source</span>
+				<span>© 2026 TTT Studios{appVersion ? ` · v${appVersion}` : ""} · Open source</span>
 				<span>Runs inside Claude Code. Not affiliated with Anthropic.</span>
 			</div>
 		</div>

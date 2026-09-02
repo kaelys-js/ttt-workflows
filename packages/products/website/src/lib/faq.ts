@@ -14,7 +14,7 @@ export const faqItems: FaqItem[] = parseFaqItems([
 	},
 	{
 		q: 'Is it really read-only?',
-		a: "By default, yes. pr-review never posts, comments, approves, resolves, or merges. It hands you a paste-ready review and you decide what to do with it. sec-audit's target-resolve, review, and sweep analysis are read-only; anything that stands up infrastructure, writes a repo, or opens a PR is gated behind an explicit approval, and even a fix is a PR opened, never merged. trp presents a plan and stops. copy-audit reads the copy and proposes verdicts, and nothing is written to disk until you approve the rewrites. No branch, no write, and nothing hard to undo happens until you say go.",
+		a: "By default, yes. pr-review only hands you a paste-ready review — it never posts, comments, approves, or merges. sec-audit reads your code and cloud read-only; anything that writes a repo, creates cloud resources, or opens a PR waits for your approval, and a fix is a PR opened, never merged. trp presents a plan and stops. copy-audit proposes rewrites and writes nothing to disk until you approve. Nothing you can't undo happens before you say yes.",
 	},
 	{
 		q: 'Does it work on GitHub and Azure DevOps?',
@@ -22,11 +22,11 @@ export const faqItems: FaqItem[] = parseFaqItems([
 	},
 	{
 		q: 'How do updates work through the marketplace?',
-		a: 'A new version reaches you only when the plugin\'s version field is bumped. Third-party marketplaces do not auto-update by default, so you pull the latest with "/plugin marketplace update ttt-workflows" and then "/reload-plugins". Or enable auto-update for the marketplace and Claude Code refreshes it in the background and prompts the reload. Either way you decide when to update; nothing changes under you.',
+		a: 'You get a new version only when we publish one. Third-party marketplaces do not auto-update by default, so pull the latest with "/plugin marketplace update ttt-workflows" and then "/reload-plugins". Or turn on auto-update, and Claude Code refreshes it in the background and prompts you to reload. Either way, you choose when to install.',
 	},
 	{
 		q: 'What does copy-audit review, and how does it avoid breaking code?',
-		a: 'It audits the words a repo ships: UI microcopy, markdown docs and prose, and copy values in JSON and YAML, judged against four content pillars — plain language, inclusive language, UX microcopy, and voice and grammar. With --mode=comments it turns the same lens on code-comment slop and test names instead. Each string is judged in its full-file context and gets one verdict: keep, rewrite, flag, or delete. Applying a rewrite splices only the text span, so the quotes, tags, and structure around it are byte-identical, and a verify pass then asserts that not a single line of code changed. You review every proposed rewrite before anything is written to disk.',
+		a: 'It audits the words a repo ships: UI microcopy, markdown docs and prose, and copy values in JSON and YAML, judged against four content pillars — plain language, inclusive language, UX microcopy, and voice and grammar. With --mode=comments it turns the same lens on code-comment slop and test names instead. Each string is judged in its full-file context and gets one verdict: keep, rewrite, flag, or delete. When you apply a rewrite, only the text changes — the code around it stays exactly as it was, and a check confirms it. You review every proposed rewrite before anything is written to disk.',
 	},
 	{
 		q: 'Is my data sent anywhere?',

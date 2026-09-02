@@ -4,10 +4,28 @@ import { expect, test, type Page } from '@playwright/test';
 // suite executes inside the pinned Playwright Docker container (see the web-e2e gate), so
 // rendering is byte-identical on every machine. Animations disabled for determinism.
 
+// Force the page to its fully settled, painted state before any screenshot. Reveal-on-scroll
+// and the hero entrance both start elements off-state (opacity:0 / translated), so add the
+// end-state class; finish any in-flight animation; wait for fonts; then let two frames paint.
+// The last step matters for the hero specifically: its H1 uses `text-wrap: balance`, which the
+// browser re-computes lazily after layout — captured mid-balance it differs by ~0.01 of pixels
+// and flakes the run. Settling first (the same recipe the a11y suite uses) makes it
+// deterministic. `animations: 'disabled'` on the assertion is belt-and-braces on top.
+const settle = (page: Page) =>
+	page.evaluate(async () => {
+		document
+			.querySelectorAll('[data-reveal],[data-stagger],[data-hero]')
+			.forEach((el) => el.classList.add('is-visible'));
+		document.getAnimations().forEach((a) => a.finish());
+		await document.fonts.ready;
+		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+	});
+
 test.describe('visual — hero', () => {
 	test('hero — light', async ({ page }) => {
 		await page.goto('./');
 		await page.emulateMedia({ colorScheme: 'light' });
+		await settle(page);
 		await expect(page.locator('section').first()).toHaveScreenshot('hero-light.png', {
 			animations: 'disabled',
 		});
@@ -16,20 +34,12 @@ test.describe('visual — hero', () => {
 	test('hero — dark', async ({ page }) => {
 		await page.goto('./');
 		await page.evaluate(() => document.documentElement.classList.add('dark'));
+		await settle(page);
 		await expect(page.locator('section').first()).toHaveScreenshot('hero-dark.png', {
 			animations: 'disabled',
 		});
 	});
 });
-
-// Reveal-on-scroll starts elements at opacity:0 and fades them in on intersection; force the
-// end state so a section is never captured mid-reveal regardless of scroll timing.
-const revealAll = (page: Page) =>
-	page.evaluate(() =>
-		document
-			.querySelectorAll('[data-reveal],[data-stagger]')
-			.forEach((el) => el.classList.add('is-visible')),
-	);
 
 // Every other section, in both themes, so a colour or layout regression anywhere on the page is
 // caught — not just in the hero.
@@ -49,7 +59,7 @@ test.describe('visual — page sections', () => {
 		test(`${name} — light`, async ({ page }) => {
 			await page.goto('./');
 			await page.emulateMedia({ colorScheme: 'light' });
-			await revealAll(page);
+			await settle(page);
 			if (ready) await expect(page.getByText(ready).first()).toBeVisible();
 			await expect(page.locator(selector)).toHaveScreenshot(`${name}-light.png`, {
 				animations: 'disabled',
@@ -59,7 +69,7 @@ test.describe('visual — page sections', () => {
 		test(`${name} — dark`, async ({ page }) => {
 			await page.goto('./');
 			await page.evaluate(() => document.documentElement.classList.add('dark'));
-			await revealAll(page);
+			await settle(page);
 			if (ready) await expect(page.getByText(ready).first()).toBeVisible();
 			await expect(page.locator(selector)).toHaveScreenshot(`${name}-dark.png`, {
 				animations: 'disabled',
@@ -88,7 +98,7 @@ test.describe('visual — interactive states', () => {
 	test('faq-open — light', async ({ page }) => {
 		await page.goto('./');
 		await page.emulateMedia({ colorScheme: 'light' });
-		await revealAll(page);
+		await settle(page);
 		await openFirstFaq(page);
 		await expect(page.locator('#faq')).toHaveScreenshot('faq-open-light.png', {
 			animations: 'disabled',
@@ -98,7 +108,7 @@ test.describe('visual — interactive states', () => {
 	test('faq-open — dark', async ({ page }) => {
 		await page.goto('./');
 		await page.evaluate(() => document.documentElement.classList.add('dark'));
-		await revealAll(page);
+		await settle(page);
 		await openFirstFaq(page);
 		await expect(page.locator('#faq')).toHaveScreenshot('faq-open-dark.png', {
 			animations: 'disabled',

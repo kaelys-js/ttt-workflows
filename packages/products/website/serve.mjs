@@ -33,4 +33,4 @@ createServer(async (req, res) => {
 		res.statusCode = 404;
 		res.end('404');
 	}
-}).listen(4321, () => console.log('serving dist on http://localhost:4321'));
+}).listen(4321, () => console.log('Serving dist on http://localhost:4321'));
