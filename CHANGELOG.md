@@ -12,6 +12,26 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-02
+
+### Fixed
+
+- copy-audit's per-unit reviewer was too lenient — a blanket keep-bias suppressed flagging as
+  well as rewriting, so it passed almost every unit. It now flags every defensible content-pillar
+  violation while keeping auto-applied rewrites conservative, which surfaced roughly three times
+  as many issues on the same corpus (including a corrupted sentence in a reference doc).
+- The copy-review workflow crashed at the workflow runtime's 4,096-item return cap on a
+  whole-repo sweep; it now returns verdicts in chunks, with the per-agent journal as the fallback.
+- markdownlint only checked root `*.md`, so every skill and reference doc went unlinted. The gate
+  now lints all authored markdown (vendored, build, and toolchain trees excluded), and 173 latent
+  violations across 22 docs were fixed.
+
+### Changed
+
+- Repo-wide copy pass: tightened 114 spans across the operator playbooks, skill reference docs,
+  the READMEs, and the website — splitting run-ons, cutting empty intensifiers, fixing comma
+  splices, and repairing a mis-described token fallback and other defects.
+
 ## [1.3.0] - 2026-09-02
 
 ### Added
