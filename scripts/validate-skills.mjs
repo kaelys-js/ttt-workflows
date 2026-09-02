@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const skills = ['pr-review', 'sec-audit', 'trp'];
+const skills = ['pr-review', 'sec-audit', 'trp', 'copy-audit'];
 let failed = 0;
 for (const s of skills) {
 	const r = spawnSync(

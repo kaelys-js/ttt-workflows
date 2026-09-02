@@ -1,10 +1,8 @@
 #
 # https://git-scm.com/docs/gitattributes
 #
-
 # Auto-detect text files and normalize line endings
 * text=auto eol=lf
-
 # ============================================
 # Source Code — JavaScript/TypeScript
 # ============================================
@@ -16,14 +14,12 @@
 *.jsx text eol=lf
 *.mjs text eol=lf
 *.cjs text eol=lf
-
 # ============================================
 # Source Code — Web Frameworks
 # ============================================
 *.svelte text eol=lf diff=html
 *.vue text eol=lf diff=html
 *.astro text eol=lf diff=html
-
 # ============================================
 # Source Code — Styles
 # ============================================
@@ -32,7 +28,6 @@
 *.sass text eol=lf diff=css
 *.less text eol=lf diff=css
 *.postcss text eol=lf diff=css
-
 # ============================================
 # Source Code — Markup & Templates
 # ============================================
@@ -43,7 +38,6 @@
 *.pug text eol=lf
 *.jade text eol=lf
 *.twig text eol=lf
-
 # ============================================
 # Source Code — Systems Languages
 # ============================================
@@ -65,7 +59,6 @@
 *.v text eol=lf
 *.dart text eol=lf
 *.wasm binary
-
 # ============================================
 # Source Code — JVM
 # ============================================
@@ -78,7 +71,6 @@
 *.cljs text eol=lf
 *.cljc text eol=lf
 *.edn text eol=lf
-
 # ============================================
 # Source Code — Functional
 # ============================================
@@ -91,7 +83,6 @@
 *.fs text eol=lf
 *.fsi text eol=lf
 *.fsx text eol=lf
-
 # ============================================
 # Source Code — Scripting
 # ============================================
@@ -106,7 +97,6 @@
 *.R text eol=lf diff=r
 *.nix text eol=lf
 *.cs text eol=lf diff=csharp
-
 # ============================================
 # Source Code — Query & Schema
 # ============================================
@@ -115,7 +105,6 @@
 *.gql text eol=lf
 *.prisma text eol=lf
 *.proto text eol=lf
-
 # ============================================
 # Data & Configuration
 # ============================================
@@ -134,7 +123,6 @@
 *.properties text eol=lf
 *.env text eol=lf
 *.env.* text eol=lf
-
 # ============================================
 # IaC & DevOps Configuration
 # ============================================
@@ -148,7 +136,6 @@
 *.dhall text eol=lf
 Pulumi.yaml text eol=lf
 Pulumi.*.yaml text eol=lf
-
 # ============================================
 # Documentation
 # ============================================
@@ -161,7 +148,6 @@ LICENSE text eol=lf
 CHANGELOG text eol=lf
 README text eol=lf
 AUTHORS text eol=lf
-
 # ============================================
 # Shell Scripts
 # ============================================
@@ -169,7 +155,6 @@ AUTHORS text eol=lf
 *.bash text eol=lf diff=bash
 *.zsh text eol=lf diff=bash
 *.fish text eol=lf
-
 # ============================================
 # Windows Scripts (CRLF required)
 # ============================================
@@ -180,12 +165,10 @@ AUTHORS text eol=lf
 *.ps1 text eol=crlf
 *.psm1 text eol=crlf
 *.psd1 text eol=crlf
-
 # ============================================
 # iCalendar (RFC 5545 mandates CRLF)
 # ============================================
 *.ics text eol=crlf
-
 # ============================================
 # Docker & Containers
 # ============================================
@@ -195,7 +178,6 @@ Dockerfile.* text eol=lf
 *.containerfile text eol=lf
 docker-compose*.yml text eol=lf
 docker-compose*.yaml text eol=lf
-
 # ============================================
 # Config Files
 # ============================================
@@ -213,7 +195,6 @@ docker-compose*.yaml text eol=lf
 .browserslistrc text eol=lf
 Makefile text eol=lf
 Procfile text eol=lf
-
 # ============================================
 # Capacitor — iOS
 # ============================================
@@ -227,12 +208,10 @@ Procfile text eol=lf
 *.xcsettings      text -merge
 *.plist           text -merge
 *.entitlements    text -merge
-
 # ============================================
 # TypeScript Definitions
 # ============================================
 *.d.ts text eol=lf linguist-generated=false
-
 # ============================================
 # Lock Files (preserve exactly, no diff)
 # ============================================
@@ -247,7 +226,6 @@ go.sum text eol=lf -diff linguist-generated=true
 poetry.lock text eol=lf -diff linguist-generated=true
 shrinkwrap.yaml text eol=lf -diff linguist-generated=true
 Package.resolved text eol=lf -diff linguist-generated=true
-
 # ============================================
 # Generated Files (no diff, linguist ignore)
 # ============================================
@@ -282,12 +260,10 @@ playwright-report/** -diff linguist-generated=true
 test-results/** -diff linguist-generated=true
 .gradle/** -diff linguist-generated=true
 .venv/** -diff linguist-generated=true
-
 # ============================================
 # Documentation (linguist)
 # ============================================
 docs/** linguist-documentation=true
-
 # ============================================
 # Graphics (binary)
 # ============================================
@@ -308,12 +284,10 @@ docs/** linguist-documentation=true
 *.sketch binary
 *.fig binary
 *.xd binary
-
 # ============================================
 # SVG (text XML)
 # ============================================
 *.svg text eol=lf
-
 # ============================================
 # Fonts (binary)
 # ============================================
@@ -322,7 +296,6 @@ docs/** linguist-documentation=true
 *.eot binary
 *.ttf binary
 *.otf binary
-
 # ============================================
 # Audio (binary)
 # ============================================
@@ -333,7 +306,6 @@ docs/** linguist-documentation=true
 *.aac binary
 *.m4a binary
 *.wma binary
-
 # ============================================
 # Video (binary)
 # ============================================
@@ -345,7 +317,6 @@ docs/** linguist-documentation=true
 *.wmv binary
 *.flv binary
 *.m4v binary
-
 # ============================================
 # Archives (binary)
 # ============================================
@@ -360,7 +331,6 @@ docs/** linguist-documentation=true
 *.rar binary
 *.iso binary
 *.dmg binary
-
 # ============================================
 # Documents (binary)
 # ============================================
@@ -374,7 +344,6 @@ docs/** linguist-documentation=true
 *.odt binary
 *.ods binary
 *.odp binary
-
 # ============================================
 # Executables & Libraries (binary)
 # ============================================
@@ -398,14 +367,12 @@ docs/** linguist-documentation=true
 *.deb binary
 *.rpm binary
 *.pkg binary
-
 # ============================================
 # Database (binary)
 # ============================================
 *.sqlite binary
 *.sqlite3 binary
 *.db binary
-
 # ============================================
 # Certificates & Keys
 # ============================================
@@ -416,7 +383,6 @@ docs/** linguist-documentation=true
 *.der binary
 *.p12 binary
 *.pfx binary
-
 # ============================================
 # Linguist Overrides (GitHub stats)
 # ============================================
@@ -424,3 +390,5 @@ docs/** linguist-documentation=true
 *.config.ts linguist-language=TypeScript
 svelte.config.js linguist-language=JavaScript
 vite.config.ts linguist-language=TypeScript
+plugins/ttt-workflows/skills/copy-audit/scripts/grammars/*.wasm filter=lfs diff=lfs merge=lfs -text
+plugins/ttt-workflows/skills/copy-audit/scripts/node_modules/**/*.wasm filter=lfs diff=lfs merge=lfs -text

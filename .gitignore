@@ -376,3 +376,13 @@ packages/products/website/public/playbooks/
 
 # Playwright visual-regression baselines are committed test inputs (override *.png).
 !packages/products/website/e2e/**/*.png
+
+# ── copy-audit skill: force-vendored deps ──────────────────────────────────
+# copy-audit is the one skill with npm/parser deps + tree-sitter grammar wasms. It ships
+# vendored (turnkey for marketplace users) — re-include its node_modules + grammars, which
+# the global node_modules/ and build-artifact rules above would otherwise ignore. The wasms
+# are stored via git-lfs (see .gitattributes).
+!plugins/ttt-workflows/skills/copy-audit/scripts/node_modules/
+!plugins/ttt-workflows/skills/copy-audit/scripts/node_modules/**
+!plugins/ttt-workflows/skills/copy-audit/scripts/grammars/
+!plugins/ttt-workflows/skills/copy-audit/scripts/grammars/**

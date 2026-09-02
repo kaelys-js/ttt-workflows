@@ -20,6 +20,7 @@ pre-commit:
     format-js:
       priority: 2
       glob: '*.{js,mjs,ts,tsx,json}'
+      exclude: 'node_modules/|/grammars/'
       run: ./bin/mise exec -- oxfmt --write {staged_files} && git add {staged_files}
     format-sh:
       priority: 3
