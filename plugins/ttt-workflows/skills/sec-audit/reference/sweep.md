@@ -73,10 +73,11 @@ the claim's shape with `scripts/coverage-claim.mjs`.
 
 ## The workflows this mode drives (Workflow tool; multi-agent opt-in required)
 
-- `workflows/expansion-sweep.js` — one triage agent per candidate (refute-first, SR3/4/5/11
-  tiers, multi-file trace, composition awareness).
-- `workflows/expansion-sweep.js` — ~45 agents fanned out per surface, batched ~10, single
-  SR12 pass at the end. ~5-10 min, ~500k-1M tokens — proportionate to coverage.
+- `workflows/expansion-sweep.js` — the opt-in fan-out, in two phases. **Hunt** runs one
+  deep-read agent per surface (semantic SFP12 read, refute-first per R2, reporting only the
+  candidates that survive self-refutation). **Verify** then runs one adversarial agent per
+  novel candidate to prove the exploit open or drop it. Fan-out scales with the surfaces you
+  pass; expect minutes and a token spend proportionate to coverage.
 Both write verdicts to `the scratch dir`. Main context reconciles proposed `SEC-nn`
 ids against the disclosure at author time.
 
