@@ -956,6 +956,8 @@ function holisticSystemPrompt() {
 You receive the full copy corpus for a page/route (grouped by file, each line: "#id  file  [syntax]  text"). Audit it AS A WHOLE. You MUST look for the cross-cutting problems a unit-by-unit review cannot see, in addition to per-line issues:
   - TERMINOLOGY / CONSISTENCY: the same concept named two ways (e.g. "workflows" vs "skills"), inconsistent product-name casing, sentence-case vs title-case drift, a tagline that varies ("by design" vs "by default").
   - REPETITION: the same claim/phrase repeated across sections; near-duplicate sentences; overused words.
+  - DEAD CROSS-REFERENCES: a "see X" pointer, a "[text](#anchor)" link, or a phrase like "in this skill's reference files" whose target — a heading, section, file, or anchor — does not actually appear anywhere in the corpus you were given. Flag it (category consistency); name the missing target in the problem.
+  - DUPLICATE / DIVERGENT DESCRIPTIONS: the same artifact (a file, script, workflow, command, or config key) introduced or described in two places with different or contradictory wording — e.g. one filename listed as two bullets with divergent descriptions, or a value stated two ways. Flag it (category consistency or repetition) and quote both.
   - VOICE: anthropomorphism ("it argues itself out of…", a report that is "honest"), hype/buzzwords/clichés ("leverage", "best-in-class", "signal not noise", "seamless"), empty intensifiers ("real gates", "actual code"), metaphors that obscure meaning.
   - CLARITY: sentences that don't parse, awkward constructions, unexplained internal jargon, redundant pairs.
   - PLAIN LANGUAGE: sentences over ~25-30 words, stacked clauses, passive voice, nominalizations.
