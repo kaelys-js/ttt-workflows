@@ -1,7 +1,7 @@
 ---
 name: pr-review
 model: claude-opus-4-7
-description: Runs a full end-to-end pull request review from a GitHub or Azure DevOps PR URL and returns a paste-ready review comment — it never posts, comments, or otherwise mutates the PR. Fetches the diff, metadata, and existing threads read-only, reviews against a design/correctness/security/tests/behaviour rubric, verifies every finding against the real diff, and outputs a compact, deterministic, plain-language review with severity-labelled findings. Use when the user asks to review a pull request, pastes a github.com or dev.azure.com pull-request link, or says "PR review", "review this PR", or "code review".
+description: Review a GitHub or Azure DevOps pull request and get back a paste-ready comment. It is read-only: it never posts, comments on, or otherwise changes the PR. It reads the diff, metadata, and existing threads, reviews them against a design, correctness, security, tests, and behavior rubric, checks every finding against the real diff, and returns a compact, plain-language review with severity-labeled findings. Use when you want to review a pull request, paste a github.com or dev.azure.com pull-request link, or say "PR review", "review this PR", or "code review".
 license: MIT. See LICENSE.
 compatibility: Requires node and git, plus gh (GitHub) or az (Azure DevOps); network access to the PR host. Optional: a ClickUp token for ticket-linked PRs.
 metadata:
