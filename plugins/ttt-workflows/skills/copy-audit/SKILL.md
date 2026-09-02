@@ -174,6 +174,11 @@ without a vendored grammar yet (KQL, Typst) are not covered.
   bottom-up splice at apply time can never corrupt a nested unit.
 - **Template-literal safety.** JS/TS template literals (`` `...${x}...` ``) are never
   captured — interpolation makes them unsafe to rewrite.
+- **HCL/Terraform config guard.** In `.tf`/`.hcl`, a string that is an attribute *value*
+  (`display_name = "…"`, `sku = "…"`, a role, region, id, …) is live infrastructure, not
+  copy — rewriting it mutates a resource and can break a plan. Only values under a
+  copy-carrier key (`description`, `summary`, `message`, `help`, `hint`, `markdown`,
+  `long_description`) are captured; other attribute values are kept untouched.
 
 **Default skips:** `AGENTS.md` / `CLAUDE.md` / `MEMORY.md` / `SKILL.md`, `CHANGELOG*`,
 lockfiles, `LICENSE`, `tsconfig`/`jsconfig`/`.eslintrc`/`.prettierrc` JSON, `*.min.*`,

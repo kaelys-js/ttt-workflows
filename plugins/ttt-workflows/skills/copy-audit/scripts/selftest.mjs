@@ -123,6 +123,10 @@ ROLE = "user_role_admin"
 	'infra.tf': `variable "env" {
   description = "The name of the environment to deploy into"
 }
+resource "azuread_application" "app" {
+  display_name               = "Live Resource Display Name"
+  admin_consent_display_name = "Access as User"
+}
 `,
 };
 for (const [f, c] of Object.entries(fixtures)) {
@@ -198,10 +202,15 @@ const rbOk = has('password was reset successfully');
 const xmlOk = has('Welcome back to the app');
 const tfOk = has('environment to deploy into');
 const rbRoleLeaked = has('user_role_admin');
-if (rbOk && xmlOk && tfOk && !rbRoleLeaked) {
-	ok('multi-language capture: ruby + android-xml + terraform (identifier excluded)');
+// HCL guard: live resource-attribute values are config, not copy — must NOT be captured
+// (rewriting them mutates infrastructure), while a variable description still is.
+const tfLiveAttrLeaked = has('Access as User') || has('Live Resource Display Name');
+if (rbOk && xmlOk && tfOk && !rbRoleLeaked && !tfLiveAttrLeaked) {
+	ok('multi-language capture: ruby + android-xml + terraform (identifier + live attr excluded)');
 } else {
-	fail(`multi-lang: ruby=${rbOk} xml=${xmlOk} tf=${tfOk} roleLeaked=${rbRoleLeaked}`);
+	fail(
+		`multi-lang: ruby=${rbOk} xml=${xmlOk} tf=${tfOk} roleLeaked=${rbRoleLeaked} tfLiveAttrLeaked=${tfLiveAttrLeaked}`,
+	);
 }
 
 // ---- 2. bundle-emit ----

@@ -12,6 +12,14 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- **copy-audit** no longer treats a live Terraform/HCL resource-attribute value as
+  editable copy. A string that is an attribute value (`display_name`, `sku`, a role,
+  region, or id) is infrastructure config — rewriting it mutates a resource and can break
+  a plan. Only values under a copy-carrier key (`description`, `summary`, `message`,
+  `help`, `hint`, `markdown`, `long_description`) are now captured in `.tf`/`.hcl`.
+
 ## [1.4.0] - 2026-09-02
 
 ### Added

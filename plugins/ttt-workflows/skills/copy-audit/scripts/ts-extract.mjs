@@ -225,6 +225,20 @@ function hasInterpolation(node) {
 	return false;
 }
 
+// HCL/Terraform attribute keys whose string value is human-readable copy, not live
+// infrastructure config. Everything else in a .tf attribute (names, ids, display names,
+// SKUs, regions, roles, …) is a resource setting: rewriting it changes infrastructure
+// and can break a plan/apply, so it must NOT be treated as editable copy.
+const HCL_COPY_KEYS = new Set([
+	'description',
+	'summary',
+	'message',
+	'long_description',
+	'help',
+	'hint',
+	'markdown',
+]);
+
 function markerKeyed(node) {
 	// climb to an enclosing call and read the callee's last identifier; only the FIRST
 	// string argument of a marker call is the copy (so Label("Delete", systemImage:"trash")
@@ -322,6 +336,27 @@ export async function extractTreeSitter(src, file, filters) {
 	}
 	const units = [];
 	const { isCopyPhrase } = filters;
+	const isHcl = lang === 'terraform' || lang === 'hcl';
+
+	// For HCL/Terraform, find the key of the nearest enclosing attribute (`key = <value>`)
+	// so a live resource-attribute value is not mistaken for copy. Returns null when the
+	// string is not inside an attribute (e.g. a marker call argument).
+	function hclAttrKey(node) {
+		let n = node.parent;
+		while (n) {
+			if (n.type === 'attribute') {
+				for (let i = 0; i < n.childCount; i++) {
+					const c = n.child(i);
+					if (c.type === 'identifier') {
+						return src.slice(c.startIndex, c.endIndex);
+					}
+				}
+				return null;
+			}
+			n = n.parent;
+		}
+		return null;
+	}
 
 	function stripQuotes(s, e) {
 		const q = src[s];
@@ -354,7 +389,13 @@ export async function extractTreeSitter(src, file, filters) {
 				if (e > s) {
 					const raw = src.slice(s, e);
 					const keyed = markerKeyed(node);
-					if (isCopyPhrase(raw, { keyed })) {
+					// In HCL, a string that is an attribute value is live config unless its
+					// key is a copy carrier (variable description, alert message, …). Skip
+					// the rest — rewriting them would mutate infrastructure. Strings outside
+					// an attribute (key === null) fall through to the normal classifier.
+					const hclKey = isHcl ? hclAttrKey(node) : null;
+					const hclBlocked = hclKey !== null && !HCL_COPY_KEYS.has(hclKey);
+					if (!hclBlocked && isCopyPhrase(raw, { keyed })) {
 						units.push({ syntax: 'code-string', char_start: s, char_end: e, block_text: raw });
 					}
 				}
