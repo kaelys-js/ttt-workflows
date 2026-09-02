@@ -40,9 +40,9 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
     <path d="M108 108l14 12-14 12"/><path d="M126 132h14"/>
   </g>
   <text x="182" y="136" ${font} font-size="40" font-weight="700" fill="#f4f4f5">ttt-workflows</text>
-  <text x="80" y="296" ${font} font-size="64" font-weight="800" fill="#fafafa">Three engineering workflows,</text>
+  <text x="80" y="296" ${font} font-size="64" font-weight="800" fill="#fafafa">Four engineering workflows,</text>
   <text x="80" y="376" ${font} font-size="64" font-weight="800" fill="#fafafa">one <tspan fill="#22b8da">plugin.</tspan></text>
-  <text x="80" y="460" ${font} font-size="32" font-weight="600" fill="#a1a1aa">pr-review · sec-audit · trp</text>
+  <text x="80" y="460" ${font} font-size="32" font-weight="600" fill="#a1a1aa">pr-review · sec-audit · trp · copy-audit</text>
   <rect x="80" y="506" width="1040" height="1.5" fill="#27272a"/>
   <text x="80" y="552" ${font} font-size="27" fill="#8b8b93">A Claude Code plugin — read-only and approval-gated by default.</text>
 </svg>`;
