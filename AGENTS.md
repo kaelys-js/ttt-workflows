@@ -4,7 +4,7 @@ Engineering notes for anyone (human or AI) working in this repository.
 
 ## What this is
 
-A Claude Code **plugin marketplace** that hosts one plugin, `ttt-workflows`, bundling three
+A Claude Code **plugin marketplace** that hosts one plugin, `ttt-workflows`, bundling four
 self-contained engineering skills:
 
 - **`pr-review`** — reviews a GitHub or Azure DevOps pull request and returns a paste-ready
@@ -13,6 +13,9 @@ self-contained engineering skills:
   repo, PR, or tenant; read-only until you approve a change.
 - **`trp`** — delivers a ClickUp ticket to a merge-ready PR under an approval-gated protocol;
   detects the platform (GitHub / Azure DevOps) from the repo.
+- **`copy-audit`** — audits product copy, UI microcopy, and (in comment mode) code comments
+  across a repo or diff via AST-based extraction; approval-gated, and a rewrite changes text
+  but never code structure. Subsumes the former comment-audit skill.
 
 Every skill is **fully self-contained and agnostic** — no external repo, no client data, no
 hardcoded projects. Each carries its own operating law in its `reference/` files and its own
@@ -36,7 +39,7 @@ deterministic scripts. See [plugins/ttt-workflows/README.md](plugins/ttt-workflo
 There is no build step — skills are files. Before any push, every skill's selftest must be green:
 
 ```bash
-for s in pr-review sec-audit trp; do
+for s in pr-review sec-audit trp copy-audit; do
   node plugins/ttt-workflows/skills/$s/scripts/selftest.mjs
 done
 ```

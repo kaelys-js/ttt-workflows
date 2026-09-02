@@ -12,6 +12,28 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-02
+
+### Added
+
+- **copy-audit skill** — audit product copy, UI microcopy, and (with `--mode=comments`)
+  code-comment slop and test-runner names across a git repo or diff. AST-based extraction
+  (tree-sitter for 40+ languages plus babel/Astro/remark/yaml) reaches markdown prose,
+  headings, and alt-text, JSON/YAML copy values, and UI microcopy in HTML/Astro/Svelte/Vue/
+  JSX/TSX; parallel subagents judge each unit with full-file context against four cited
+  content pillars (plain language, inclusive, UX microcopy, voice/grammar) or, in comment
+  mode, comment-quality plus Rule 9. Verdicts are keep/rewrite/flag/delete and every rewrite
+  is a SHA-guarded char-offset splice that changes text but never code structure, with a
+  verify phase asserting zero code-line changes. Read-only until you approve the rewrites.
+  Subsumes the standalone comment-audit skill.
+- Marketing site: a fourth skill card, a copy-audit mockup, FAQ entries, and an Operator's
+  Playbook PDF for copy-audit.
+
+### Changed
+
+- The plugin now bundles four skills; the plugin and marketplace manifests, the READMEs, and
+  the marketing site update from "three" to "four".
+
 ## [1.2.3] - 2026-09-01
 
 ### Features

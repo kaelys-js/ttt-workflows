@@ -1,13 +1,13 @@
 # ttt-workflows
 
-**Three senior-engineer workflows for [Claude Code](https://claude.com/claude-code): review a pull request, run a security audit, deliver a ticket.** One plugin, installed from a git-backed marketplace. Read-only and approval-gated by default, so you can point it at any repo or tenant without worrying what it will touch.
+**Four senior-engineer workflows for [Claude Code](https://claude.com/claude-code): review a pull request, run a security audit, deliver a ticket, audit the copy.** One plugin, installed from a git-backed marketplace. Read-only and approval-gated by default, so you can point it at any repo or tenant without worrying what it will touch.
 
 ```text
 /plugin marketplace add kaelys-js/ttt-workflows
 /plugin install ttt-workflows
 ```
 
-Then just ask. Paste a pull-request URL and ask for a review, point `/sec-audit` at a repo, or hand `/trp` a ticket.
+Then just ask. Paste a pull-request URL and ask for a review, point `/sec-audit` at a repo, hand `/trp` a ticket, or run `/copy-audit` over a repo's copy.
 
 [Website](https://kaelys-js.github.io/ttt-workflows/) · [Changelog](CHANGELOG.md) · each skill ships an operator's-playbook PDF, attached to every [release](https://github.com/kaelys-js/ttt-workflows/releases)
 
@@ -17,7 +17,7 @@ Then just ask. Paste a pull-request URL and ask for a review, point `/sec-audit`
 
 ## What you get
 
-Three skills, each self-contained and portable, no client data baked in.
+Four skills, each self-contained and portable, no client data baked in.
 
 ### `/pr-review` — a review you can paste
 
@@ -30,6 +30,10 @@ Point it at a repo, a PR, a path, or live Azure/Entra/ADO. It works across three
 ### `/trp` — a ticket delivered
 
 Hand it a ClickUp ticket. It grounds the ticket in the real repo with evidence, plans the work, **stops for your approval**, then implements, runs the real gates, opens the PR, and posts the two-layer ticket update. Nothing hard to undo happens before you say go.
+
+### `/copy-audit` — the copy, reviewed
+
+Point it at a repo or a diff. It parses the actual copy out of 40+ languages with real ASTs, markdown prose and headings, JSON/YAML values, UI microcopy in HTML/Astro/Svelte/Vue/JSX, and judges each phrase against four content pillars (plain language, inclusive, UX microcopy, voice/grammar). With `--mode=comments` it also audits code comments and test-runner names (Rule 9). You approve the rewrites before anything is written, and every change is a **char-offset splice that touches text, never code structure**.
 
 ## Safe by default
 
@@ -55,7 +59,7 @@ cd ttt-workflows
 | Path | What it is |
 | --- | --- |
 | `.claude-plugin/marketplace.json` | The marketplace manifest (`name: ttt-workflows`). |
-| `plugins/ttt-workflows/` | The plugin: `plugin.json` + the three `skills/<name>/`. |
+| `plugins/ttt-workflows/` | The plugin: `plugin.json` + the four `skills/<name>/`. |
 | `plugins/ttt-workflows/skills/<name>/scripts/` | Deterministic `.mjs`/`.sh` the skill drives, each with a `selftest.mjs`. |
 | `plugins/ttt-workflows/skills/<name>/reference/` | The protocol, usage guide, deep dive, eval triggers. |
 | `docs/*.typ` · `docs/*.pdf` | The operator playbooks, typst source and the built PDF (kept in sync by `docs:check`). |
@@ -71,7 +75,7 @@ Everything is pinned and provisioned by [mise](https://mise.jdx.dev/), you do no
 One gate runs everywhere: the `pre-push` lefthook hook is exactly what the CI **Checks** job runs (`lefthook run pre-push --all-files`), and `bin/preflight.sh` asserts that parity on every push. Every stage runs through turbo, so an unchanged surface is a cache hit locally and in CI.
 
 - **Format + lint** — oxfmt, oxlint, shfmt, shellcheck, taplo, yamllint, actionlint, markdownlint, prettier (astro), stylelint (css).
-- **Skill scripts** — the three selftest batteries under c8, with a coverage floor.
+- **Skill scripts** — the four selftest batteries under c8, with a coverage floor.
 - **Website** — Vitest unit + Playwright E2E and visual regression, byte-identical light/dark baselines for every section.
 - **Docs** — the playbook PDFs must match their typst sources.
 
@@ -90,7 +94,7 @@ git push origin main --tags
 Two things are separate, on purpose:
 
 - **The plugin is served from `main`.** `/plugin marketplace add kaelys-js/ttt-workflows` clones the default branch and `/plugin marketplace update ttt-workflows` re-pulls it, so a push to `main` with the `version` bumped is what reaches installed plugins. No tag needed.
-- **The `v*` tag is the release.** `release.yml` re-checks the tag against `VERSION` and `CHANGELOG.md` (via `scripts/release-notes.mjs`), refuses to publish on any mismatch, then cuts a GitHub Release whose notes are the matching CHANGELOG section, with the three playbook PDFs attached. The tag is also the only trigger that deploys the marketing site, keeping the live site in lockstep with the released plugin.
+- **The `v*` tag is the release.** `release.yml` re-checks the tag against `VERSION` and `CHANGELOG.md` (via `scripts/release-notes.mjs`), refuses to publish on any mismatch, then cuts a GitHub Release whose notes are the matching CHANGELOG section, with the four playbook PDFs attached. The tag is also the only trigger that deploys the marketing site, keeping the live site in lockstep with the released plugin.
 
 ### Contributing
 

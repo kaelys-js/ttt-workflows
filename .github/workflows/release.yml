@@ -1,7 +1,7 @@
 name: Release
 # Push an annotated version tag (e.g. v1.2) to cut a GitHub Release. The changelog
 # goes in the tag message: git tag -a v1.2 -m "## Changes…"; git push origin v1.2
-# The release attaches the three operator-playbook PDFs (kept in sync with their
+# The release attaches the four operator-playbook PDFs (kept in sync with their
 # sources by the docs-drift check in the lint/build workflows).
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Confirm the shipped PDFs are present
-        run: test -f docs/pr-review.pdf && test -f docs/sec-audit.pdf && test -f docs/trp.pdf
+        run: test -f docs/pr-review.pdf && test -f docs/sec-audit.pdf && test -f docs/trp.pdf && test -f docs/copy-audit.pdf
 
       - name: Release notes from CHANGELOG (also gates tag == VERSION == CHANGELOG)
         id: notes
@@ -46,3 +46,4 @@ jobs:
             docs/pr-review.pdf
             docs/sec-audit.pdf
             docs/trp.pdf
+            docs/copy-audit.pdf

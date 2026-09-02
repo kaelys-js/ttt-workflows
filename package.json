@@ -1,7 +1,7 @@
 {
 	"name": "ttt-workflows",
 	"private": true,
-	"description": "Three engineering workflows as Claude Code skills — pr-review, sec-audit, trp.",
+	"description": "Four engineering workflows as Claude Code skills — pr-review, sec-audit, trp, copy-audit.",
 	"license": "Proprietary",
 	"type": "module",
 	"scripts": {
