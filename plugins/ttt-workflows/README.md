@@ -1,10 +1,11 @@
 # ttt-workflows
 
-Three end-to-end engineering workflows, each a Claude Code skill:
+Four end-to-end engineering workflows, each a Claude Code skill:
 
 - **`/ttt-workflows:sec-audit`** — three-layer security audit (code + live Azure + identity/CI) of a repo, PR, or tenant. Read-only.
 - **`/ttt-workflows:trp`** — deliver a ClickUp ticket end to end, with an absolute approval gate before anything is built.
 - **`/ttt-workflows:pr-review`** — a paste-ready PR review that never touches the PR.
+- **`/ttt-workflows:copy-audit`** — audit product copy, UI microcopy, and (in comment mode) code comments across a repo or diff. Approval-gated; changes text, never code structure.
 
 Invoke any of them and it opens with a short scan-first guide, then asks for the one input it needs.
 
@@ -48,5 +49,6 @@ Portability differs by skill. Be straight with your team about it:
 | **pr-review** | ✅ **Fully portable.** Works on any GitHub / Azure DevOps PR. | `node`, and `gh` (GitHub) or `az` (Azure DevOps). ClickUp token optional (`CLICKUP_TOKEN_FILE`), only for ticket-linked PRs. |
 | **sec-audit** | ✅ **Fully self-contained & agnostic.** Point it at any repo/PR/tenant. | `node`, `git`, and `az` for the live-cloud probes; the scanners `semgrep`/`gitleaks`/`checkov`/`osv-scanner`/`trivy` for the code layer (a missing one is reported, never silently skipped). No external repo, no client data — coverage against a prior audit is a file *you* pass in (`--known`). |
 | **trp** | ✅ **Self-contained & agnostic.** Works with any GitHub or Azure DevOps repo. | `node`, a ClickUp token (`CLICKUP_TOKEN_FILE`), and `gh` (GitHub) or `az` (Azure DevOps). The platform is detected from the repo's remote; the full delivery protocol is bundled in `reference/`. No external rulebook, no client-specific config baked in. |
+| **copy-audit** | ✅ **Fully self-contained & agnostic.** Runs on any repo or diff, offline. | `node` and `git`. Ships its parsers vendored (tree-sitter grammar wasms plus babel/Astro/remark/better-sqlite3), so there is no install step; the reviewer runs as in-session subagents. No external rulebook, no client data. |
 
-**Bottom line:** all three are self-contained and portable — share them with anyone. pr-review works on any PR, sec-audit on any repo/Azure tenant, trp on any GitHub/Azure DevOps repo.
+**Bottom line:** all four are self-contained and portable — share them with anyone. pr-review works on any PR, sec-audit on any repo/Azure tenant, trp on any GitHub/Azure DevOps repo, copy-audit on any repo's copy and comments.
