@@ -707,6 +707,11 @@ function escapeForSyntax(syntax, rewrite, file, charStart) {
 		if (head.startsWith('<!--')) {
 			return `<!-- ${body} -->`;
 		}
+		// Preserve a JSDoc opener (/**) — downgrading it to /* strips the doc-comment
+		// semantics tooling/IntelliSense keys on. Must be checked before the plain /* case.
+		if (head.startsWith('/**')) {
+			return `/** ${body} */`;
+		}
 		if (head.startsWith('/*')) {
 			return `/* ${body} */`;
 		}

@@ -533,7 +533,7 @@ cg('config', 'user.email', 'x@y');
 cg('config', 'user.name', 'x');
 writeFileSync(
 	join(cRepo, 'a.ts'),
-	`// increment the counter by one\nlet counter = 0;\ncounter++;\n// TTL must match the cron interval or events double-fire\nconst ttl = 60;\nimport { it } from 'vitest';\nit('returns 200', () => {});\n`,
+	`// increment the counter by one\nlet counter = 0;\ncounter++;\n// TTL must match the cron interval or events double-fire\nconst ttl = 60;\n/**\n * R12.3 -- legacy narrative block above the widget.\n */\nfunction widget() {}\nimport { it } from 'vitest';\nit('returns 200', () => {});\n`,
 );
 writeFileSync(join(cRepo, 'b.py'), `# restate: set x to one\nx = 1\n`);
 cg('add', '.');
@@ -571,6 +571,7 @@ if ((cSyn.comment || 0) >= 3 && (cSyn.testname || 0) >= 1) {
 const cRows = JSON.parse(sql(cDb, 'SELECT id, syntax, block_text FROM units;', true) || '[]');
 const slop = cRows.find((x) => x.block_text.includes('increment the counter'));
 const why = cRows.find((x) => x.block_text.includes('TTL must match'));
+const jsdoc = cRows.find((x) => x.block_text.includes('legacy narrative block'));
 const tn = cRows.find((x) => x.syntax === 'testname');
 writeFileSync(
 	join(root, 'cv.json'),
@@ -584,6 +585,14 @@ writeFileSync(
 			rewrite: null,
 		},
 		{ id: why.id, verdict: 'keep', rewrite: null },
+		{
+			id: jsdoc.id,
+			verdict: 'rewrite',
+			rewrite: 'Renders the widget.',
+			category: 'comment',
+			severity: 'low',
+			note: 'drop the task scar',
+		},
 		{
 			id: tn.id,
 			verdict: 'rewrite',
@@ -614,6 +623,12 @@ if (
 	ok('comment mode apply: slop deleted, WHY kept, testname rewritten (call shape intact)');
 } else {
 	fail(`comment mode apply wrong:\n${cAfter}`);
+}
+// A rewritten JSDoc keeps its /** opener — downgrading to /* would strip doc-comment semantics.
+if (/\/\*\* Renders the widget\. \*\//.test(cAfter) && !/\/\* Renders the widget/.test(cAfter)) {
+	ok('comment mode apply: rewritten JSDoc keeps its /** marker (not downgraded to /*)');
+} else {
+	fail(`comment mode apply downgraded a JSDoc marker:\n${cAfter}`);
 }
 r = spawnSync('node', [engine, '--phase=verify', '--db', cDb, '--repo', cRepo], {
 	encoding: 'utf8',
