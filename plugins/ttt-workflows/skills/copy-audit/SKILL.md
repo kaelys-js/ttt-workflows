@@ -6,7 +6,7 @@ license: MIT. See LICENSE.
 compatibility: Requires node and git. Ships vendored parsers (tree-sitter grammar wasms via git-lfs, @babel/parser, @astrojs/compiler, remark, better-sqlite3), so there is no install step and it runs offline; the reviewer runs as in-session subagents (no API key).
 metadata:
   author: ttt-studios
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # copy-audit

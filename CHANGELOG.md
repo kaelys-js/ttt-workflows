@@ -12,8 +12,30 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-02
+
+### Added
+
+- **copy-audit** now audits the **working tree** when `--head` is the current `HEAD`.
+  `apply` and `verify` operate on the on-disk file, so extract reads the working-tree
+  content too — a file with uncommitted edits is audited as it actually is on disk, and its
+  `file_sha`/`block_text` match what `apply` splices. Previously a dirty tree was audited
+  from its committed blob, re-surfacing already-applied copy and tripping the SHA guard on
+  every `apply`. A historical `--head` still reads via `git show` (review-only).
+- **copy-audit** captures **terse UI copy** rendered in JSX expression positions —
+  `aria-label={"Close"}`, `<span>{active ? "Active" : "Archived"}</span>` — by keying those
+  string literals like JSX text. Code-position strings (conditional/logical tests, i18n call
+  args, class-name expressions, event handlers, `.map` callbacks) stay excluded.
+
 ### Fixed
 
+- **copy-audit** JSX/HTML text extraction now stores the **raw source slice** as
+  `block_text` (offset-consistent with `apply`), decodes HTML entities only to judge
+  copy-worthiness, and trims whitespace entities — so entity-bearing prose (`doesn&rsquo;t`)
+  applies cleanly, lone glyph entities (`&ldquo;`) are dropped, and `&nbsp;` no longer
+  fragments a text node.
+- **copy-audit** comment rewrites preserve the `/**` JSDoc opener instead of downgrading it
+  to a plain `/*` block, which stripped the doc-comment semantics tooling keys on.
 - **copy-audit** no longer treats a live Terraform/HCL resource-attribute value as
   editable copy. A string that is an attribute value (`display_name`, `sku`, a role,
   region, or id) is infrastructure config — rewriting it mutates a resource and can break

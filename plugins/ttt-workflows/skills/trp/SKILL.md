@@ -6,7 +6,7 @@ license: MIT. See LICENSE.
 compatibility: Requires node, git, a ClickUp token (CLICKUP_TOKEN_FILE), and gh (GitHub) or az (Azure DevOps). Works with any GitHub or Azure DevOps repo; the platform is detected from the repo remote.
 metadata:
   author: ttt-studios
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # trp

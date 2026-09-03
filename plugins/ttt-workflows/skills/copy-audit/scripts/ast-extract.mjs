@@ -204,16 +204,16 @@ const NAMED_ENTITIES = {
 	bull: '•',
 };
 function decodeHtmlEntities(str) {
-	return str.replace(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);/gi, (m, body) => {
+	return str.replaceAll(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);/gi, (m, body) => {
 		if (body[0] === '#') {
 			const cp =
 				body[1] === 'x' || body[1] === 'X'
-					? parseInt(body.slice(2), 16)
-					: parseInt(body.slice(1), 10);
+					? Number.parseInt(body.slice(2), 16)
+					: Number.parseInt(body.slice(1), 10);
 			return Number.isFinite(cp) && cp > 0 ? String.fromCodePoint(cp) : m;
 		}
 		const v = NAMED_ENTITIES[body.toLowerCase()];
-		return v !== undefined ? v : m;
+		return v === undefined ? m : v;
 	});
 }
 // Trim a text span on both raw whitespace and whitespace entities (&nbsp; and its numeric forms)

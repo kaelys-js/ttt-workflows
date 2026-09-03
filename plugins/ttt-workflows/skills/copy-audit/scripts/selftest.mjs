@@ -884,12 +884,12 @@ if (mHex >= 1 && mArr >= 1) {
 				src.slice(u.char_start, u.char_end),
 			)} block=${JSON.stringify(u.block_text)}`,
 		);
-	} else if (!u.block_text.includes('&rsquo;')) {
+	} else if (u.block_text.includes('&rsquo;')) {
+		ok('jsx-text with HTML entities keeps the raw source slice (offset-consistent, apply-safe)');
+	} else {
 		fail(
 			`entity jsx-text stored decoded value instead of raw source: ${JSON.stringify(u.block_text)}`,
 		);
-	} else {
-		ok('jsx-text with HTML entities keeps the raw source slice (offset-consistent, apply-safe)');
 	}
 }
 
@@ -967,19 +967,25 @@ if (mHex >= 1 && mArr >= 1) {
 	).map((u) => u.block_text);
 	const prose = texts(`const A = () => <p>This can&rsquo;t be undone &mdash; ask IT first.</p>;`);
 	let bad = null;
-	if (glyph.length)
+	if (glyph.length) {
 		bad = `lone entity glyph captured as copy: ${JSON.stringify(glyph.map((u) => u.block_text))}`;
-	else if (nbsp.includes('Use&nbsp') || nbsp.some((t) => t.startsWith('nbsp;')))
+	}
+	if (!bad && (nbsp.includes('Use&nbsp') || nbsp.some((t) => t.startsWith('nbsp;')))) {
 		bad = `&nbsp; sliced mid-entity: ${JSON.stringify(nbsp)}`;
-	else if (!nbsp.includes('as a custom role'))
+	}
+	if (!bad && nbsp.includes('as a custom role') === false) {
 		bad = `&nbsp;-led text not recovered cleanly: ${JSON.stringify(nbsp)}`;
-	else if (!prose.length || !prose[0].block_text.includes('&rsquo;'))
+	}
+	if (!bad && (prose.length === 0 || prose[0].block_text.includes('&rsquo;') === false)) {
 		bad = `real entity prose not captured raw: ${JSON.stringify(prose.map((u) => u.block_text))}`;
+	}
 	// offset consistency for the prose unit
 	if (!bad && prose.length) {
 		const src = `const A = () => <p>This can&rsquo;t be undone &mdash; ask IT first.</p>;`;
 		const u = extractJs(src, 'Ent.tsx', 0)[0];
-		if (src.slice(u.char_start, u.char_end) !== u.block_text) bad = 'entity prose offset drift';
+		if (src.slice(u.char_start, u.char_end) !== u.block_text) {
+			bad = 'entity prose offset drift';
+		}
 	}
 	if (bad) {
 		fail(`jsx entity handling: ${bad}`);
@@ -1011,9 +1017,7 @@ if (mHex >= 1 && mArr >= 1) {
 	const bt = sql(wdb, "SELECT block_text FROM units WHERE syntax='json-copy';").trim();
 	if (ex.status !== 0) {
 		fail(`dirty-worktree extract non-zero: ${ex.stderr}`);
-	} else if (bt !== 'Working tree headline now') {
-		fail(`dirty-worktree extract read committed blob, not disk: ${JSON.stringify(bt)}`);
-	} else {
+	} else if (bt === 'Working tree headline now') {
 		// prove apply then succeeds against the same working-tree content (no SHA FATAL)
 		const vp = join(wt, 'v.json');
 		const id = sql(wdb, "SELECT id FROM units WHERE syntax='json-copy';").trim();
@@ -1037,11 +1041,15 @@ if (mHex >= 1 && mArr >= 1) {
 			encoding: 'utf8',
 		});
 		const after = readFileSync(join(wt, 'a.json'), 'utf8');
-		if (ap.status !== 0 || /FATAL/.test(ap.stderr))
+		if (ap.status !== 0 || /FATAL/.test(ap.stderr)) {
 			fail(`dirty-worktree apply failed: ${ap.stderr}`);
-		else if (!after.includes('Working tree headline today'))
+		} else if (after.includes('Working tree headline today')) {
+			ok('extract reads the working tree at --head HEAD (dirty tree audits + applies cleanly)');
+		} else {
 			fail(`dirty-worktree apply did not splice: ${after}`);
-		else ok('extract reads the working tree at --head HEAD (dirty tree audits + applies cleanly)');
+		}
+	} else {
+		fail(`dirty-worktree extract read committed blob, not disk: ${JSON.stringify(bt)}`);
 	}
 	rmSync(wt, { recursive: true, force: true });
 }
