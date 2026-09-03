@@ -733,6 +733,21 @@ function escapeForSyntax(syntax, rewrite, file, charStart) {
 	return rewrite;
 }
 
+// A comment that is the ONLY thing between an opening { and its closing } is load-bearing:
+// deleting it empties the block, which a human reads as "intentionally empty" and which
+// eslint rejects (no-empty / no-empty-function). Detect it so apply keeps it, never deletes it.
+function commentIsSoleBlockBody(content, s, e) {
+	let i = s - 1;
+	while (i >= 0 && /\s/.test(content[i])) {
+		i--;
+	}
+	let j = e;
+	while (j < content.length && /\s/.test(content[j])) {
+		j++;
+	}
+	return content[i] === '{' && content[j] === '}';
+}
+
 // Apply rewrite/delete rows to a file's content by exact char span, bottom-up so earlier
 // offsets stay valid. Pure — no DB, no I/O — so both apply (to write disk) and the git-free
 // verify (to reconstruct the expected post-image) share one splice, and can never diverge.
@@ -741,6 +756,11 @@ function spliceUnits(content, frs) {
 	let out = content;
 	for (const r of frs.toSorted((a, b) => b.char_start - a.char_start)) {
 		if (r.verdict === 'delete') {
+			// Keep a comment whose removal would empty its enclosing block (checked against the
+			// pristine content so apply and verify agree). Mirrors the apply-phase guard.
+			if (r.syntax === 'comment' && commentIsSoleBlockBody(content, r.char_start, r.char_end)) {
+				continue;
+			}
 			let s = r.char_start;
 			let e = r.char_end;
 			let ls = s;
@@ -810,6 +830,7 @@ if (phase === 'apply') {
 		}
 		// Validate every row against the untouched pre-image (drift, testname-delete, null
 		// rewrite) and record it, then splice once via the shared helper.
+		const toApply = [];
 		for (const r of frs) {
 			const cur = content.slice(r.char_start, r.char_end);
 			if (cur !== r.block_text) {
@@ -820,17 +841,30 @@ if (phase === 'apply') {
 			if (r.verdict === 'delete' && r.syntax === 'testname') {
 				fatal(`unit ${file}#${r.id} delete on a testname would break the runner call; refusing`);
 			}
+			// A delete that would empty its enclosing block is refused — keep the comment instead.
+			if (
+				r.verdict === 'delete' &&
+				r.syntax === 'comment' &&
+				commentIsSoleBlockBody(content, r.char_start, r.char_end)
+			) {
+				summary.kept_empty_block = (summary.kept_empty_block || 0) + 1;
+				continue;
+			}
 			if (r.verdict !== 'delete' && (r.rewrite === null || r.rewrite === undefined)) {
 				fatal(`unit ${file}#${r.id} verdict=rewrite but rewrite text is null`);
 			}
 			upd.run(r.id);
+			toApply.push(r);
 			if (r.verdict === 'delete') {
 				summary.deleted++;
 			} else {
 				summary.rewritten++;
 			}
 		}
-		const newContent = spliceUnits(content, frs);
+		if (toApply.length === 0) {
+			continue;
+		}
+		const newContent = spliceUnits(content, toApply);
 		const tmp = diskPath + '.tmp';
 		writeFileSync(tmp, newContent);
 		renameSync(tmp, diskPath);

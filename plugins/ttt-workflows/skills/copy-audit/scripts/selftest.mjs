@@ -533,7 +533,7 @@ cg('config', 'user.email', 'x@y');
 cg('config', 'user.name', 'x');
 writeFileSync(
 	join(cRepo, 'a.ts'),
-	`// increment the counter by one\nlet counter = 0;\ncounter++;\n// TTL must match the cron interval or events double-fire\nconst ttl = 60;\n/**\n * R12.3 -- legacy narrative block above the widget.\n */\nfunction widget() {}\nimport { it } from 'vitest';\nit('returns 200', () => {});\n`,
+	`// increment the counter by one\nlet counter = 0;\ncounter++;\n// TTL must match the cron interval or events double-fire\nconst ttl = 60;\n/**\n * R12.3 -- legacy narrative block above the widget.\n */\nfunction widget() {}\nconst noop = () => {\n\t// intentional no-op stub\n};\nimport { it } from 'vitest';\nit('returns 200', () => {});\n`,
 );
 writeFileSync(join(cRepo, 'b.py'), `# restate: set x to one\nx = 1\n`);
 cg('add', '.');
@@ -572,6 +572,7 @@ const cRows = JSON.parse(sql(cDb, 'SELECT id, syntax, block_text FROM units;', t
 const slop = cRows.find((x) => x.block_text.includes('increment the counter'));
 const why = cRows.find((x) => x.block_text.includes('TTL must match'));
 const jsdoc = cRows.find((x) => x.block_text.includes('legacy narrative block'));
+const soleBody = cRows.find((x) => x.block_text.includes('intentional no-op stub'));
 const tn = cRows.find((x) => x.syntax === 'testname');
 writeFileSync(
 	join(root, 'cv.json'),
@@ -592,6 +593,14 @@ writeFileSync(
 			category: 'comment',
 			severity: 'low',
 			note: 'drop the task scar',
+		},
+		{
+			id: soleBody.id,
+			verdict: 'delete',
+			category: 'comment',
+			severity: 'low',
+			note: 'looks like filler',
+			rewrite: null,
 		},
 		{
 			id: tn.id,
@@ -629,6 +638,13 @@ if (/\/\*\* Renders the widget\. \*\//.test(cAfter) && !/\/\* Renders the widget
 	ok('comment mode apply: rewritten JSDoc keeps its /** marker (not downgraded to /*)');
 } else {
 	fail(`comment mode apply downgraded a JSDoc marker:\n${cAfter}`);
+}
+// A delete on the sole comment of an empty block is refused — emptying the block would break
+// no-empty / no-empty-function lint (and reads as unintentional). The comment must survive.
+if (/intentional no-op stub/.test(cAfter)) {
+	ok('comment mode apply: keeps a sole-body block comment (does not empty the block)');
+} else {
+	fail(`comment mode apply emptied a block by deleting its sole comment:\n${cAfter}`);
 }
 r = spawnSync('node', [engine, '--phase=verify', '--db', cDb, '--repo', cRepo], {
 	encoding: 'utf8',
