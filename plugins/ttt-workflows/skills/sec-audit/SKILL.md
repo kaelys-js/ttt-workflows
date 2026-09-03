@@ -6,7 +6,7 @@ license: MIT. See LICENSE.
 compatibility: Requires node, git, and az (live Azure/Entra/ADO probes), plus scanners semgrep, gitleaks, checkov, osv-scanner, trivy for the code layer; network access to the target and Azure.
 metadata:
   author: ttt-studios
-  version: "1.5.0"
+  version: "1.5.1"
 ---
 
 # sec-audit

@@ -12,6 +12,16 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-02
+
+### Fixed
+
+- **copy-audit** (comment mode) no longer deletes a comment that is the sole content of an
+  otherwise-empty block. Removing it empties the `{}`, which reads as unintentional and
+  trips eslint `no-empty` / `no-empty-function` (`observe() { /* no-op */ }`,
+  `() => { /* stub */ }`). `apply` and the shared splice now refuse such a delete and keep
+  the comment.
+
 ## [1.5.0] - 2026-09-02
 
 ### Added
