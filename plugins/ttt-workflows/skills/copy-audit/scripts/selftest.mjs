@@ -851,6 +851,186 @@ if (mHex >= 1 && mArr >= 1) {
 	fail(`pdf mixed operators off: hex=${mHex} arr=${mArr}`);
 }
 
+// --- regression: JSXText carrying HTML entities must store the RAW source slice, not babel's
+// entity-decoded node.value. Storing the decoded value while recording raw-source offsets makes
+// block_text disagree with src.slice(char_start,char_end), which the apply span guard then rejects
+// as false drift (observed on `&rsquo;`/`&apos;` in real .tsx copy).
+{
+	const { extractJs } = await import('./ast-extract.mjs');
+	const src = `const X = () => <p>It doesn&rsquo;t break &amp; stays put here</p>;\n`;
+	const u = extractJs(src, 'Entity.tsx', 0).find(
+		(r) => r.syntax === 'jsx-text' && r.block_text.includes('doesn'),
+	);
+	if (!u) {
+		fail('entity jsx-text unit not captured');
+	} else if (src.slice(u.char_start, u.char_end) !== u.block_text) {
+		fail(
+			`entity jsx-text offset drift: slice=${JSON.stringify(
+				src.slice(u.char_start, u.char_end),
+			)} block=${JSON.stringify(u.block_text)}`,
+		);
+	} else if (!u.block_text.includes('&rsquo;')) {
+		fail(
+			`entity jsx-text stored decoded value instead of raw source: ${JSON.stringify(u.block_text)}`,
+		);
+	} else {
+		ok('jsx-text with HTML entities keeps the raw source slice (offset-consistent, apply-safe)');
+	}
+}
+
+// --- regression: terse UI copy in JSX expression positions must be captured (keyed like JSXText),
+// while strings in code positions (conditional/logical tests, i18n call args, class-name exprs,
+// event handlers, .map callbacks) must NOT be — the phrase filter alone drops terse labels, so the
+// walk threads a "UI text" context into JSX child expressions and copy-attribute containers only.
+{
+	const { extractJs } = await import('./ast-extract.mjs');
+	const texts = (src) => extractJs(src, 'Ui.tsx', 0).map((u) => u.block_text);
+	const has = (src, t) => texts(src).includes(t);
+	const captures = [
+		[`const A = () => <button aria-label={'Close'} />;`, 'Close', 'terse copy-attr expression'],
+		[
+			`const A = () => <span>{active ? 'Active' : 'Archived'}</span>;`,
+			'Active',
+			'terse JSX-child ternary branch',
+		],
+		[`const A = () => <p>{'Welcome'}</p>;`, 'Welcome', 'terse single JSX-child expression'],
+		[`const A = () => <p>{error && 'Failed'}</p>;`, 'Failed', 'terse JSX-child logical branch'],
+	];
+	const excludes = [
+		[
+			`const A = () => <span>{variant === 'primary' ? 'On' : 'Off'}</span>;`,
+			'primary',
+			'conditional test string',
+		],
+		[
+			`const A = () => <button aria-label={t('close_btn')} />;`,
+			'close_btn',
+			'i18n call arg in copy attr',
+		],
+		[
+			`const A = () => <div className={big ? 'p-4-lg' : 'p-2-sm'} />;`,
+			'p-4-lg',
+			'class-name expression',
+		],
+		[
+			`const A = () => <button onClick={() => track('click_x')}>Go</button>;`,
+			'click_x',
+			'event-handler call arg',
+		],
+	];
+	let bad = null;
+	for (const [src, t, why] of captures) {
+		if (!has(src, t)) {
+			bad = `MISSED ${why}: ${JSON.stringify(t)}`;
+			break;
+		}
+	}
+	if (!bad) {
+		for (const [src, t, why] of excludes) {
+			if (has(src, t)) {
+				bad = `FALSE POSITIVE ${why}: ${JSON.stringify(t)}`;
+				break;
+			}
+		}
+	}
+	if (bad) {
+		fail(`jsx expression copy keying: ${bad}`);
+	} else {
+		ok('jsx expression copy: terse UI text captured; code-position strings excluded');
+	}
+}
+
+// --- regression: entity-only JSX text (a lone &ldquo;/&quot; used to wrap a value) is noise and
+// must NOT be captured, and a whitespace entity (&nbsp;) at a text-node edge must be trimmed, not
+// sliced through — while a real phrase carrying a mid-text entity is still captured (raw-consistent).
+{
+	const { extractJs } = await import('./ast-extract.mjs');
+	const texts = (src) => extractJs(src, 'Ent.tsx', 0);
+	const glyph = texts(`const A = () => <b>&ldquo;</b>{q}<b>&rdquo;</b>;`);
+	const nbsp = texts(
+		`const A = () => <span>Use&nbsp;<code>{r}</code>&nbsp;as a custom role</span>;`,
+	).map((u) => u.block_text);
+	const prose = texts(`const A = () => <p>This can&rsquo;t be undone &mdash; ask IT first.</p>;`);
+	let bad = null;
+	if (glyph.length)
+		bad = `lone entity glyph captured as copy: ${JSON.stringify(glyph.map((u) => u.block_text))}`;
+	else if (nbsp.includes('Use&nbsp') || nbsp.some((t) => t.startsWith('nbsp;')))
+		bad = `&nbsp; sliced mid-entity: ${JSON.stringify(nbsp)}`;
+	else if (!nbsp.includes('as a custom role'))
+		bad = `&nbsp;-led text not recovered cleanly: ${JSON.stringify(nbsp)}`;
+	else if (!prose.length || !prose[0].block_text.includes('&rsquo;'))
+		bad = `real entity prose not captured raw: ${JSON.stringify(prose.map((u) => u.block_text))}`;
+	// offset consistency for the prose unit
+	if (!bad && prose.length) {
+		const src = `const A = () => <p>This can&rsquo;t be undone &mdash; ask IT first.</p>;`;
+		const u = extractJs(src, 'Ent.tsx', 0)[0];
+		if (src.slice(u.char_start, u.char_end) !== u.block_text) bad = 'entity prose offset drift';
+	}
+	if (bad) {
+		fail(`jsx entity handling: ${bad}`);
+	} else {
+		ok('jsx entities: lone glyphs dropped, &nbsp; edges trimmed, real entity prose kept raw');
+	}
+}
+
+// --- regression: with --head HEAD, extract must read the WORKING TREE, not the committed blob.
+// apply/verify are hard-coupled to disk; if extract read `git show HEAD:file` while the file had
+// uncommitted edits, it would audit stale copy and every apply would fail the SHA guard.
+{
+	const wt = mkdtempSync(join(tmpdir(), 'copyaudit-wt-'));
+	const wg = (...a) => spawnSync('git', ['-C', wt, ...a], { encoding: 'utf8' });
+	wg('init', '-q');
+	wg('config', 'user.email', 't@t.t');
+	wg('config', 'user.name', 't');
+	writeFileSync(join(wt, 'a.json'), `{ "title": "Committed headline here" }\n`);
+	wg('add', '.');
+	wg('commit', '-q', '-m', 'base');
+	// uncommitted edit in the working tree
+	writeFileSync(join(wt, 'a.json'), `{ "title": "Working tree headline now" }\n`);
+	const wdb = join(wt, 'db.sqlite');
+	const ex = spawnSync(
+		'node',
+		[engine, '--phase=extract', '--repo', wt, '--full', '--head', 'HEAD', '--db', wdb],
+		{ encoding: 'utf8' },
+	);
+	const bt = sql(wdb, "SELECT block_text FROM units WHERE syntax='json-copy';").trim();
+	if (ex.status !== 0) {
+		fail(`dirty-worktree extract non-zero: ${ex.stderr}`);
+	} else if (bt !== 'Working tree headline now') {
+		fail(`dirty-worktree extract read committed blob, not disk: ${JSON.stringify(bt)}`);
+	} else {
+		// prove apply then succeeds against the same working-tree content (no SHA FATAL)
+		const vp = join(wt, 'v.json');
+		const id = sql(wdb, "SELECT id FROM units WHERE syntax='json-copy';").trim();
+		writeFileSync(
+			vp,
+			JSON.stringify([
+				{
+					id: Number(id),
+					verdict: 'rewrite',
+					rewrite: 'Working tree headline today',
+					category: 'microcopy',
+					severity: 'low',
+					note: 'x',
+				},
+			]),
+		);
+		spawnSync('node', [engine, '--phase=apply-verdicts', '--db', wdb, '--verdicts', vp], {
+			encoding: 'utf8',
+		});
+		const ap = spawnSync('node', [engine, '--phase=apply', '--db', wdb, '--repo', wt], {
+			encoding: 'utf8',
+		});
+		const after = readFileSync(join(wt, 'a.json'), 'utf8');
+		if (ap.status !== 0 || /FATAL/.test(ap.stderr))
+			fail(`dirty-worktree apply failed: ${ap.stderr}`);
+		else if (!after.includes('Working tree headline today'))
+			fail(`dirty-worktree apply did not splice: ${after}`);
+		else ok('extract reads the working tree at --head HEAD (dirty tree audits + applies cleanly)');
+	}
+	rmSync(wt, { recursive: true, force: true });
+}
+
 rmSync(root, { recursive: true, force: true });
 if (failed) {
 	console.error(`\n${failed} check(s) failed`);

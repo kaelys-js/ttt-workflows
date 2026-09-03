@@ -176,6 +176,58 @@ function decodeMinimal(raw) {
 		.replaceAll(String.raw`\\`, '\\');
 }
 
+// Decode the HTML entities that show up in JSX/HTML copy — used ONLY to judge copy-worthiness
+// and to trim span edges; block_text always keeps the raw source so apply offsets stay exact.
+const NAMED_ENTITIES = {
+	nbsp: ' ',
+	amp: '&',
+	lt: '<',
+	gt: '>',
+	quot: '"',
+	apos: "'",
+	rsquo: '’',
+	lsquo: '‘',
+	ldquo: '“',
+	rdquo: '”',
+	mdash: '—',
+	ndash: '–',
+	hellip: '…',
+	middot: '·',
+	times: '×',
+	divide: '÷',
+	copy: '©',
+	reg: '®',
+	trade: '™',
+	laquo: '«',
+	raquo: '»',
+	deg: '°',
+	bull: '•',
+};
+function decodeHtmlEntities(str) {
+	return str.replace(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);/gi, (m, body) => {
+		if (body[0] === '#') {
+			const cp =
+				body[1] === 'x' || body[1] === 'X'
+					? parseInt(body.slice(2), 16)
+					: parseInt(body.slice(1), 10);
+			return Number.isFinite(cp) && cp > 0 ? String.fromCodePoint(cp) : m;
+		}
+		const v = NAMED_ENTITIES[body.toLowerCase()];
+		return v !== undefined ? v : m;
+	});
+}
+// Trim a text span on both raw whitespace and whitespace entities (&nbsp; and its numeric forms)
+// so we never slice through the middle of an entity. Returns raw-consistent offsets + the slice.
+function trimTextSpan(src, start, end) {
+	const sub = src.slice(start, end);
+	const m = sub.match(
+		/^((?:&nbsp;|&#0*160;|&#x0*a0;|\s)*)([\s\S]*?)((?:&nbsp;|&#0*160;|&#x0*a0;|\s)*)$/i,
+	);
+	const lead = m ? m[1].length : 0;
+	const core = m ? m[2] : sub.trim();
+	return { ts: start + lead, te: start + lead + core.length, core };
+}
+
 // Decide whether a raw string is human-facing copy. `keyed` relaxes the single-word rule
 // for values in a known copy slot (a copy key or a copy attribute) so terse labels ("OK",
 // "Save") survive.
@@ -264,11 +316,11 @@ export function extractJs(src, file, base = 0) {
 		return []; // unparseable — skip rather than crash the sweep
 	}
 	const units = [];
-	const add = (syntax, innerStart, innerEnd, raw, keyed) => {
+	const add = (syntax, innerStart, innerEnd, raw, keyed, testText = raw) => {
 		if (innerEnd <= innerStart) {
 			return;
 		}
-		if (isCopyPhrase(raw, { keyed })) {
+		if (isCopyPhrase(testText, { keyed })) {
 			units.push({
 				syntax,
 				char_start: base + innerStart,
@@ -292,13 +344,13 @@ export function extractJs(src, file, base = 0) {
 		};
 	};
 
-	function walk(node, parent) {
+	function walk(node, parent, uiText = false) {
 		if (!node || typeof node !== 'object') {
 			return;
 		}
 		if (Array.isArray(node)) {
 			for (const c of node) {
-				walk(c, parent);
+				walk(c, parent, uiText);
 			}
 			return;
 		}
@@ -313,10 +365,12 @@ export function extractJs(src, file, base = 0) {
 				break;
 			}
 			case 'JSXText': {
-				const raw = node.value;
-				const trimmedStart = node.start + (raw.length - raw.trimStart().length);
-				const trimmedEnd = node.end - (raw.length - raw.trimEnd().length);
-				add('jsx-text', trimmedStart, trimmedEnd, raw.trim(), true);
+				// Store the RAW source slice as block_text so offsets stay exact for the apply splice
+				// (babel decodes entities into node.value, which would drift the span guard).
+				// Trim on raw whitespace AND whitespace entities (&nbsp;) so we never slice mid-entity,
+				// and test copy-worthiness on the decoded text so lone glyph entities (&ldquo;) drop out.
+				const { ts, te, core } = trimTextSpan(src, node.start, node.end);
+				add('jsx-text', ts, te, core, true, decodeHtmlEntities(core));
 				break;
 			}
 			case 'JSXAttribute': {
@@ -327,9 +381,11 @@ export function extractJs(src, file, base = 0) {
 					add('attr-copy', start, end, raw, COPY_ATTRS.has(attr));
 				}
 				// don't fall through to generic string handling for the attr value
-				walk(node.name, node);
+				walk(node.name, node, false);
+				// Copy attributes written as expression containers (aria-label={cond ? 'A' : 'B'},
+				// placeholder={'Search'}) carry UI copy — key their strings so terse labels survive.
 				if (v && v.type !== 'StringLiteral') {
-					walk(v, node);
+					walk(v, node, COPY_ATTRS.has(attr));
 				}
 				return;
 			}
@@ -372,7 +428,7 @@ export function extractJs(src, file, base = 0) {
 				} else if (p.type === 'CallExpression' || p.type === 'NewExpression') {
 					keyed = false; // args: only real phrases
 				}
-				add('js-string', start, end, raw, keyed);
+				add('js-string', start, end, raw, keyed || uiText);
 				break;
 			}
 			case 'TemplateLiteral': {
@@ -394,8 +450,44 @@ export function extractJs(src, file, base = 0) {
 				} else if (p.type === 'ArrayExpression') {
 					keyed = true;
 				}
-				add('js-string', start, end, raw, keyed);
+				add('js-string', start, end, raw, keyed || uiText);
 				break;
+			}
+			// A string rendered as JSX text — a direct child expression, or a branch of a conditional
+			// or the right side of a logical inside a JSX child — is UI copy. Establish/propagate the
+			// text context here; the generic recursion below resets it to false, so it never leaks into
+			// call args, handlers, .map callbacks, or conditional/logical *tests*.
+			case 'JSXExpressionContainer': {
+				const pt = parent?.type;
+				const childUi =
+					pt === 'JSXElement' || pt === 'JSXFragment'
+						? true
+						: pt === 'JSXAttribute'
+							? uiText
+							: false;
+				if (node.expression) {
+					walk(node.expression, node, childUi);
+				}
+				return;
+			}
+			case 'ConditionalExpression': {
+				walk(node.test, node, false);
+				walk(node.consequent, node, uiText);
+				walk(node.alternate, node, uiText);
+				return;
+			}
+			case 'LogicalExpression': {
+				walk(node.left, node, false);
+				walk(node.right, node, uiText);
+				return;
+			}
+			case 'ParenthesizedExpression':
+			case 'TSAsExpression':
+			case 'TSNonNullExpression': {
+				if (node.expression) {
+					walk(node.expression, node, uiText);
+				}
+				return;
 			}
 			default: {
 				break;
@@ -612,17 +704,21 @@ export async function extractAstro(src, file) {
 		} else if (t === 'text') {
 			// skip text that is actually the inside of an expression ({title})
 			if (parentType !== 'expression') {
-				const raw = node.value || '';
-				const v = raw.trim();
+				// Slice block_text from the raw source between the node start/end offsets — node.value
+				// is entity-decoded, so deriving char_end from its length would mis-span (and drift the
+				// apply guard) whenever the source uses HTML entities.
 				const off = node.position?.start?.offset;
-				if (v && off !== undefined && isCopyPhrase(v, { keyed: true })) {
-					const cs = off + (raw.length - raw.trimStart().length);
-					units.push({
-						syntax: 'jsx-text',
-						char_start: cs,
-						char_end: cs + v.length,
-						block_text: v,
-					});
+				const endOff = node.position?.end?.offset;
+				if (off !== undefined && endOff !== undefined && endOff > off) {
+					const { ts, te, core } = trimTextSpan(src, off, endOff);
+					if (core && isCopyPhrase(decodeHtmlEntities(core), { keyed: true })) {
+						units.push({
+							syntax: 'jsx-text',
+							char_start: ts,
+							char_end: te,
+							block_text: core,
+						});
+					}
 				}
 			}
 		} else if (t === 'element' || t === 'component') {

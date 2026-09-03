@@ -406,17 +406,31 @@ if (phase === 'extract') {
 		);
 	});
 
+	// apply and verify are hard-coupled to the working tree (they readFileSync the on-disk file
+	// and check its sha against file_sha). So when --head is the working tree's own HEAD, extract
+	// must read the WORKING TREE too — otherwise a file with uncommitted edits is audited from its
+	// committed content, re-surfacing already-applied copy and guaranteeing an apply SHA mismatch.
+	// A historical --head (a past commit) still reads via `git show` (review-only, apply not meant).
+	let headIsWorktree = false;
+	try {
+		headIsWorktree = git(repo, 'rev-parse', head).trim() === git(repo, 'rev-parse', 'HEAD').trim();
+	} catch {
+		headIsWorktree = false;
+	}
+
 	let n = 0;
 	const perFile = {};
 	for (const f of candidates) {
 		const isPdf = path.extname(f).toLowerCase() === '.pdf';
+		const abs = path.join(repo, f);
+		const onDisk = headIsWorktree && existsSync(abs);
 		let result;
 		try {
 			result = await ingestFile({
 				routeName: f,
 				isPdf,
-				readUtf8: () => git(repo, 'show', `${head}:${f}`),
-				readBuffer: () => gitShowBuffer(repo, `${head}:${f}`),
+				readUtf8: () => (onDisk ? readFileSync(abs, 'utf8') : git(repo, 'show', `${head}:${f}`)),
+				readBuffer: () => (onDisk ? readFileSync(abs) : gitShowBuffer(repo, `${head}:${f}`)),
 			});
 		} catch {
 			continue;

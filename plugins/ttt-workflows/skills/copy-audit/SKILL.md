@@ -118,6 +118,14 @@ by extension + skip rules, and for each survivor parses every **copy unit** into
 `units` table, recording exact `char_start`/`char_end` offsets of the editable payload.
 Wipes rows for this `repo` first so re-runs are clean.
 
+**Working-tree coupling.** `apply` and `verify` always operate on the on-disk (working
+tree) file, so when `--head` is the current `HEAD`, extract reads file **content** from the
+working tree too — a file with uncommitted edits is audited as it actually is on disk, and
+its `file_sha`/`block_text` match what `apply` will splice into. (A historical `--head` — a
+past commit — still reads content via `git show`; that is a review-only audit, since apply
+can only write the working tree.) Without this coupling, a dirty tree would be audited from
+its committed content and every `apply` would trip the SHA guard.
+
 **Direct input (`--input` / `--stdin`).** To audit pasted text or a single file that is not
 in a git repo, pass `--input <file>` (or pipe the text with `--stdin`), and `--as <.ext>` to
 declare the format (`.md`, `.json`, `.html`, …) so the right extractor runs. The rest of the
