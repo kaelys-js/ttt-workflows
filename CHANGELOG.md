@@ -12,6 +12,30 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-09-03
+
+### Fixed
+
+- **pr-review / trp** — the CLI entrypoint guard compared `import.meta.url` (resolved through
+  a symlink) against `process.argv[1]` (unresolved), so under the standard `~/.claude/skills`
+  install layout `main()` never ran and the scripts exited 0 with no output and no file
+  written. `fetch-pr.mjs`, `fetch-ticket.mjs`, and `clickup-update.mjs` now resolve argv[1]
+  with `realpathSync` before comparing.
+- **pr-review** — Azure DevOps marks some rename and add-shaped-as-edit change entries with a
+  changeType that omits "add", so the loop fetched the old blob at the base commit and died
+  on the 404. The blob helper now separates real 404s from other transport errors, and the
+  loop follows `sourceServerItem` / `originalPath` for the pre-rename path and treats a
+  missing base blob as an add (or a missing head blob as a delete) — with the effective kind
+  recorded in `status` — instead of refusing the whole PR.
+
+### Changed
+
+- **pr-review** — a URL invocation now runs in a subagent, so a 30 KB diff and the finding /
+  self-verify loop never share the operator's context. The subagent's final message is the
+  paste-ready block, verbatim. `render-review.mjs` wraps its own output in an outer fence
+  longer than any inner run so a suggestion body's triple backticks copy cleanly through
+  the subagent boundary.
+
 ## [1.5.1] - 2026-09-02
 
 ### Fixed
