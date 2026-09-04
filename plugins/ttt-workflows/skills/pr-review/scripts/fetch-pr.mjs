@@ -11,7 +11,14 @@
 // It never calls a mutating verb (no POST/PUT/PATCH/DELETE, no `gh pr comment/review/edit`).
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import {
+	mkdtempSync,
+	writeFileSync,
+	rmSync,
+	readFileSync,
+	existsSync,
+	realpathSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -271,15 +278,27 @@ async function fetchAdo({ org, base, number }) {
 	});
 	const files = [];
 	let diff = '';
+	// Returns { text, missing }. `missing:true` means the API said 404 (file genuinely absent at
+	// that commit — a rename source, a file the changeType mis-labels as "edit" when it's really
+	// an add, etc.); the caller decides what to do. Any OTHER error dies loudly — a swallowed
+	// error would fabricate a diff.
 	async function blob(path, commit) {
 		const url = `${apiRepo}/items?path=${encodeURIComponent(path)}&versionDescriptor.versionType=commit&versionDescriptor.version=${commit}&includeContent=true&$format=json&api-version=7.1`;
-		// A swallowed error here would fabricate a diff (file reads as emptied). Retry
-		// once for transient failures, then die loudly — never return a fake blob.
+		const attempt = async () => {
+			try {
+				return { text: (await adoGet(url, token)).content ?? '', missing: false };
+			} catch (error) {
+				if (/\b404\b/.test(String(error.message))) {
+					return { text: '', missing: true };
+				}
+				throw error;
+			}
+		};
 		try {
-			return (await adoGet(url, token)).content ?? '';
+			return await attempt();
 		} catch {
 			try {
-				return (await adoGet(url, token)).content ?? '';
+				return await attempt();
 			} catch (error) {
 				die(
 					`could not fetch blob ${path}@${commit.slice(0, 8)} after retry: ${error.message} — refusing to fabricate a diff`,
@@ -296,9 +315,26 @@ async function fetchAdo({ org, base, number }) {
 		const path = item.path.replace(/^\//, '');
 		const isAdd = ct.includes('add'),
 			isDel = ct.includes('delete');
-		const oldText = isAdd ? '' : await blob(path, targetCommit);
-		const newText = isDel ? '' : await blob(path, sourceCommit);
-		files.push({ path, status: ct });
+		// Renames report the pre-rename path in `sourceServerItem`; fall back to `originalPath`
+		// (older API) and to the current path (edit-in-place).
+		const oldPath = (ch.sourceServerItem || ch.originalPath || item.path).replace(/^\//, '');
+		const oldRes = isAdd ? { text: '', missing: false } : await blob(oldPath, targetCommit);
+		const newRes = isDel ? { text: '', missing: false } : await blob(path, sourceCommit);
+		// A 404 at the base is a real add (mis-labelled changeType or rename source); at the head
+		// it is a real delete. Treat as such rather than dying — the reviewer sees the actual
+		// content, and `status` records the effective kind.
+		let oldText = oldRes.text;
+		let newText = newRes.text;
+		let status = ct;
+		if (oldRes.missing && !isAdd) {
+			oldText = '';
+			status = `${status || 'edit'} (base blob missing — treated as add)`;
+		}
+		if (newRes.missing && !isDel) {
+			newText = '';
+			status = `${status || 'edit'} (head blob missing — treated as delete)`;
+		}
+		files.push({ path, status });
 		if (oldText.includes('\u0000') || newText.includes('\u0000')) {
 			diff += `diff --git a/${path} b/${path}\nBinary files differ\n`; // don't run text diff on binary blobs
 			continue;
@@ -519,7 +555,10 @@ async function main() {
 
 // Run only as a CLI entrypoint, so importing parseUrl for unit tests never triggers a fetch.
 /* c8 ignore start -- entrypoint dispatch */
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// realpathSync on both sides so a symlinked install path (e.g. ~/.claude/skills/pr-review →
+// the plugin dir) still matches — otherwise main() silently no-ops and the caller sees exit 0
+// with no file written.
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
 	try {
 		await main();
 	} catch (error) {
