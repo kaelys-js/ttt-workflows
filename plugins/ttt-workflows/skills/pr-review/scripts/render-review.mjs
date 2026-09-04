@@ -412,4 +412,9 @@ for (const ch of block) {
 	}
 }
 
-process.stdout.write(block);
+// Wrap in an outer fence longer than any internal one so the block copies cleanly
+// (a suggestion body uses ```; if a finding ever nests deeper, grow the outer fence
+// past the longest internal run).
+const longestFence = (block.match(/`{3,}/g) || []).reduce((n, s) => Math.max(n, s.length), 2);
+const outer = '`'.repeat(longestFence + 1);
+process.stdout.write(`${outer}markdown\n${block}\n${outer}\n`);

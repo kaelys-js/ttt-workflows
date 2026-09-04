@@ -23,16 +23,36 @@ and wants it reviewed, or says "PR review", "review this PR", or "code review". 
 a re-review — the same PR after the author pushed changes. Invoked without a URL, ask
 for the PR link first; do not guess one.
 
-## On invocation: open the picker
+## On invocation: URL → subagent, otherwise picker
 
-If the operator already gave a clear request (a PR URL), skip the picker — run
-`scripts/preflight.mjs`, then follow the Workflow below. Otherwise open the **Ask** picker:
-call AskUserQuestion with the four paths defined in `reference/usage.md` (Review a pull request ·
-Re-check after changes · Show me how this works · Options), then route on the answer:
+**If the operator gave a PR URL** (with or without extra guidance), do NOT run the review in the
+main conversation. Run `scripts/preflight.mjs` inline; if it exits non-zero, relay its `✗` lines
+verbatim and WAIT. Once preflight is clean, launch the review in a subagent via the Agent tool
+so the fetch/diff/finding-writing never pollutes the main context:
+
+- `subagent_type`: `general-purpose`
+- `model`: `claude-opus-4-7` (matches this skill's frontmatter; see Hard rules)
+- `description`: `PR review: <platform> <owner>/<repo>#<n>`
+- `prompt`: self-contained brief that (a) names the PR URL and any re-review context the
+  operator gave, (b) tells the subagent to follow the Workflow below verbatim (fetch → read →
+  review against `reference/rubric.md` → write `findings.json` per `reference/output-format.md` →
+  self-verify → render), (c) points at the skill dir (`$HOME/.claude/skills/pr-review` or
+  `$CLAUDE_PLUGIN_ROOT/skills/pr-review`) and the scratchpad dir for `pr.json` / `findings.json`,
+  (d) restates the Hard rules verbatim (read-only, no AI attribution, functional emojis only,
+  every finding anchored + refuted), and (e) says its final message MUST be exactly the rendered
+  paste-ready output of `render-review.mjs` — verbatim, no additional wrapping (the
+  script already emits its own outer fence long enough to contain any inner suggestion
+  fence). Nothing else: no preamble, no summary, no meta commentary.
+
+Return that block to the operator unmodified. Do not post it.
+
+**Otherwise (no URL)** open the **Ask** picker: call AskUserQuestion with the four paths defined
+in `reference/usage.md` (Review a pull request · Re-check after changes · Show me how this works ·
+Options), then route on the answer:
 
 - **Review a pull request / Re-check after changes** → run `scripts/preflight.mjs`; if it exits
   non-zero, relay its `✗` lines verbatim (what's missing + where to put it) and WAIT. Then ask
-  for the PR link if not supplied, and run the Workflow.
+  for the PR link if not supplied, and follow the URL path above (launch a subagent).
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → open a second **Ask** picker of the topics defined in the `reference/usage.md` "Options — drill-down" section; present the chosen subsection, then offer the topic picker again so they can read another.
 - **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
@@ -132,8 +152,9 @@ decorative emoji, a blocking finding with no fix, or an anchor that fails the ga
 (file not in the PR, or `anchor_snippet` not on the cited line). If it refuses, fix `findings.json`
 and re-run. Never hand-edit the block to get around the gate.
 
-**7. Return** the rendered block to the operator as the deliverable, in one fenced code
-block so it copies cleanly. Do not post it anywhere.
+**7. Return** the rendered output to the operator as the deliverable, verbatim — the
+renderer already wraps the review in an outer fence longer than any inner suggestion
+fence, so it copies cleanly. Do not add another wrapper. Do not post it anywhere.
 
 ## Hard rules
 
