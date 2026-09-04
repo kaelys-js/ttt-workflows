@@ -9,7 +9,7 @@
 // READ-ONLY: GET requests only. The token is sent in the Authorization header and is
 // never printed or written to the output file.
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 if (typeof fetch !== 'function') {
@@ -146,7 +146,8 @@ async function main() {
 
 // Run only as a CLI entrypoint, so importing parseRef/token for unit tests never triggers a fetch.
 /* c8 ignore start -- entrypoint dispatch */
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// realpathSync on argv[1] so a symlinked skills dir still matches the resolved import path.
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
 	try {
 		await main();
 	} catch (error) {

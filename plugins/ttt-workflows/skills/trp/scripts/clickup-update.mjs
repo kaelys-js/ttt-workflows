@@ -15,7 +15,7 @@
 //  - landed-verification — after a live comment post, the latest comment is re-fetched
 //    and must match what was posted, else exit non-zero (Phase 5 INCOMPLETE)
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 if (typeof fetch !== 'function') {
@@ -185,7 +185,8 @@ async function main() {
 
 // Run only as a CLI entrypoint, so importing token/parseRef for unit tests never triggers a write.
 /* c8 ignore start -- entrypoint dispatch */
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// realpathSync on argv[1] so a symlinked skills dir still matches the resolved import path.
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
 	try {
 		await main();
 	} catch (error) {
