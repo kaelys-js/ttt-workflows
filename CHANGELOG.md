@@ -12,6 +12,26 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-08
+
+### Changed
+
+- **trp** — the heavy phases now run in Agent-tool subagents pinned to the skill's model
+  while every gate stays in the main conversation: a read-only Phase 0 grounding subagent
+  returns the Full TRP Package, the approval gate fires inline, a delivery subagent runs
+  Phases 2 through 4 with the gates carried verbatim in its prompt, and the pr-review loop
+  plus Phase 5 stay inline. A `context: fork` skill would lose AskUserQuestion, so the
+  gate could not live inside a forked run; the reference files and the operator playbook
+  now say the only subagent before approval is that read-only grounding pass.
+- **sec-audit** — the audit sequence (resolve, threat-model, scanners, live probes, scoring,
+  advisory drafting, lint, coverage claim) runs in one subagent that stops at the first
+  hard human-gate and returns the decision needed as options with a default; the picker,
+  preflight, target and mode confirmation, the multi-agent opt-in, and all six gates stay
+  inline, and the same subagent is resumed with the operator's decision.
+- **copy-audit** — the script phases run in subagents (extract + bundle-emit; apply-verdicts
+  with a compact before-and-after summary; apply + verify on the approved files only) while
+  the Workflow review fan-outs and the review-before-apply gate stay inline.
+
 ## [1.5.2] - 2026-09-03
 
 ### Fixed
