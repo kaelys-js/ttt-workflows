@@ -63,8 +63,9 @@ The **Full TRP Package** is assembled (`templates.md`): what changes and why, th
 detail, the tests that will prove it, the risks, and — where relevant — cost. It restates the
 ticket's acceptance criteria against their original source so nothing is silently narrowed.
 
-**Then it stops.** This gate is absolute: no branch, no subagent, no write — not even "obvious"
-work — happens before your explicit approval. You always see the plan first. Approval is
+**Then it stops.** This gate is absolute: no branch, no write, no implementation subagent —
+not even "obvious" work — happens before your explicit approval. (The read-only grounding
+subagent that wrote the package is the one exception; it returns the plan and nothing else.) You always see the plan first. Approval is
 per-package; it doesn't carry to later, separate work.
 
 ## 5. Phase 1.5 — breaking up bigger work

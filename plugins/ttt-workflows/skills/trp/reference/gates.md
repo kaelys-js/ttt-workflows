@@ -45,8 +45,9 @@ tests, build), discovered from the repo. Universal, regardless of platform:
 
 ## Subagent prompt rules
 
-Subagents follow ONLY their prompt. Therefore every implementation-subagent prompt
-carries, verbatim:
+Subagents follow ONLY their prompt, and none of them can ask the operator anything
+(AskUserQuestion is withheld from subagents). Therefore every implementation-subagent
+prompt carries, verbatim:
 
 - the pre-push gates;
 - the PR-done bar;
@@ -87,7 +88,8 @@ every number/claim in the body re-measured at the current head.
 - **Changelog missing env-var handling, end-to-end verification, or PR creation.**
   Those sections are mandatory in every package; their absence is a violation.
 - **No detailed changelog before acting.** Nothing executes without the presented
-  package and explicit approval — including "obvious" work and read-only subagents.
+  package and explicit approval — including "obvious" work. The only subagent that runs
+  before approval is the read-only Phase 0 grounding subagent whose output IS the package.
 - **"Suspected/likely/probably" root causes.** Evidence with file:line and a
   verified failure in the real artifact, or the claim doesn't ship.
 - **Ignoring a named evidence file (GAP-LIST).** When the invocation names one,

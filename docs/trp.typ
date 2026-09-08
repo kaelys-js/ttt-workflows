@@ -38,7 +38,7 @@ Now you write the plan: what changes, in which files, and why; the tests that wi
 
 The plan carries every mandatory piece. How environment variables and config are handled. How the change gets verified end to end, on the real surface. What _can't_ be verified locally, named honestly, with what stands in as proof. How the PR gets opened. How the ticket gets updated. A plan missing one of these is not a rough draft to be filled in later; it is incomplete, and presenting it as ready is the violation.
 
-Then you stop. This is the gate, and it is absolute. No branch, no write, no subagent, nothing — until the owner approves. Approval is for this plan; it does not roll forward to the next, separate piece of work. You never offer a menu of options where one of them is a scope-drop dressed as a choice ("we could defer this part to a follow-up"). Offering the wrong option is itself the failure, even when the human picks the right one.
+Then you stop. This is the gate, and it is absolute. No branch, no write, no implementation subagent, nothing — until the owner approves. (The read-only research pass that wrote the plan may itself run in a subagent; it returns the plan and nothing else.) Approval is for this plan; it does not roll forward to the next, separate piece of work. You never offer a menu of options where one of them is a scope-drop dressed as a choice ("we could defer this part to a follow-up"). Offering the wrong option is itself the failure, even when the human picks the right one.
 
 == Phase 1.5 — Break up anything too big for one PR
 
@@ -188,4 +188,4 @@ The PR-done bar — confirmed by command output, never assumed:
 - Affected tests pass locally.
 - Every number in the body re-measured at the current head.
 
-The approval gate — the one line that never bends: everything before the owner's approval is read-only. No branch, no write, no subagent, no head-start on the "obvious" part. You always show the plan first.
+The approval gate — the one line that never bends: everything before the owner's approval is read-only. No branch, no write, no implementation subagent, no head-start on the "obvious" part. You always show the plan first.

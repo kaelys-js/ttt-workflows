@@ -2,7 +2,10 @@
 
 Phases 0 → 1 → 1.5 → 2 → 3 → 3.5 → 4 → 5, with one hard stop: after the Full TRP
 Package is presented, NOTHING executes until the operator types approval. Everything
-before that stop is read-only.
+before that stop is read-only. Phase 0 through 1.5 run in a read-only grounding subagent
+that returns the package; Phases 2 through 4 run in a delivery subagent; the approval
+gate, the pr-review loop, and Phase 5 run in the main conversation (SKILL.md "Execution
+model").
 
 ## Contents
 
@@ -28,7 +31,8 @@ every claim, verify the described behaviour in the deployed artifact where feasi
 "Suspected" / "likely" / "probably" root causes are defects — evidence or nothing.
 
 Answer every gap yourself (Rule 8 — discover, don't punt). Queryable answers (code,
-config, telemetry, pipelines, registry) are never questions to the operator. Only a
+config, telemetry, pipelines, registry) are never questions to the operator. This phase
+runs in a read-only subagent that cannot ask at all, so its output is the package itself. Only a
 decision that genuinely lives in the owner's head (priority call, business taxonomy,
 consent for a destructive step) surfaces. It surfaces as a decision with options
 and a default, stated in the package, not as an open question blocking the work.
@@ -54,7 +58,9 @@ none, the code must be correct on merge, and the package says so.
 
 Assemble the **Full TRP Package** (templates.md) and present it. Then STOP.
 
-- No subagents, no writes, no branch, nothing — until the operator approves.
+- No writes, no branch, no implementation subagent, nothing — until the operator
+  approves. The read-only grounding subagent that produced the package is the only one
+  allowed before this point.
 - The package must contain EVERY mandatory section — env-var handling, end-to-end
   verification, what-cannot-be-verified, PR creation, ClickUp plan. A package missing
   one of these is a process violation, not a draft.
