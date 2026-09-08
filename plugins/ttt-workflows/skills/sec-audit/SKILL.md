@@ -31,12 +31,41 @@ the **Ask** picker: call AskUserQuestion with the four paths defined in `referen
 
 - **Run a full check-up** → `sweep`. **Look into one thing** → `review` (then offer `poc` /
   `remediate`). For either, run `scripts/preflight.mjs`; if it exits non-zero, relay its lines
-  verbatim (what's missing + where) and WAIT. Then confirm target + mode and run.
+  verbatim (what's missing + where) and WAIT. Then confirm target + mode and launch the
+  audit subagent (Execution model below).
 - **Show me how this works** → present the "How it works" section of `reference/usage.md`.
 - **Options** → open a second **Ask** picker of the topics defined in the `reference/usage.md` "Options — drill-down" section; present the chosen subsection, then offer the topic picker again so they can read another.
 - **deep dive** (asked any time) → present `reference/deep-dive.md` — the full technical walkthrough.
 
 Never start a run until preflight is clean.
+
+## Execution model: the audit runs in a subagent, every gate stays here
+
+The picker, preflight, confirming target + mode, the per-run multi-agent opt-in, each of
+the six hard human-gates, and presenting the deliverables stay in the main conversation —
+they need AskUserQuestion or the operator's eyes, and a subagent has neither. The audit
+itself — resolving the target, reading the references, threat-modelling, scanners, live
+probes, deep reads, scoring, advisory drafting, lint, coverage claim — runs in one
+Agent-tool subagent so a full sweep never shares the operator's context. The subagent:
+`subagent_type: general-purpose`, `model: claude-opus-4-7`, `description: sec-audit
+<mode>: <target>`, a self-contained prompt (it sees nothing of this conversation), and
+"Do not delegate" — no nested subagents.
+
+The prompt carries: the target and mode, the scratch dir, the skill dir, every
+`AZURE_CONFIG_DIR` / org / project / `--known` / `--map` value the operator gave, an
+instruction to read `reference/gates.md`, `reference/methodology.md`, and the mode's
+reference in full before running anything, the six hard human-gates verbatim, and the
+read-only rule: nothing that stands up infra, writes a client repo, opens a PR, or touches
+ClickUp happens inside the subagent. It runs the mode sequence up to the first gate,
+writes the deliverables to the scratch dir (advisory-lint and coverage-claim passing), and
+returns a compact report: deliverable paths, finding IDs with scores, the coverage claim,
+what was NOT covered, and the gate it stopped at with the decision needed as options and
+a default. It cannot ask, so a decision comes back as a report, never a question.
+
+Workflow-tool fan-outs (`workflows/expansion-sweep.js`) are launched from the main
+conversation after the operator's explicit per-run opt-in, exactly as before; the
+subagent consumes their output from the scratch dir. When the operator decides at a gate,
+resume the same subagent with the decision verbatim and let it continue.
 
 ## Targets (any of four)
 
@@ -114,13 +143,16 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
 ## Workflow
 
 ```text
-- [ ] 0. Read reference/gates.md fully + the mode's reference
-- [ ] 1. Resolve the target → target.json (read-only, provenance stamped)
-- [ ] 2. Threat-model the Tier-1 surfaces (methodology.md) before deep analysis
-- [ ] 3. Run the mode sequence; drive the repo's scripts/workflows, don't reimplement
-- [ ] 4. Produce the deliverables to the disclosure standard; advisory-lint.mjs must pass
-- [ ] 5. Stop at every hard human-gate; nothing public/throwaway/client-writing without approval
-- [ ] 6. Honest coverage claim (coverage-claim.mjs); state what was NOT covered (SFP8)
+- [ ] 0. Inline: preflight clean → confirm target + mode → multi-agent opt-in if the mode needs it
+- [ ] 1. Subagent: read reference/gates.md fully + methodology.md + the mode's reference
+- [ ] 2. Subagent: resolve the target → target.json (read-only, provenance stamped)
+- [ ] 3. Subagent: threat-model the Tier-1 surfaces (methodology.md) before deep analysis
+- [ ] 4. Subagent: run the mode sequence; drive the skill's scripts, don't reimplement
+- [ ] 5. Subagent: deliverables to the disclosure standard; advisory-lint.mjs must pass;
+        honest coverage claim (coverage-claim.mjs); state what was NOT covered (SFP8)
+- [ ] 6. Inline: every hard human-gate — nothing public/throwaway/client-writing without
+        approval; resume the subagent with the decision
+- [ ] 7. Inline: present the deliverables and the coverage claim
 ```
 
 ## Hard rules
@@ -140,6 +172,9 @@ Every mode is framed against professional methodology (PTES / OWASP WSTG / NIST 
   a reason. `coverage-claim.mjs` validates the shape.
 - **Multi-agent opt-in.** `sweep`/`poc`/`remediate` drive Workflow-tool fan-outs — only on
   the operator's explicit per-run opt-in.
+- **Gates stay in the main conversation.** AskUserQuestion is not available to a subagent,
+  so the picker, the preflight WAIT, the opt-in, and all six hard human-gates run inline.
+  The audit subagent receives decisions in its prompt and returns reports, never questions.
 
 ## Files in this skill
 
