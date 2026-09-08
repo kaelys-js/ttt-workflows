@@ -12,6 +12,27 @@ section here as the GitHub Release notes.
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-09-08
+
+### Fixed
+
+- **trp** — Phase 0 grounding now runs three mandatory checks before writing the package,
+  closing two failure modes surfaced by a real ticket where a bug reported against QA got a
+  first-pass package proposing to cherry-pick a fix that was already deployed to that same QA
+  environment. First, a Timeline check enumerates every candidate fix or prior related commit
+  discovered while grounding as `{SHA, subject, branches, merge date per env}` and rejects any
+  candidate whose merge date on the reproducing env is on or before the ticket's report date —
+  it is already deployed, so it cannot be the answer. Second, an Evidence-sufficiency check
+  forces the mode: if the ticket describes runtime behaviour the repo alone cannot explain (a
+  thrown error class, an HTTP response body, browser/localStorage state at the failure moment,
+  environment-only reproduction), the deliverable is a runtime repro plan and the package is
+  `spike-solve`, not a `solve` package with hypotheses wrapped in caveats. Third, ranked
+  hypothesis lists with a "recommended default" are banned in a `solve` package — that content
+  now has a physically distinct `spike-solve` template variant with a Hypotheses-to-test
+  section, a Phase 1 spike plan, and DEFERRED Phase 2+, so a spike deliverable cannot pass as
+  a fix proposal. `gates.md`'s failure catalogue extends the "Suspected/likely" ban to those
+  ranked lists and adds a bullet for the already-deployed-fix failure mode.
+
 ## [1.6.0] - 2026-09-08
 
 ### Changed
