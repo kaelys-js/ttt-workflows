@@ -6,7 +6,7 @@ license: MIT. See LICENSE.
 compatibility: Requires node, git, a ClickUp token (CLICKUP_TOKEN_FILE), and gh (GitHub) or az (Azure DevOps). Works with any GitHub or Azure DevOps repo; the platform is detected from the repo remote.
 metadata:
   author: ttt-studios
-  version: "1.6.0"
+  version: "1.6.1"
 ---
 
 # trp
@@ -59,7 +59,31 @@ and "Do not delegate" — no nested subagents.
    verbatim: no branch, no write, no commit, no ClickUp call, no subagent. It cannot ask, so
    every gap is answered from the repo and every owner-only decision goes INTO the package as
    options with a default. Its final message MUST be the Full TRP Package (templates.md),
-   verbatim, nothing else.
+   verbatim, nothing else. Before writing that package it MUST satisfy three checks:
+
+   a) **Timeline check.** For every candidate fix / prior related commit discovered in git
+      history (via `git log --grep`, blame, or reading commit history around the affected
+      files), print a table: `{SHA, subject, branches present on, merge date per env}`.
+      Cross-reference with the ticket's report date and the env(s) named as "reproduced in".
+      If a candidate landed on the reproducing env BEFORE the ticket's report date, that
+      candidate is already deployed and CANNOT be the fix — do not propose it. State the
+      timeline table and this conclusion explicitly in the package.
+
+   b) **Evidence-sufficiency check.** If the ticket describes runtime behaviour the repo
+      alone cannot explain (an error class thrown at runtime, an HTTP response body, browser
+      storage state, environment-only reproduction, "works in dev, breaks in QA" with the
+      same code), static analysis is insufficient. The deliverable is a runtime repro plan
+      naming specific evidence to capture — NOT a fix proposal. Emit a `spike-solve` (or
+      `spike-writeup`) package per templates.md, not a `solve` package with hypotheses
+      wrapped in caveats.
+
+   c) **No ranked hypothesis list in a solve package.** Every root-cause claim in a `solve`
+      package MUST be anchored to a captured failure artifact (curl output, reproducing test,
+      log line, screenshot) plus file:line for the code path. A ranked H1/H2/H3 list with a
+      "recommended default" IS the failure mode this rule exists to catch — that content
+      belongs in a `spike-solve` package's "Hypotheses to test in repro" section, never in a
+      `solve` package's "Root cause". If you cannot pick a single evidenced root cause, the
+      mode is spike, not solve.
 2. **Approval gate (inline)** — present the package to the operator unmodified and STOP.
    Nothing else executes until they approve. On a change request, re-run step 1 with the
    feedback in the prompt.

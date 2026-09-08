@@ -39,7 +39,36 @@ and a default, stated in the package, not as an open question blocking the work.
 When the ticket's wording conflicts with traced reality, decide and say so:
 "Decision (mine, not yours): …" with the evidence.
 
-Exit: every AC mapped to code reality; every gap answered or surfaced as a decision.
+### Timeline check (mandatory before Phase 0 exit)
+
+For every candidate fix or prior related commit discovered while grounding,
+enumerate: `{SHA, subject, branches present on, merge date per env}`. If the
+ticket reports the bug on env X on date D1, and a candidate lands on env X on
+date D2 ≤ D1, that candidate is already deployed and CANNOT be the answer. Say
+so explicitly. This one check would have killed several real Phase 0 false-fix
+packages (see gates.md failure catalogue).
+
+### Evidence-sufficiency check (mandatory before Phase 0 exit)
+
+If the ticket describes runtime behaviour the repo alone cannot explain — an
+error class thrown at runtime, an HTTP response body, browser/localStorage
+state at a failure moment, environment-only reproduction, "works in dev, breaks
+in QA" with the same code — static analysis is insufficient. The Phase 0
+deliverable is a runtime repro plan naming specific evidence to capture, NOT a
+fix proposal wrapped in caveats. Emit a `spike-solve` package (templates.md)
+in that case.
+
+### Exit
+
+EITHER (a) an EVIDENCED root cause — file:line for the code path AND a captured
+failure artifact (curl output, log excerpt, screenshot, reproducing test) — in
+which case the package is `solve` mode; OR (b) a runtime repro plan naming the
+specific evidence to capture and how, in which case the package is `spike-solve`
+(or `spike-writeup` if no fix will follow). A ranked hypothesis list with a
+"recommended default" is NEVER a valid Phase 0 exit — that content belongs in a
+`spike-solve` package's Hypotheses-to-test section, not a `solve` package's Root
+cause. Every AC is mapped to code reality; every gap answered or surfaced as a
+decision with options and a default.
 
 ## Phase 1 — Spike (when needed)
 
