@@ -90,8 +90,21 @@ every number/claim in the body re-measured at the current head.
 - **No detailed changelog before acting.** Nothing executes without the presented
   package and explicit approval — including "obvious" work. The only subagent that runs
   before approval is the read-only Phase 0 grounding subagent whose output IS the package.
-- **"Suspected/likely/probably" root causes.** Evidence with file:line and a
-  verified failure in the real artifact, or the claim doesn't ship.
+- **"Suspected/likely/probably" root causes — including ranked hypothesis
+  lists with a "recommended default".** A ranked list is that same failure with
+  more formatting; it is not evidence. Every root-cause claim in a `solve`
+  package carries file:line for the code path AND a captured failure artifact
+  in the real environment (curl output, log excerpt, screenshot, reproducing
+  test). Missing either → the mode is `spike-solve` (templates.md), not
+  `solve`, and a solve package cannot enter Phase 2 without both.
+- **Proposing a fix already deployed to the reproducing environment.** Every
+  Phase 0 package must include the Timeline check (phases.md) —
+  `{candidate SHA, merge date per env}` vs `{ticket reported on env X, date D1}`.
+  If a candidate's merge date on env X is on or before D1, the candidate is
+  already deployed and cannot be the answer; state so, and the bug is
+  something else. This one check kills the most common Phase 0 false-fix
+  package (proposing a cherry-pick of a fix that is already present in the
+  reproducing environment).
 - **Ignoring a named evidence file (GAP-LIST).** When the invocation names one,
   reading it is part of Phase 0.
 - **Phase 5 as status-flip only.** Both actions, every round; verify the comment

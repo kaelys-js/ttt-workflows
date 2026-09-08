@@ -67,6 +67,55 @@ reviewers; the full drafted PR body>
 <status transitions planned; the drafted two-layer comment>
 ````
 
+## The Full TRP Package — `spike-solve` variant (root cause not yet evidenced)
+
+Use this shape when Phase 0 cannot evidence a single root cause and a repro must
+land first. Physically distinct from `solve` mode so a hypothesis list cannot
+pass for a fix proposal (gates.md failure catalogue).
+
+````markdown
+# <TICKET-ID> — Full TRP Package (Phase 0 → Phase 1 spike)
+
+**Class:** <bug|security|…> · **Mode:** spike-solve
+· **Waves:** 2 (spike PR then fix PR) · **Branch:** `<spike-branch>` off `<trunk>`
+
+## Phase 0 — Grounded facts (no root cause claim)
+
+- <every grounded fact with file:line — code paths, config, backends probed>
+- **Timeline check:** <candidate-fix table proving why the "obvious" fix is deployed already>
+- <env-var differences, backend behaviours probed with curl, etc.>
+
+## Phase 0 — Hypotheses to test in repro (each UNVERIFIED)
+
+- **H1:** <specific mechanism>. **Anchor:** <file:line>. **Repro method:**
+  <exactly what to run>. **Observable if TRUE:** <evidence that would confirm>.
+  **Observable if FALSE:** <evidence that would falsify>.
+- **H2:** … (same structure)
+
+## Phase 1 — Spike plan
+
+- **Deliverable:** captured evidence per hypothesis (log excerpt, HAR, curl
+  output, in-browser state snapshot, minimal reproducing test).
+- **Method:** <exact repro steps; instrumentation to add on a scratch branch
+  NOT to be merged>.
+- **Access needed:** <env, creds, browser state — operator-supplied or self-drivable>.
+- **Exit:** one hypothesis evidenced (or all falsified — then Phase 0 re-opens
+  with a new set of hypotheses).
+
+## Phase 2+ — DEFERRED
+
+Not written yet. A second package cycle starts after the spike's evidence lands
+— the follow-up `solve` package names the root cause, changelog, verification,
+PR, and ClickUp update based on captured evidence.
+
+## Phase 5 — ClickUp update (spike round)
+
+Status transitions this round: `in progress` on spike start; a further
+transition after evidence capture per the follow-up package. Two-layer comment
+this round reports: what was ruled out, what was proven, and what the follow-up
+fix will change.
+````
+
 ## PR body — Azure DevOps (4000-char cap — `wc -c` before the REST call)
 
 ```markdown
