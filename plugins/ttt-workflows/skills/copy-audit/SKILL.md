@@ -42,6 +42,33 @@ nothing writes without your go-ahead**: the flow stops after review for approval
 - Not a code reviewer. Code strings, identifiers, and config values are filtered out at
   extract; any that slip through get a `keep` verdict.
 
+## Execution model: script phases in subagents, review and approval here
+
+The Workflow-tool review fan-outs (`copy-review.js`, `copy-holistic.js`), the
+review-before-apply approval gate, and any commit the operator asks for stay in the main
+conversation — the Workflow tool is invoked from here, and a subagent cannot ask for
+approval. The script phases run in Agent-tool subagents so a whole-repo extract, the
+verdict tables, and the verify report never share the operator's context. Every
+subagent: `subagent_type: general-purpose`, `model: claude-opus-4-7`, a self-contained
+prompt carrying absolute paths for the skill's `extract.mjs`, the repo, the DB, and the
+bundle dir plus the mode, range, and skips the operator gave, and "Do not delegate".
+
+1. **Extract subagent** — `description: copy-audit extract: <repo>`. Runs `extract` then
+   `bundle-emit` (and `holistic-emit` when a holistic pass was asked for). Returns only
+   unit counts per file and syntax, the bundle count, and the manifest path.
+2. **Review (inline)** — call the Workflow tool with `copy-review.js` on those bundles and
+   collect `verdicts.json` as described under Phases.
+3. **Verdict subagent** — `description: copy-audit verdicts: <repo>`. Runs
+   `apply-verdicts`, then reads the DB and returns a compact approval summary: per file,
+   every `rewrite` as before → after and every `flag` with its note, plus the keep count.
+   It writes the DB only; it never runs `apply`.
+4. **Approval gate (inline)** — show the summary and STOP. Nothing writes to the repo until
+   the operator approves, file by file if they want.
+5. **Apply subagent** — `description: copy-audit apply: <repo>`. Its prompt carries the
+   approved file list verbatim. Runs `apply` (deferring any file not approved by setting its
+   rows to `keep` first), then `verify` with the repo's `--post-verify-cmd` when one exists,
+   and returns the verify report and per-file stat.
+
 ## Modes (`--mode` on every phase)
 
 - **`copy`** (default) — product copy & UI microcopy, judged against the four content
@@ -316,6 +343,9 @@ state file with `NEW_HEAD` only after apply + verify pass.
   extract; defer it to the next sweep rather than forcing.
 - **No pushes.** The skill runs only local operations; the orchestrator commits (if
   asked) and stops.
+- **Approval stays in the main conversation.** AskUserQuestion is not available to a
+  subagent, so the review-before-apply gate runs inline; the apply subagent receives the
+  approved file list in its prompt and never decides scope itself.
 
 ## Test & run
 

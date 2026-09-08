@@ -1,7 +1,9 @@
 # copy-audit — usage
 
 A worked end-to-end run, plus the review-workflow shape and recovery notes. Every phase
-shares one sqlite DB; the DB alone tells you where a sweep is.
+shares one sqlite DB; the DB alone tells you where a sweep is. The script phases below run
+in Agent-tool subagents and the Workflow review plus the approval gate run in the main
+conversation (SKILL.md "Execution model"); the commands are the same either way.
 
 ## Whole-repo sweep (most common)
 
