@@ -1,9 +1,0 @@
----
-import { cn } from "@/lib/utils";
-interface Props {
-	class?: string;
-}
-const { class: cls } = Astro.props;
----
-
-<div class={cn("text-muted-foreground text-sm", cls)}><slot /></div>
